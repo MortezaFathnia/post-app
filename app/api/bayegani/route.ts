@@ -160,20 +160,54 @@ async function normalizeExistingRecords() {
   return normalized;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const records = await prisma.bayeganiRecord.findMany({
-      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-      take: 300,
-      select: {
-        id: true, sheetName: true, sourceRow: true, facilityNumber: true,
-        customerNumber: true, archiveCode: true, facilityTitle: true, serial: true,
-        classification: true, status: true, startDate: true, endDate: true,
-        approvedAmount: true, remainingAmount: true, nationalId: true,
-      },
+    const params = request.nextUrl.searchParams;
+    const requestedPage = Number.parseInt(params.get("page") ?? "1", 10);
+    const requestedPageSize = Number.parseInt(params.get("pageSize") ?? "20", 10);
+    const page = Number.isFinite(requestedPage) ? Math.max(1, requestedPage) : 1;
+    const pageSize = Number.isFinite(requestedPageSize)
+      ? Math.min(100, Math.max(10, requestedPageSize))
+      : 20;
+    const search = (params.get("search") ?? "").trim();
+
+    const where = search
+      ? {
+          OR: [
+            { facilityNumber: { contains: search, mode: "insensitive" as const } },
+            { customerNumber: { contains: search, mode: "insensitive" as const } },
+            { archiveCode: { contains: search, mode: "insensitive" as const } },
+            { facilityTitle: { contains: search, mode: "insensitive" as const } },
+            { nationalId: { contains: search, mode: "insensitive" as const } },
+            { sheetName: { contains: search, mode: "insensitive" as const } },
+          ],
+        }
+      : {};
+
+    const [records, total] = await prisma.$transaction([
+      prisma.bayeganiRecord.findMany({
+        where,
+        orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        select: {
+          id: true, sheetName: true, sourceRow: true, facilityNumber: true,
+          customerNumber: true, archiveCode: true, facilityTitle: true, serial: true,
+          classification: true, status: true, startDate: true, endDate: true,
+          approvedAmount: true, remainingAmount: true, nationalId: true,
+        },
+      }),
+      prisma.bayeganiRecord.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      records,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.max(1, Math.ceil(total / pageSize)),
     });
-    const total = await prisma.bayeganiRecord.count();
-    return NextResponse.json({ success: true, records, total });
   } catch (error) {
     return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "خطا در دریافت اطلاعات" }, { status: 500 });
   }
