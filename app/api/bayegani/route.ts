@@ -4,6 +4,13 @@ import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
+const REMOVED_RAW_FIELDS = ["column1", "column3", "column23", "column24"] as const;
+
+function removeUnwantedColumns(rawData: Record<string, unknown>) {
+  for (const key of REMOVED_RAW_FIELDS) delete rawData[key];
+  return rawData;
+}
+
 function cell(value: unknown): string {
   if (value === null || value === undefined) return "";
   return String(value).trim();
@@ -50,6 +57,8 @@ function mapRow(rawData: Record<string, unknown>) {
 
 export async function GET() {
   try {
+    // Clean unwanted keys from previously saved JSON records.
+    await prisma.$executeRaw`UPDATE "BayeganiRecord" SET "rawData" = "rawData" - ARRAY[\'column1\', \'column3\', \'column23\', \'column24\']::text[] WHERE "rawData" ?| ARRAY[\'column1\', \'column3\', \'column23\', \'column24\']::text[]`;
     const records = await prisma.bayeganiRecord.findMany({
       orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       take: 300,
@@ -84,6 +93,7 @@ export async function POST(request: NextRequest) {
         if (emptyRow(row)) continue;
         const rawData: Record<string, unknown> = {};
         headers.forEach((header, index) => { rawData[header] = cell(row[index]); });
+        removeUnwantedColumns(rawData);
         const mapped = mapRow(rawData);
         if (!mapped.facilityNumber && !mapped.customerNumber && !mapped.facilityTitle) continue;
         records.push({
