@@ -123,7 +123,8 @@ export default function BayeganiRecordForm({ recordId }: Props) {
     || (!currentCounter.name && !currentCounter.code)
     ? counters
     : [...counters, currentCounter];
-  const entries = Object.entries(fields);
+  const hiddenFields = new Set(["کد باجه", "column1", "column3", "column23", "column24"]);
+  const entries = Object.entries(fields).filter(([key]) => !hiddenFields.has(key));
   return (
     <div dir="rtl" className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
