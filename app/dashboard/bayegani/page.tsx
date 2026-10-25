@@ -21,6 +21,16 @@ export default function BayeganiPage() {
   const [pageSize, setPageSize] = useState(20);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const firstRecord = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const lastRecord = Math.min(page * pageSize, total);
+  const visiblePages = Array.from(
+    { length: Math.min(5, totalPages) },
+    (_, index) => {
+      const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+      return start + index;
+    },
+  );
 
   async function loadRecords() {
     const params = new URLSearchParams({
@@ -85,17 +95,32 @@ export default function BayeganiPage() {
         </table>
         {records.length === 0 && <p className="p-8 text-center text-sm text-slate-500">رکوردی پیدا نشد. ابتدا فایل Excel را بارگذاری کنید یا عبارت جستجو را تغییر دهید.</p>}
       </div>
-      <div className="flex flex-col gap-3 border-t border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-500">
-          صفحه {page.toLocaleString("fa-IR")} از {Math.max(1, Math.ceil(total / pageSize)).toLocaleString("fa-IR")}
-          {" · "}نمایش {records.length.toLocaleString("fa-IR")} از {total.toLocaleString("fa-IR")} رکورد
-        </p>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-4 border-t border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-slate-700">
+            نمایش {firstRecord.toLocaleString("fa-IR")} تا {lastRecord.toLocaleString("fa-IR")} از {total.toLocaleString("fa-IR")} رکورد
+          </p>
+          <p className="text-xs text-slate-500">
+            صفحه {page.toLocaleString("fa-IR")} از {totalPages.toLocaleString("fa-IR")} · {records.length.toLocaleString("fa-IR")} رکورد در این صفحه
+          </p>
+        </div>
+        <nav aria-label="صفحه‌بندی رکوردهای بایگانی" className="flex flex-wrap items-center gap-1.5">
           <button type="button" onClick={() => setPage(1)} disabled={page <= 1} className="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">اولین</button>
           <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page <= 1} className="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">قبلی</button>
-          <button type="button" onClick={() => setPage((current) => Math.min(Math.max(1, Math.ceil(total / pageSize)), current + 1))} disabled={page >= Math.max(1, Math.ceil(total / pageSize))} className="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">بعدی</button>
-          <button type="button" onClick={() => setPage(Math.max(1, Math.ceil(total / pageSize)))} disabled={page >= Math.max(1, Math.ceil(total / pageSize))} className="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">آخرین</button>
-        </div>
+          {visiblePages.map((pageNumber) => (
+            <button
+              key={pageNumber}
+              type="button"
+              aria-current={pageNumber === page ? "page" : undefined}
+              onClick={() => setPage(pageNumber)}
+              className={`min-w-10 rounded-lg border px-3 py-2 text-sm ${pageNumber === page ? "border-blue-600 bg-blue-600 font-semibold text-white" : "border-slate-300 hover:bg-slate-50"}`}
+            >
+              {pageNumber.toLocaleString("fa-IR")}
+            </button>
+          ))}
+          <button type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page >= totalPages} className="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">بعدی</button>
+          <button type="button" onClick={() => setPage(totalPages)} disabled={page >= totalPages} className="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">آخرین</button>
+        </nav>
       </div>
     </section>
   </div>;
