@@ -16,9 +16,15 @@ export async function GET() {
 
     const unique = new Map<string, { name: string; code: string }>();
     for (const record of records) {
-      const name = record.counterName?.trim() ?? "";
-      const code = record.counterCode?.trim() ?? "";
-      if (!name && !code) continue;
+      let name = record.counterName?.trim() ?? "";
+      let code = record.counterCode?.trim() ?? "";
+      // Support legacy rows where the counter was stored as one value, e.g. "64508-دلوئی".
+      const combined = name.match(/^(\\d+)\\s*-\\s*(.+)$/);
+      if (combined) {
+        if (!code) code = combined[1];
+        name = combined[2].trim();
+      }
+      if (!name || !code) continue;
       const key = `${name}\u0000${code}`;
       if (!unique.has(key)) unique.set(key, { name, code });
     }
