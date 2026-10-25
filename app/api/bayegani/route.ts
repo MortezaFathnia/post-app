@@ -58,7 +58,7 @@ function mapRow(rawData: Record<string, unknown>) {
 export async function GET() {
   try {
     // Clean unwanted keys from previously saved JSON records.
-    await prisma.$executeRaw`UPDATE "BayeganiRecord" SET "rawData" = "rawData" - ARRAY[\'column1\', \'column3\', \'column23\', \'column24\']::text[] WHERE "rawData" ?| ARRAY[\'column1\', \'column3\', \'column23\', \'column24\']::text[]`;
+    await prisma.$executeRaw`UPDATE "BayeganiRecord" SET "rawData" = "rawData" - ARRAY['column1', 'column3', 'column23', 'column24']::text[] WHERE "rawData" ?| ARRAY['column1', 'column3', 'column23', 'column24']::text[]`;
     const records = await prisma.bayeganiRecord.findMany({
       orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       take: 300,
