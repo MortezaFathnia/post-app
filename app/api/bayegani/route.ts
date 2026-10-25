@@ -4,20 +4,17 @@ import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
-const REMOVED_RAW_FIELDS = ["column1", "column3", "column23", "column24"] as const;
-
-function removeUnwantedColumns(rawData: Record<string, unknown>) {
-  for (const key of REMOVED_RAW_FIELDS) delete rawData[key];
-  return rawData;
-}
+const REMOVED_RAW_FIELDS = new Set(["column1", "column3", "column23", "column24"]);
 
 function cell(value: unknown): string {
   if (value === null || value === undefined) return "";
   return String(value).trim();
 }
+
 function emptyRow(row: unknown[]) {
   return row.every((value) => cell(value) === "");
 }
+
 function findValue(record: Record<string, unknown>, ...headers: string[]) {
   for (const header of headers) {
     const value = record[header];
@@ -25,6 +22,14 @@ function findValue(record: Record<string, unknown>, ...headers: string[]) {
   }
   return "";
 }
+
+function removeUnwantedColumns(rawData: Record<string, unknown>) {
+  for (const key of Object.keys(rawData)) {
+    if (REMOVED_RAW_FIELDS.has(key.trim().toLowerCase())) delete rawData[key];
+  }
+  return rawData;
+}
+
 function normalizeCounter(rawData: Record<string, unknown>) {
   let name = findValue(rawData, "نام باجه");
   let code = findValue(rawData, "کد باجه", "باجه");
@@ -43,17 +48,27 @@ function customerNumberFromFacility(facilityNumber: string): string {
   return parts.length >= 3 ? (parts[2] || "").trim() : "";
 }
 
+function buildNewArchiveCode(rawData: Record<string, unknown>) {
+  const counterCode = findValue(rawData, "کد باجه", "باجه");
+  const floor = findValue(rawData, "طبقه", "طبقه بایگانی");
+  const serial = findValue(rawData, "سریال", "سریال2");
+  return counterCode && floor && serial ? [counterCode, floor, serial].join("-") : "";
+}
+
 function mapRow(rawData: Record<string, unknown>) {
   const facilityNumber = findValue(rawData, "شماره تسهيلات", "شماره تسهیلات");
   const derivedCustomerNumber = customerNumberFromFacility(facilityNumber);
   const customerNumber = derivedCustomerNumber || findValue(rawData, "شماره مشتری", "شماره مشتري");
   if (derivedCustomerNumber) rawData["شماره مشتری"] = derivedCustomerNumber;
+
   const counter = normalizeCounter(rawData);
+  const newArchiveCode = buildNewArchiveCode(rawData);
+  if (newArchiveCode) rawData["کد بایگانی جدید"] = newArchiveCode;
 
   return {
     facilityNumber,
     customerNumber,
-    archiveCode: findValue(rawData, "کد بایگانی", "شماره بایگانی", "کد بایگانی جدید"),
+    archiveCode: newArchiveCode || findValue(rawData, "کد بایگانی جدید", "کد بایگانی", "شماره بایگانی"),
     facilityTitle: findValue(rawData, "عنوان تسهیلات", "عنوان تسهيلات"),
     serial: findValue(rawData, "سریال", "سریال2"),
     classification: findValue(rawData, "طبقه", "طبقه بایگانی"),
@@ -69,10 +84,84 @@ function mapRow(rawData: Record<string, unknown>) {
   };
 }
 
+async function normalizeExistingRecords() {
+  const existing = await prisma.bayeganiRecord.findMany({
+    select: {
+      id: true, rawData: true, facilityNumber: true, customerNumber: true,
+      archiveCode: true, serial: true, classification: true, counterName: true, counterCode: true,
+    },
+  });
+
+  let normalized = 0;
+  let pending: Array<ReturnType<typeof prisma.bayeganiRecord.update>> = [];
+
+  for (const record of existing) {
+    const rawData: Record<string, unknown> =
+      record.rawData && typeof record.rawData === "object" && !Array.isArray(record.rawData)
+        ? { ...(record.rawData as Record<string, unknown>) }
+        : {};
+
+    const before = JSON.stringify(rawData);
+    removeUnwantedColumns(rawData);
+
+    const facilityNumber = record.facilityNumber?.trim() || findValue(rawData, "شماره تسهيلات", "شماره تسهیلات");
+    const derivedCustomerNumber = customerNumberFromFacility(facilityNumber);
+    const customerNumber = derivedCustomerNumber || record.customerNumber?.trim() || findValue(rawData, "شماره مشتری", "شماره مشتري");
+    if (derivedCustomerNumber) rawData["شماره مشتری"] = derivedCustomerNumber;
+
+    if (!findValue(rawData, "کد باجه") && record.counterCode) rawData["کد باجه"] = record.counterCode;
+    if (!findValue(rawData, "نام باجه") && record.counterName) rawData["نام باجه"] = record.counterName;
+    if (!findValue(rawData, "سریال") && record.serial) rawData["سریال"] = record.serial;
+    if (!findValue(rawData, "طبقه") && record.classification) rawData["طبقه"] = record.classification;
+
+    const counter = normalizeCounter(rawData);
+    const newArchiveCode = buildNewArchiveCode(rawData);
+    if (newArchiveCode) rawData["کد بایگانی جدید"] = newArchiveCode;
+
+    const nextArchiveCode = newArchiveCode || record.archiveCode || findValue(rawData, "کد بایگانی", "شماره بایگانی");
+    const nextSerial = findValue(rawData, "سریال", "سریال2") || record.serial || null;
+    const nextClassification = findValue(rawData, "طبقه", "طبقه بایگانی") || record.classification || null;
+    const nextCounterName = counter.name || record.counterName || null;
+    const nextCounterCode = counter.code || record.counterCode || null;
+    const nextCustomerNumber = customerNumber || null;
+
+    const changed =
+      before !== JSON.stringify(rawData) ||
+      nextCustomerNumber !== record.customerNumber ||
+      nextArchiveCode !== record.archiveCode ||
+      nextSerial !== record.serial ||
+      nextClassification !== record.classification ||
+      nextCounterName !== record.counterName ||
+      nextCounterCode !== record.counterCode;
+
+    if (!changed) continue;
+
+    pending.push(prisma.bayeganiRecord.update({
+      where: { id: record.id },
+      data: {
+        rawData: rawData as never,
+        customerNumber: nextCustomerNumber,
+        archiveCode: nextArchiveCode,
+        serial: nextSerial,
+        classification: nextClassification,
+        counterName: nextCounterName,
+        counterCode: nextCounterCode,
+      },
+    }));
+    normalized++;
+
+    if (pending.length >= 150) {
+      await prisma.$transaction(pending);
+      pending = [];
+    }
+  }
+
+  if (pending.length) await prisma.$transaction(pending);
+  return normalized;
+}
+
 export async function GET() {
   try {
-    // Clean unwanted keys from previously saved JSON records.
-    await prisma.$executeRaw`UPDATE "BayeganiRecord" SET "rawData" = "rawData" - ARRAY['column1', 'column3', 'column23', 'column24']::text[] WHERE "rawData" ?| ARRAY['column1', 'column3', 'column23', 'column24']::text[]`;
     const records = await prisma.bayeganiRecord.findMany({
       orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       take: 300,
@@ -94,22 +183,31 @@ export async function POST(request: NextRequest) {
   try {
     const form = await request.formData();
     const file = form.get("file");
-    if (!(file instanceof File)) return NextResponse.json({ success: false, error: "فایل Excel را انتخاب کنید." }, { status: 400 });
+    if (!(file instanceof File)) {
+      return NextResponse.json({ success: false, error: "فایل Excel را انتخاب کنید." }, { status: 400 });
+    }
+
     const workbook = XLSX.read(await file.arrayBuffer(), { type: "array", raw: false });
     const records: Array<Record<string, unknown>> = [];
+
     for (const sheetName of workbook.SheetNames) {
-      const matrix = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[sheetName], { header: 1, defval: "", raw: false, blankrows: false });
+      const matrix = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[sheetName], {
+        header: 1, defval: "", raw: false, blankrows: false,
+      });
       const headerIndex = matrix.findIndex((row) => !emptyRow(row));
       if (headerIndex < 0) continue;
-      const headers = matrix[headerIndex].map((v, i) => cell(v) || `ستون بدون نام ${i + 1}`);
+
+      const headers = matrix[headerIndex].map((value, index) => cell(value) || `ستون بدون نام ${index + 1}`);
       for (let i = headerIndex + 1; i < matrix.length; i++) {
         const row = matrix[i];
         if (emptyRow(row)) continue;
+
         const rawData: Record<string, unknown> = {};
         headers.forEach((header, index) => { rawData[header] = cell(row[index]); });
         removeUnwantedColumns(rawData);
         const mapped = mapRow(rawData);
         if (!mapped.facilityNumber && !mapped.customerNumber && !mapped.facilityTitle) continue;
+
         records.push({
           sourceFile: file.name,
           sheetName,
@@ -119,18 +217,33 @@ export async function POST(request: NextRequest) {
         });
       }
     }
-    if (!records.length) return NextResponse.json({ success: false, error: "ردیف اطلاعاتی قابل‌واردکردن در فایل پیدا نشد." }, { status: 400 });
-    // Skip already-imported source rows when the same file is uploaded again.
+
+    if (!records.length) {
+      return NextResponse.json({ success: false, error: "ردیف اطلاعاتی قابل‌واردکردن در فایل پیدا نشد." }, { status: 400 });
+    }
+
     let imported = 0;
-    // Keep each SQL insert small enough for PostgreSQL's bind-parameter limit.
-    for (let offset = 0; offset < records.length; offset += 400) {
-      const batch = records.slice(offset, offset + 400);
+    for (let offset = 0; offset < records.length; offset += 300) {
+      const batch = records.slice(offset, offset + 300);
       const result = await prisma.bayeganiRecord.createMany({ data: batch as never[], skipDuplicates: true });
       imported += result.count;
     }
-    return NextResponse.json({ success: true, imported, detected: records.length, sheets: workbook.SheetNames });
+
+    const normalized = await normalizeExistingRecords();
+
+    return NextResponse.json({
+      success: true,
+      imported,
+      detected: records.length,
+      normalized,
+      sheets: workbook.SheetNames,
+      message: "بارگذاری انجام شد و اطلاعات موجود نیز پاک‌سازی و یکسان‌سازی شد.",
+    });
   } catch (error) {
     console.error("Bayegani Excel import error:", error);
-    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "خطا در پردازش فایل Excel" }, { status: 500 });
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : "خطا در پردازش فایل Excel",
+    }, { status: 500 });
   }
 }
