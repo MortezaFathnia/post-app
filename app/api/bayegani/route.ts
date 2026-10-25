@@ -18,10 +18,20 @@ function findValue(record: Record<string, unknown>, ...headers: string[]) {
   }
   return "";
 }
+function customerNumberFromFacility(facilityNumber: string): string {
+  const parts = facilityNumber.trim().split(".");
+  return parts.length >= 3 ? (parts[2] || "").trim() : "";
+}
+
 function mapRow(rawData: Record<string, unknown>) {
+  const facilityNumber = findValue(rawData, "شماره تسهيلات", "شماره تسهیلات");
+  const derivedCustomerNumber = customerNumberFromFacility(facilityNumber);
+  const customerNumber = derivedCustomerNumber || findValue(rawData, "شماره مشتری", "شماره مشتري");
+  if (derivedCustomerNumber) rawData["شماره مشتری"] = derivedCustomerNumber;
+
   return {
-    facilityNumber: findValue(rawData, "شماره تسهيلات", "شماره تسهیلات"),
-    customerNumber: findValue(rawData, "شماره مشتری", "شماره مشتري"),
+    facilityNumber,
+    customerNumber,
     archiveCode: findValue(rawData, "کد بایگانی", "شماره بایگانی", "کد بایگانی جدید"),
     facilityTitle: findValue(rawData, "عنوان تسهیلات", "عنوان تسهيلات"),
     serial: findValue(rawData, "سریال", "سریال2"),
