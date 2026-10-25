@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 
+type CounterItem = { code: string; name: string };
+
 type RecordItem = {
   id: number; sheetName: string; sourceRow: number; facilityNumber: string | null;
   customerNumber: string | null; archiveCode: string | null; facilityTitle: string | null;
@@ -14,6 +16,7 @@ type RecordItem = {
 
 export default function BayeganiPage() {
   const [records, setRecords] = useState<RecordItem[]>([]);
+  const [counters, setCounters] = useState<CounterItem[]>([]);
   const [total, setTotal] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -43,6 +46,7 @@ export default function BayeganiPage() {
     const result = await response.json();
     if (!response.ok || !result.success) throw new Error(result.error || "دریافت اطلاعات ناموفق بود.");
     setRecords(result.records);
+    setCounters(result.counters ?? []);
     setTotal(result.total);
   }
 
@@ -82,6 +86,31 @@ export default function BayeganiPage() {
       {message && <p className="mt-3 text-sm text-emerald-700">{message}</p>}
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
     </form>
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-100 p-5">
+        <h2 className="font-bold">فهرست باجه‌ها</h2>
+        <p className="mt-1 text-xs text-slate-500">کد و نام یکتای باجه‌های ثبت‌شده در پایگاه داده</p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[420px] text-right text-sm">
+          <thead className="bg-slate-50 text-slate-600">
+            <tr>
+              <th className="whitespace-nowrap px-4 py-3 font-semibold">کد باجه</th>
+              <th className="whitespace-nowrap px-4 py-3 font-semibold">نام باجه</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {counters.map((counter) => (
+              <tr key={counter.code + "-" + counter.name} className="hover:bg-slate-50">
+                <td className="whitespace-nowrap px-4 py-3" dir="ltr">{counter.code}</td>
+                <td className="px-4 py-3">{counter.name}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {counters.length === 0 && <p className="p-6 text-center text-sm text-slate-500">اطلاعات باجه‌ای ثبت نشده است.</p>}
+      </div>
+    </section>
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div><h2 className="font-bold">رکوردهای بایگانی</h2><p className="mt-1 text-xs text-slate-500">تعداد نتایج: {total.toLocaleString("fa-IR")}</p></div>
