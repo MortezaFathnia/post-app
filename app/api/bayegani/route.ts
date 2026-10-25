@@ -208,7 +208,7 @@ export async function GET(request: NextRequest) {
         }
       : {};
 
-    const [records, total, counters] = await Promise.all([
+    const [records, total, recordCounters] = await Promise.all([
       prisma.bayeganiRecord.findMany({
         where,
         orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
@@ -230,13 +230,35 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
+    // Backfill the dedicated counter table from existing archive rows.
+    const validCounters = recordCounters
+      .map((counter) => ({
+        code: counter.counterCode?.trim() ?? "",
+        name: counter.counterName?.trim() ?? "",
+      }))
+      .filter((counter) => counter.code && counter.name);
+
+    if (validCounters.length) {
+      await prisma.$transaction(
+        validCounters.map((counter) =>
+          prisma.bayeganiCounter.upsert({
+            where: { code_name: { code: counter.code, name: counter.name } },
+            create: counter,
+            update: {},
+          }),
+        ),
+      );
+    }
+
+    const counters = await prisma.bayeganiCounter.findMany({
+      orderBy: [{ code: "asc" }, { name: "asc" }],
+      select: { code: true, name: true },
+    });
+
     return NextResponse.json({
       success: true,
       records,
-      counters: counters.map((counter) => ({
-        code: counter.counterCode,
-        name: counter.counterName,
-      })),
+      counters,
       total,
       page,
       pageSize,
