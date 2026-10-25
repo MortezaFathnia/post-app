@@ -23,7 +23,17 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   if (!Number.isInteger(recordId) || recordId < 1) return NextResponse.json({ error: "شناسه نامعتبر است." }, { status: 400 });
   const record = await prisma.bayeganiRecord.findUnique({ where: { id: recordId } });
   if (!record) return NextResponse.json({ error: "رکورد پیدا نشد." }, { status: 404 });
-  return NextResponse.json({ success: true, record });
+  const raw = record.rawData && typeof record.rawData === "object" && !Array.isArray(record.rawData)
+    ? { ...(record.rawData as Record<string, unknown>) }
+    : {};
+  let changed = false;
+  for (const key of ["column1", "column3", "column23", "column24"]) {
+    if (Object.prototype.hasOwnProperty.call(raw, key)) { delete raw[key]; changed = true; }
+  }
+  const cleanedRecord = changed
+    ? await prisma.bayeganiRecord.update({ where: { id: recordId }, data: { rawData: raw as never } })
+    : record;
+  return NextResponse.json({ success: true, record: cleanedRecord });
 }
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
@@ -35,7 +45,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (!body.rawData || typeof body.rawData !== "object" || Array.isArray(body.rawData)) {
       return NextResponse.json({ success: false, error: "اطلاعات ویرایش‌شده معتبر نیست." }, { status: 400 });
     }
-    const raw = body.rawData as Record<string, unknown>;
+    const raw = { ...(body.rawData as Record<string, unknown>) };
+    for (const key of ["column1", "column3", "column23", "column24"]) delete raw[key];
     const facilityNumber = value(raw, "شماره تسهيلات", "شماره تسهیلات");
     const derivedCustomerNumber = customerNumberFromFacility(facilityNumber);
     if (derivedCustomerNumber) raw["شماره مشتری"] = derivedCustomerNumber;
