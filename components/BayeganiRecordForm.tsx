@@ -163,7 +163,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {entries.map(([key, value]) => (
             <label key={key} className="block">
-              <span className="mb-1.5 block text-sm font-medium text-slate-700">{key}</span>
+              <span className="mb-1.5 block text-sm font-medium text-slate-700">{key === "نام باجه" ? "کد باجه-نام باجه" : key}</span>
               {key === "نام باجه" ? (
                 <select
                   value={JSON.stringify([fields["نام باجه"] || "", fields["کد باجه"] || ""])}
@@ -185,7 +185,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                   }}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 >
-                  <option value={JSON.stringify(["", ""])}>انتخاب نام و کد باجه</option>
+                  <option value={JSON.stringify(["", ""])}>انتخاب کد باجه-نام باجه</option>
                   {counterOptions.map((counter) => (
                     <option key={`${counter.name}-${counter.code}`} value={JSON.stringify([counter.name, counter.code])}>
                       {counter.code}{counter.code && counter.name ? "-" : ""}{counter.name}
