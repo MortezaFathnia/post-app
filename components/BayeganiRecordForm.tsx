@@ -37,6 +37,12 @@ function isHiddenField(key: string) {
   return hiddenFields.has(key.trim().toLocaleLowerCase());
 }
 
+function removeUnwantedColumns(raw: Record<string, unknown>) {
+  const cleaned = { ...raw };
+  for (const key of ["column1", "column3", "column23", "column24"]) delete cleaned[key];
+  return cleaned;
+}
+
 export default function BayeganiRecordForm({ recordId }: Props) {
   const router = useRouter();
   const [fields, setFields] = useState<Record<string, string>>(initialFields);
@@ -66,7 +72,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const result = await res.json();
         if (!res.ok || !result.success) throw new Error(result.error || "دریافت رکورد ناموفق بود.");
         const record = result.record as ApiRecord;
-        const raw = record.rawData && typeof record.rawData === "object" ? record.rawData : {};
+        const raw = record.rawData && typeof record.rawData === "object" ? removeUnwantedColumns(record.rawData) : {};
         const next: Record<string, string> = { ...initialFields };
         for (const [key, value] of Object.entries(raw)) next[key] = value == null ? "" : String(value);
         if (active) setFields(next);
@@ -103,7 +109,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         ? await fetch(`/api/bayegani/${recordId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rawData: fields }),
+            body: JSON.stringify({ rawData: removeUnwantedColumns(fields) }),
           })
         : await fetch("/api/bayegani/manual", {
             method: "POST",
