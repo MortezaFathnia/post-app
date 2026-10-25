@@ -57,7 +57,15 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   }, [recordId]);
 
   function changeField(key: string, value: string) {
-    setFields((current) => ({ ...current, [key]: value }));
+    setFields((current) => {
+      const next = { ...current, [key]: value };
+      if (key === "شماره تسهیلات" || key === "شماره تسهيلات") {
+        const parts = value.trim().split(".");
+        const derivedCustomerNumber = parts.length >= 3 ? (parts[2] || "").trim() : "";
+        if (derivedCustomerNumber) next["شماره مشتری"] = derivedCustomerNumber;
+      }
+      return next;
+    });
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
