@@ -241,7 +241,7 @@ export async function GET(request: NextRequest) {
     if (validCounters.length) {
       await prisma.$transaction(
         validCounters.map((counter) =>
-          prisma.bayeganiCounter.upsert({
+          prisma.bajehCode.upsert({
             where: { code_name: { code: counter.code, name: counter.name } },
             create: counter,
             update: {},
@@ -250,7 +250,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const counters = await prisma.bayeganiCounter.findMany({
+    const counters = await prisma.bajehCode.findMany({
       orderBy: [{ code: "asc" }, { name: "asc" }],
       select: { code: true, name: true },
     });
