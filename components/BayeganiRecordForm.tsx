@@ -143,10 +143,12 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   if (loading) return <div dir="rtl" className="rounded-2xl border bg-white p-8 text-center text-slate-600">در حال دریافت اطلاعات...</div>;
 
   const currentCounter = { name: fields["نام باجه"] || "", code: fields["کد باجه"] || "" };
-  const counterOptions = counters.some((counter) => counter.name === currentCounter.name && counter.code === currentCounter.code)
-    || (!currentCounter.name && !currentCounter.code)
-    ? counters
-    : [...counters, currentCounter];
+  const completeCounters = counters.filter((counter) => counter.name.trim() && counter.code.trim());
+  const currentCounterIsComplete = currentCounter.name.trim() && currentCounter.code.trim();
+  const counterOptions = completeCounters.some((counter) => counter.name === currentCounter.name && counter.code === currentCounter.code)
+    || !currentCounterIsComplete
+    ? completeCounters
+    : [...completeCounters, currentCounter];
   const entries = Object.entries(fields).filter(([key]) => !isHiddenField(key));
   return (
     <div dir="rtl" className="space-y-6">
@@ -184,7 +186,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                   className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 >
                   <option value={JSON.stringify(["", ""])}>انتخاب نام و کد باجه</option>
-                  {counterOptions.filter((counter) => counter.name || counter.code).map((counter) => (
+                  {counterOptions.map((counter) => (
                     <option key={`${counter.name}-${counter.code}`} value={JSON.stringify([counter.name, counter.code])}>
                       {counter.code ? `${counter.code} - ` : ""}{counter.name}
                     </option>
