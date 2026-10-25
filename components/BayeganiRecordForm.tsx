@@ -31,6 +31,7 @@ const initialFields: Record<string, string> = {
   "مبلغ مصوب": "",
   "مانده تسهیلات": "",
   "کد ملی": "",
+  "توضیحات": "",
 };
 
 const hiddenFields = new Set(["کد باجه", "column1", "column3", "column23", "column24"]);
@@ -83,7 +84,11 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const record = result.record as ApiRecord;
         const raw = record.rawData && typeof record.rawData === "object" ? removeUnwantedColumns(record.rawData) : {};
         const next: Record<string, string> = { ...initialFields };
-        for (const [key, value] of Object.entries(raw)) next[key] = value == null ? "" : String(value);
+        for (const [key, value] of Object.entries(raw)) {
+          const fieldName = key.trim() === "تیک" ? "توضیحات" : key;
+          next[fieldName] = value == null ? "" : String(value);
+        }
+        delete next["تیک"];
         next["نام باجه"] = normalizeCounterName(next["نام باجه"] || "");
         next["کد باجه"] = normalizePersianText(next["کد باجه"] || "");
         next["کد بایگانی جدید"] = buildNewArchiveCode(next);
