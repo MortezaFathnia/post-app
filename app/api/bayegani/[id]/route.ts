@@ -15,7 +15,7 @@ function value(raw: Record<string, unknown>, ...keys: string[]) {
 function normalizeCounter(raw: Record<string, unknown>) {
   let name = value(raw, "نام باجه");
   let code = value(raw, "کد باجه", "باجه");
-  const combined = name.match(/^(\\d+)\\s*-\\s*(.+)$/);
+  const combined = name.match(/^(\d+)\s*-\s*(.+)$/);
   if (combined) {
     if (!code) code = combined[1];
     name = combined[2].trim();
