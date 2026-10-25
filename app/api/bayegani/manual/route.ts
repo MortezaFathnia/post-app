@@ -30,7 +30,8 @@ function normalizeCounter(raw: Record<string, unknown>) {
   }
   raw["نام باجه"] = name;
   raw["کد باجه"] = code;
-  return { name, code };
+  raw["کد باجه-نام باجه"] = code && name ? `${code}-${name}` : "";
+  return { name, code, label: code && name ? `${code}-${name}` : "" };
 }
 
 function customerNumberFromFacility(facilityNumber: string): string {
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
         archiveCode: value(raw, "کد بایگانی", "شماره بایگانی", "کد بایگانی جدید") || null,
         facilityTitle: value(raw, "عنوان تسهیلات", "عنوان تسهيلات") || null,
         serial: value(raw, "سریال", "سریال2"), classification: value(raw, "طبقه", "طبقه بایگانی"),
-        counterName: counter.name, counterCode: counter.code,
+        counterName: counter.name, counterCode: counter.code, counterLabel: counter.label,
         status: value(raw, "وضعیت کنونی", "وضعيت کنونی"),
         startDate: value(raw, "تاریخ شروع", "تاريخ شروع"),
         endDate: value(raw, "پایان قرارداد", " پایان قرارداد", "تاریخ پایان قرارداد"),
