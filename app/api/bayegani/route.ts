@@ -208,7 +208,7 @@ export async function GET(request: NextRequest) {
         }
       : {};
 
-    const [records, total] = await prisma.$transaction([
+    const [records, total, counters] = await Promise.all([
       prisma.bayeganiRecord.findMany({
         where,
         orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
@@ -222,11 +222,21 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.bayeganiRecord.count({ where }),
+      prisma.bayeganiRecord.findMany({
+        where: { counterCode: { not: null }, counterName: { not: null } },
+        select: { counterCode: true, counterName: true },
+        distinct: ["counterCode", "counterName"],
+        orderBy: [{ counterCode: "asc" }, { counterName: "asc" }],
+      }),
     ]);
 
     return NextResponse.json({
       success: true,
       records,
+      counters: counters.map((counter) => ({
+        code: counter.counterCode,
+        name: counter.counterName,
+      })),
       total,
       page,
       pageSize,
