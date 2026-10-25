@@ -246,3 +246,15 @@ model BayeganiRecord {
   @@index([customerNumber])
   @@index([archiveCode])
 }
+
+model BayeganiCounter {
+  id        Int      @id @default(autoincrement())
+  code      String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([code, name])
+  @@index([code])
+  @@index([name])
+}
