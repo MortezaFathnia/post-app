@@ -139,31 +139,39 @@ export default function BayeganiRecordForm({ recordId }: Props) {
             <label key={key} className="block">
               <span className="mb-1.5 block text-sm font-medium text-slate-700">{key}</span>
               {key === "نام باجه" ? (
-                <select
-                  value={value}
-                  onChange={(event) => changeField(key, event.target.value)}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                >
-                  <option value="">انتخاب نام باجه</option>
-                  {counterOptions.filter((counter) => counter.name).map((counter) => (
-                    <option key={`${counter.name}-${counter.code}`} value={counter.name}>
-                      {counter.name}{counter.code ? ` — ${counter.code}` : ""}
-                    </option>
-                  ))}
-                </select>
+                <>
+                  <input
+                    list="bayegani-counter-names"
+                    value={value}
+                    onChange={(event) => changeField(key, event.target.value)}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    placeholder="انتخاب یا وارد کردن نام باجه"
+                  />
+                  <datalist id="bayegani-counter-names">
+                    {counterOptions.filter((counter) => counter.name).map((counter) => (
+                      <option key={`${counter.name}-${counter.code}`} value={counter.name}>
+                        {counter.code ? `کد باجه: ${counter.code}` : ""}
+                      </option>
+                    ))}
+                  </datalist>
+                </>
               ) : key === "کد باجه" ? (
-                <select
-                  value={value}
-                  onChange={(event) => changeField(key, event.target.value)}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                >
-                  <option value="">انتخاب کد باجه</option>
-                  {counterOptions.filter((counter) => counter.code).map((counter) => (
-                    <option key={`${counter.name}-${counter.code}`} value={counter.code}>
-                      {counter.code}{counter.name ? ` — ${counter.name}` : ""}
-                    </option>
-                  ))}
-                </select>
+                <>
+                  <input
+                    list="bayegani-counter-codes"
+                    value={value}
+                    onChange={(event) => changeField(key, event.target.value)}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    placeholder="انتخاب یا وارد کردن کد باجه"
+                  />
+                  <datalist id="bayegani-counter-codes">
+                    {counterOptions.filter((counter) => counter.code).map((counter) => (
+                      <option key={`${counter.name}-${counter.code}`} value={counter.code}>
+                        {counter.name ? `نام باجه: ${counter.name}` : ""}
+                      </option>
+                    ))}
+                  </datalist>
+                </>
               ) : (
                 <input
                   value={value}
