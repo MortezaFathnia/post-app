@@ -247,7 +247,7 @@ model BayeganiRecord {
   @@index([archiveCode])
 }
 
-model BayeganiCounter {
+model BajehCode {
   id        Int      @id @default(autoincrement())
   code      String
   name      String
@@ -257,4 +257,5 @@ model BayeganiCounter {
   @@unique([code, name])
   @@index([code])
   @@index([name])
+  @@map("bajehCode")
 }
