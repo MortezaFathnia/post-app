@@ -33,7 +33,8 @@ function normalizeCounter(raw: Record<string, unknown>) {
   }
   raw["نام باجه"] = name;
   raw["کد باجه"] = code;
-  return { name, code };
+  raw["کد باجه-نام باجه"] = code && name ? `${code}-${name}` : "";
+  return { name, code, label: code && name ? `${code}-${name}` : "" };
 }
 
 function customerNumberFromFacility(facilityNumber: string): string {
