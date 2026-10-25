@@ -19,7 +19,7 @@ export async function GET() {
       let name = record.counterName?.trim() ?? "";
       let code = record.counterCode?.trim() ?? "";
       // Support legacy rows where the counter was stored as one value, e.g. "64508-دلوئی".
-      const combined = name.match(/^(\\d+)\\s*-\\s*(.+)$/);
+      const combined = name.match(/^(\d+)\s*-\s*(.+)$/);
       if (combined) {
         if (!code) code = combined[1];
         name = combined[2].trim();
