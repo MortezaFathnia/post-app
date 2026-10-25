@@ -9,13 +9,23 @@ function value(raw: Record<string, unknown>, ...keys: string[]) {
   return "";
 }
 
+function splitCounter(input: string): { code: string; name: string } | null {
+  const match = input.match(/^(\d+)\s*-\s*(.*)$/);
+  return match ? { code: match[1].trim(), name: match[2].trim() } : null;
+}
+
 function normalizeCounter(raw: Record<string, unknown>) {
   let name = value(raw, "نام باجه");
   let code = value(raw, "کد باجه", "باجه");
-  const combined = name.match(/^(\d+)\s*-\s*(.+)$/);
-  if (combined) {
-    if (!code) code = combined[1];
-    name = combined[2].trim();
+  const combinedName = splitCounter(name);
+  if (combinedName) {
+    code = code || combinedName.code;
+    name = combinedName.name;
+  }
+  const combinedCode = splitCounter(code);
+  if (combinedCode) {
+    code = combinedCode.code;
+    name = name || combinedCode.name;
   }
   raw["نام باجه"] = name;
   raw["کد باجه"] = code;
