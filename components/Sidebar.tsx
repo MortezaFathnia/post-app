@@ -11,6 +11,7 @@ const menuItems = [
   { title: "ثبت قرارداد", href: "/dashboard/upload", icon: "+", description: "ثبت از طریق فایل Excel" },
   { title: "اسناد خرید دین", href: "/dashboard/debt-documents/upload", icon: "⇧", description: "بارگذاری اسناد خرید دین" },
   { title: "بایگانی تسهیلات", href: "/dashboard/bayegani", icon: "▣", description: "ورود و ویرایش فایل بایگانی" },
+  { title: "تنظیمات", href: "/dashboard/settings", icon: "⚙", description: "فهرست و کد باجه‌ها" },
 ];
 
 function isActivePath(pathname: string, href: string) {
