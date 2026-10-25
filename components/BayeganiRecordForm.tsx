@@ -11,6 +11,7 @@ type ApiRecord = {
   sourceRow: number;
   rawData: Record<string, unknown> | null;
 };
+type CounterOption = { name: string; code: string };
 
 const initialFields: Record<string, string> = {
   "شماره تسهیلات": "",
@@ -37,6 +38,19 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [counters, setCounters] = useState<CounterOption[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/bayegani/counters", { cache: "no-store" })
+      .then(async (res) => {
+        const result = await res.json();
+        if (!res.ok || !result.success) throw new Error(result.error || "دریافت فهرست باجه‌ها ناموفق بود.");
+        if (active) setCounters(Array.isArray(result.counters) ? result.counters : []);
+      })
+      .catch(() => { /* Counter options are an enhancement; manual text fallback remains available. */ });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (!recordId) return;
@@ -59,6 +73,13 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   function changeField(key: string, value: string) {
     setFields((current) => {
       const next = { ...current, [key]: value };
+      if (key === "نام باجه") {
+        const selected = counters.find((counter) => counter.name === value);
+        if (selected) next["کد باجه"] = selected.code;
+      } else if (key === "کد باجه") {
+        const selected = counters.find((counter) => counter.code === value);
+        if (selected) next["نام باجه"] = selected.name;
+      }
       if (key === "شماره تسهیلات" || key === "شماره تسهيلات") {
         const parts = value.trim().split(".");
         const derivedCustomerNumber = parts.length >= 3 ? (parts[2] || "").trim() : "";
@@ -97,6 +118,11 @@ export default function BayeganiRecordForm({ recordId }: Props) {
 
   if (loading) return <div dir="rtl" className="rounded-2xl border bg-white p-8 text-center text-slate-600">در حال دریافت اطلاعات...</div>;
 
+  const currentCounter = { name: fields["نام باجه"] || "", code: fields["کد باجه"] || "" };
+  const counterOptions = counters.some((counter) => counter.name === currentCounter.name && counter.code === currentCounter.code)
+    || (!currentCounter.name && !currentCounter.code)
+    ? counters
+    : [...counters, currentCounter];
   const entries = Object.entries(fields);
   return (
     <div dir="rtl" className="space-y-6">
@@ -112,12 +138,40 @@ export default function BayeganiRecordForm({ recordId }: Props) {
           {entries.map(([key, value]) => (
             <label key={key} className="block">
               <span className="mb-1.5 block text-sm font-medium text-slate-700">{key}</span>
-              <input
-                value={value}
-                onChange={(event) => changeField(key, event.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                placeholder={key}
-              />
+              {key === "نام باجه" ? (
+                <select
+                  value={value}
+                  onChange={(event) => changeField(key, event.target.value)}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">انتخاب نام باجه</option>
+                  {counterOptions.filter((counter) => counter.name).map((counter) => (
+                    <option key={`${counter.name}-${counter.code}`} value={counter.name}>
+                      {counter.name}{counter.code ? ` — ${counter.code}` : ""}
+                    </option>
+                  ))}
+                </select>
+              ) : key === "کد باجه" ? (
+                <select
+                  value={value}
+                  onChange={(event) => changeField(key, event.target.value)}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">انتخاب کد باجه</option>
+                  {counterOptions.filter((counter) => counter.code).map((counter) => (
+                    <option key={`${counter.name}-${counter.code}`} value={counter.code}>
+                      {counter.code}{counter.name ? ` — ${counter.name}` : ""}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  value={value}
+                  onChange={(event) => changeField(key, event.target.value)}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  placeholder={key}
+                />
+              )}
             </label>
           ))}
         </div>
