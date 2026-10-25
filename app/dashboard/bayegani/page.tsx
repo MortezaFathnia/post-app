@@ -49,7 +49,7 @@ export default function BayeganiPage() {
       const response = await fetch("/api/bayegani", { method: "POST", body: form });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || "ورود اطلاعات ناموفق بود.");
-      setMessage(`${result.imported} رکورد جدید ذخیره شد. تعداد ردیف‌های شناسایی‌شده: ${result.detected}.`);
+      setMessage(`${result.imported} رکورد جدید ذخیره شد. تعداد ردیف‌های شناسایی‌شده: ${result.detected}. ${result.normalized ?? 0} رکورد موجود نیز پاک‌سازی و یکسان‌سازی شد.`);
       setPage(1);
       await loadRecords();
     } catch (e) { setError(e instanceof Error ? e.message : "خطا در بارگذاری فایل."); }
