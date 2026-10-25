@@ -28,7 +28,7 @@ function findValue(record: Record<string, unknown>, ...headers: string[]) {
 function normalizeCounter(rawData: Record<string, unknown>) {
   let name = findValue(rawData, "نام باجه");
   let code = findValue(rawData, "کد باجه", "باجه");
-  const combined = name.match(/^(\\d+)\\s*-\\s*(.+)$/);
+  const combined = name.match(/^(\d+)\s*-\s*(.+)$/);
   if (combined) {
     if (!code) code = combined[1];
     name = combined[2].trim();
