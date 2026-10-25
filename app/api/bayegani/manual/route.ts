@@ -20,7 +20,8 @@ export async function POST(request: NextRequest) {
     if (!body.rawData || typeof body.rawData !== "object" || Array.isArray(body.rawData)) {
       return NextResponse.json({ success: false, error: "اطلاعات واردشده معتبر نیست." }, { status: 400 });
     }
-    const raw = body.rawData as Record<string, unknown>;
+    const raw = { ...(body.rawData as Record<string, unknown>) };
+    for (const key of ["column1", "column3", "column23", "column24"]) delete raw[key];
     const facilityNumber = value(raw, "شماره تسهیلات", "شماره تسهيلات");
     const derivedCustomerNumber = customerNumberFromFacility(facilityNumber);
     if (derivedCustomerNumber) raw["شماره مشتری"] = derivedCustomerNumber;
