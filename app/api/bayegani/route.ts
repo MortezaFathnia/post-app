@@ -30,16 +30,34 @@ function removeUnwantedColumns(rawData: Record<string, unknown>) {
   return rawData;
 }
 
+function splitCounter(value: string): { code: string; name: string } | null {
+  // Accept both a complete value (e.g. "64508-دلوئی") and an incomplete
+  // legacy value (e.g. "1538-") without leaving the code inside the name.
+  const match = value.match(/^(\d+)\s*-\s*(.*)$/);
+  if (!match) return null;
+  return { code: match[1].trim(), name: match[2].trim() };
+}
+
 function normalizeCounter(rawData: Record<string, unknown>) {
   let name = findValue(rawData, "نام باجه");
   let code = findValue(rawData, "کد باجه", "باجه");
-  const combined = name.match(/^(\d+)\s*-\s*(.+)$/);
-  if (combined) {
-    if (!code) code = combined[1];
-    name = combined[2].trim();
+
+  const combinedName = splitCounter(name);
+  if (combinedName) {
+    code = code || combinedName.code;
+    name = combinedName.name;
   }
-  if (name) rawData["نام باجه"] = name;
-  if (code) rawData["کد باجه"] = code;
+
+  // Some older imports stored the combined "code-name" value in the code field.
+  const combinedCode = splitCounter(code);
+  if (combinedCode) {
+    code = combinedCode.code;
+    name = name || combinedCode.name;
+  }
+
+  // Store the two values separately. Empty names are intentionally cleared.
+  rawData["نام باجه"] = name;
+  rawData["کد باجه"] = code;
   return { name, code };
 }
 
@@ -121,8 +139,8 @@ async function normalizeExistingRecords() {
     const nextArchiveCode = newArchiveCode || record.archiveCode || findValue(rawData, "کد بایگانی", "شماره بایگانی");
     const nextSerial = findValue(rawData, "سریال", "سریال2") || record.serial || null;
     const nextClassification = findValue(rawData, "طبقه", "طبقه بایگانی") || record.classification || null;
-    const nextCounterName = counter.name || record.counterName || null;
-    const nextCounterCode = counter.code || record.counterCode || null;
+    const nextCounterName = counter.name || null;
+    const nextCounterCode = counter.code || null;
     const nextCustomerNumber = customerNumber || null;
 
     const changed =
