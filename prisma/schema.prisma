@@ -229,6 +229,7 @@ model BayeganiRecord {
   classification    String?
   counterName       String?
   counterCode       String?
+  counterLabel      String?
   status            String?
   startDate         String?
   endDate           String?
