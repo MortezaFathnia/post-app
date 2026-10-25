@@ -59,7 +59,8 @@ function normalizeCounter(rawData: Record<string, unknown>) {
   // Store the two values separately. Empty names are intentionally cleared.
   rawData["نام باجه"] = name;
   rawData["کد باجه"] = code;
-  return { name, code };
+  rawData["کد باجه-نام باجه"] = code && name ? `${code}-${name}` : "";
+  return { name, code, label: code && name ? `${code}-${name}` : "" };
 }
 
 function customerNumberFromFacility(facilityNumber: string): string {
@@ -93,6 +94,7 @@ function mapRow(rawData: Record<string, unknown>) {
     classification: findValue(rawData, "طبقه", "طبقه بایگانی"),
     counterName: counter.name,
     counterCode: counter.code,
+    counterLabel: counter.label,
     status: findValue(rawData, "وضعيت کنونی", "وضعیت کنونی"),
     startDate: findValue(rawData, "تاريخ شروع", "تاریخ شروع"),
     endDate: findValue(rawData, " پایان قرارداد", "پایان قرارداد", "تاریخ پایان قرارداد"),
@@ -107,7 +109,7 @@ async function normalizeExistingRecords() {
   const existing = await prisma.bayeganiRecord.findMany({
     select: {
       id: true, rawData: true, facilityNumber: true, customerNumber: true,
-      archiveCode: true, serial: true, classification: true, counterName: true, counterCode: true,
+      archiveCode: true, serial: true, classification: true, counterName: true, counterCode: true, counterLabel: true,
     },
   });
 
@@ -142,6 +144,7 @@ async function normalizeExistingRecords() {
     const nextClassification = findValue(rawData, "طبقه", "طبقه بایگانی") || record.classification || null;
     const nextCounterName = counter.name || null;
     const nextCounterCode = counter.code || null;
+    const nextCounterLabel = counter.label || null;
     const nextCustomerNumber = customerNumber || null;
 
     const changed =
@@ -151,7 +154,8 @@ async function normalizeExistingRecords() {
       nextSerial !== record.serial ||
       nextClassification !== record.classification ||
       nextCounterName !== record.counterName ||
-      nextCounterCode !== record.counterCode;
+      nextCounterCode !== record.counterCode ||
+      nextCounterLabel !== record.counterLabel;
 
     if (!changed) continue;
 
@@ -165,6 +169,7 @@ async function normalizeExistingRecords() {
         classification: nextClassification,
         counterName: nextCounterName,
         counterCode: nextCounterCode,
+        counterLabel: nextCounterLabel,
       },
     }));
     normalized++;
