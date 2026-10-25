@@ -89,6 +89,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         classification: value(raw, "طبقه", "طبقه بایگانی"),
         counterName: counter.name,
         counterCode: counter.code,
+        counterLabel: counter.label,
         status: value(raw, "وضعيت کنونی", "وضعیت کنونی"),
         startDate: value(raw, "تاريخ شروع", "تاریخ شروع"),
         endDate: value(raw, " پایان قرارداد", "پایان قرارداد", "تاریخ پایان قرارداد"),
