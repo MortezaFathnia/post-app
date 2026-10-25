@@ -17,6 +17,7 @@ const initialFields: Record<string, string> = {
   "شماره تسهیلات": "",
   "شماره مشتری": "",
   "کد بایگانی": "",
+  "کد بایگانی جدید": "",
   "عنوان تسهیلات": "",
   "سریال": "",
   "طبقه": "",
@@ -35,6 +36,13 @@ const hiddenFields = new Set(["کد باجه", "column1", "column3", "column23",
 
 function isHiddenField(key: string) {
   return hiddenFields.has(key.trim().toLocaleLowerCase());
+}
+
+function buildNewArchiveCode(raw: Record<string, unknown>) {
+  const counterCode = String(raw["کد باجه"] ?? "").trim();
+  const floor = String(raw["طبقه"] ?? "").trim();
+  const serial = String(raw["سریال"] ?? "").trim();
+  return [counterCode, floor, serial].every(Boolean) ? [counterCode, floor, serial].join("-") : "";
 }
 
 function removeUnwantedColumns(raw: Record<string, unknown>) {
@@ -75,6 +83,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const raw = record.rawData && typeof record.rawData === "object" ? removeUnwantedColumns(record.rawData) : {};
         const next: Record<string, string> = { ...initialFields };
         for (const [key, value] of Object.entries(raw)) next[key] = value == null ? "" : String(value);
+        next["کد بایگانی جدید"] = buildNewArchiveCode(next);
         if (active) setFields(next);
       })
       .catch((e: unknown) => { if (active) setError(e instanceof Error ? e.message : "خطا در دریافت اطلاعات."); })
@@ -85,6 +94,9 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   function changeField(key: string, value: string) {
     setFields((current) => {
       const next = { ...current, [key]: value };
+      if (["کد باجه", "طبقه", "سریال"].includes(key)) {
+        next["کد بایگانی جدید"] = buildNewArchiveCode(next);
+      }
       if (key === "نام باجه") {
         const selected = counters.find((counter) => counter.name === value);
         if (selected) next["کد باجه"] = selected.code;
@@ -109,7 +121,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         ? await fetch(`/api/bayegani/${recordId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rawData: removeUnwantedColumns(fields) }),
+            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "کد بایگانی جدید": buildNewArchiveCode(fields) }) }),
           })
         : await fetch("/api/bayegani/manual", {
             method: "POST",
@@ -156,9 +168,17 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                   onChange={(event) => {
                     try {
                       const [name, code] = JSON.parse(event.target.value) as [string, string];
-                      setFields((current) => ({ ...current, "نام باجه": name, "کد باجه": code }));
+                      setFields((current) => {
+                      const next = { ...current, "نام باجه": name, "کد باجه": code };
+                      next["کد بایگانی جدید"] = buildNewArchiveCode(next);
+                      return next;
+                    });
                     } catch {
-                      setFields((current) => ({ ...current, "نام باجه": "", "کد باجه": "" }));
+                      setFields((current) => {
+                        const next = { ...current, "نام باجه": "", "کد باجه": "" };
+                        next["کد بایگانی جدید"] = buildNewArchiveCode(next);
+                        return next;
+                      });
                     }
                   }}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -173,8 +193,9 @@ export default function BayeganiRecordForm({ recordId }: Props) {
               ) : (
                 <input
                   value={value}
+                  readOnly={key === "کد بایگانی جدید"}
                   onChange={(event) => changeField(key, event.target.value)}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "کد بایگانی جدید" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
                   placeholder={key}
                 />
               )}
