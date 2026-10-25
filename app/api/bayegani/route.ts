@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { prisma } from "@/lib/prisma";
+import { normalizeCounterName, normalizePersianText } from "@/lib/normalize-persian";
 
 export const runtime = "nodejs";
 
@@ -39,8 +40,8 @@ function splitCounter(value: string): { code: string; name: string } | null {
 }
 
 function normalizeCounter(rawData: Record<string, unknown>) {
-  let name = findValue(rawData, "نام باجه");
-  let code = findValue(rawData, "کد باجه", "باجه");
+  let name = normalizeCounterName(findValue(rawData, "نام باجه"));
+  let code = normalizePersianText(findValue(rawData, "کد باجه", "باجه"));
 
   const combinedName = splitCounter(name);
   if (combinedName) {
