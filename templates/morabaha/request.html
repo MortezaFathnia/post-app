@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>برگ درخواست انجام معامله مرابحه</title>
+
+  </head>
+
+<body class="template-morabaha-request">
+  <div class="document-date-top"><strong>تاریخ:</strong> {{documentDate}}</div>
+
+
+  <div class="page">
+
+    <div class="inner-border">
+
+      <!-- ================= HEADER ================= -->
+
+      <header class="header">
+
+        <div class="header-center">
+          بسمه تعالی
+        </div>
+
+        <div class="branch-info">
+          <div class="branch-info-row">
+            <span>کد</span>
+            <span class="inline-value">{{contractCode}}</span>
+          </div>
+
+          <div class="branch-info-row">
+            <span>شعبه</span>
+            <span class="inline-value">{{branchName}}</span>
+          </div>
+        </div>
+
+        <div class="header-info">
+
+          <div class="header-info-row">
+            <span class="header-info-label">سریال</span>
+            <span class="header-info-value">
+              {{contractNumber}}
+            </span>
+          </div>
+
+          <div class="header-info-row">
+            <span class="header-info-label">تاریخ</span>
+            <span class="header-info-value">
+              {{contractDate}}
+            </span>
+          </div>
+
+          <div class="header-info-row">
+            <span class="header-info-label">شماره</span>
+            <span class="header-info-value">
+              {{contractNumber}}
+            </span>
+          </div>
+
+        </div>
+
+        <div class="header-title">
+          برگ درخواست انجام معامله مرابحه
+        </div>
+
+        <div class="header-subtitle">
+          (اشخاص حقیقی / حقوقی)
+        </div>
+
+        <div class="header-subtitle">
+          (در امور تولیدی / خدماتی / بازرگانی)
+        </div>
+
+      </header>
+
+
+      <!-- ================= APPLICANT ================= -->
+
+      <section class="info-section">
+
+        <div class="info-row">
+
+          <div class="info-item">
+            <span class="label">اینجانب:</span>
+            <span class="value">
+              {{applicantName}}
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">فرزند:</span>
+            <span class="value">
+              {{fatherName}}
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">دارای شماره شناسنامه:</span>
+            <span class="value">
+              {{birthCertificateNumber}}
+            </span>
+          </div>
+
+        </div>
+
+
+        <div class="info-row">
+
+          <div class="info-item">
+            <span class="label">شماره اقتصادی:</span>
+            <span class="value">
+              {{companyEconomicCode}}
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">شماره ملی:</span>
+            <span class="value">
+              {{nationalCode}}
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">محل صدور:</span>
+            <span class="value">
+              {{birthPlace}}
+            </span>
+          </div>
+
+        </div>
+
+
+        <div class="info-row">
+
+          <div class="info-item">
+            <span class="label">تاریخ تولد:</span>
+            <span class="value">
+              {{birthDate}}
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">محل تولد:</span>
+            <span class="value">
+              {{birthPlace}}
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">کد پستی:</span>
+            <span class="value">
+              {{postalCode}}
+            </span>
+          </div>
+
+        </div>
+
+
+        <div class="info-row two">
+
+          <div class="info-item">
+            <span class="label">نشانی:</span>
+            <span class="value">
+              {{address}}
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">تلفن همراه:</span>
+            <span class="value">
+              {{mobile}}
+            </span>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================= INTRO ================= -->
+
+      <section class="intro">
+
+        <p>
+          به موجب این برگ، درخواست انجام معامله مرابحه به منظور
+          <span class="inline-value">
+            {{facilityDescription}}
+          </span>
+          را از بانک درخواست می‌نمایم.
+        </p>
+
+        <p>
+          متعهد می‌گردم اطلاعات و مدارک ارائه شده صحیح بوده و
+          در صورت احراز شرایط لازم، کلیه تعهدات ناشی از قرارداد
+          و مقررات بانک را رعایت نمایم.
+        </p>
+
+        <p>
+          همچنین متعهد می‌گردم وجوه دریافتی را صرف موضوع معامله
+          نموده و در موعد مقرر نسبت به پرداخت مبالغ مربوط اقدام نمایم.
+        </p>
+
+      </section>
+
+
+      <!-- ================= REQUEST ================= -->
+
+      <div class="request-title">
+        نوع و مشخصات کالای مورد معامله:
+      </div>
+
+      <div class="request-box">
+        {{collateralDescription}}
+      </div>
+
+
+      <!-- ================= LOAN TYPE ================= -->
+
+      <div class="loan-type">
+
+        <strong>نوع تسهیلات:</strong>
+
+        <span class="checkbox">
+          <span class="checkbox-box {{isMaturityLoan}}"></span>
+          سررسیدی
+        </span>
+
+        <span class="checkbox">
+          <span class="checkbox-box {{isInstallmentLoan}}"></span>
+          اقساط
+        </span>
+
+      </div>
+
+
+      <!-- ================= NUMBERED INFORMATION ================= -->
+
+      <section class="fields">
+
+        <div class="field-row">
+          <div class="field-number">۱-</div>
+
+          <div class="field-content">
+            موضوع معامله:
+            <span class="long-line">
+              {{facilityDescription}}
+            </span>
+          </div>
+        </div>
+
+
+        <div class="field-row">
+          <div class="field-number">۲-</div>
+
+          <div class="field-content">
+            مورد مصرف مال / اموال مورد معامله:
+            <span class="long-line">
+              {{facilityDescription}}
+            </span>
+          </div>
+        </div>
+
+
+        <div class="field-row">
+          <div class="field-number">۳-</div>
+
+          <div class="field-content">
+            مشخصات کامل فروشنده / فروشندگان:
+            <span class="long-line">
+              {{applicantName}}
+            </span>
+          </div>
+        </div>
+
+
+        <div class="field-row">
+          <div class="field-number">۴-</div>
+
+          <div class="field-content">
+            شرایط خرید و نحوه پرداخت قیمت معامله:
+            <span class="long-line">
+              {{purchasePrice}}
+            </span>
+            ریال
+          </div>
+        </div>
+
+
+        <div class="field-row">
+          <div class="field-number">۵-</div>
+
+          <div class="field-content">
+
+            قیمت رسمی روز خرید نقدی مال / اموال مورد معامله:
+
+            <span class="medium-line">
+              {{purchasePrice}}
+            </span>
+
+            ریال
+
+          </div>
+        </div>
+
+
+        <div class="field-row">
+          <div class="field-number">۶-</div>
+
+          <div class="field-content">
+
+            سایر هزینه‌های عمده جهت بهره‌برداری از موضوع معامله:
+
+            <span class="medium-line">
+              {{profitAmount}}
+            </span>
+
+            ریال
+
+          </div>
+        </div>
+
+
+        <div class="field-row">
+          <div class="field-number">۷-</div>
+
+          <div class="field-content">
+
+            زمان تحویل مال / اموال:
+
+            <span class="medium-line">
+              {{contractDuration}}
+            </span>
+
+          </div>
+        </div>
+
+
+        <div class="field-row">
+          <div class="field-number">۸-</div>
+
+          <div class="field-content">
+
+            مبلغ تسهیلات درخواستی:
+
+            <span class="medium-line">
+              {{salePrice}}
+            </span>
+
+            ریال
+
+          </div>
+        </div>
+
+
+        <div class="field-row">
+          <div class="field-number">۹-</div>
+
+          <div class="field-content">
+
+            میزان سرمایه متقاضی پرداخت‌شده:
+
+            <span class="medium-line">
+              {{prepayment}}
+            </span>
+
+            ریال
+
+          </div>
+        </div>
+
+
+        <div class="field-row">
+          <div class="field-number">۱۰-</div>
+
+          <div class="field-content">
+
+            طول دوره مصرف / بازپرداخت اموال مورد معامله:
+
+            <span class="medium-line">
+              {{contractDuration}}
+            </span>
+
+            ماه / سال
+
+          </div>
+        </div>
+
+
+        <div class="field-row">
+          <div class="field-number">۱۱-</div>
+
+          <div class="field-content">
+
+            نحوه بازپرداخت تسهیلات:
+
+            <span class="inline-value">
+              {{loanTypeTitle}}
+            </span>
+
+            مبلغ هر قسط:
+
+            <span class="medium-line">
+              {{installmentAmount}}
+            </span>
+
+            ریال
+
+            تعداد اقساط:
+
+            <span class="short-line">
+              {{installmentCount}}
+            </span>
+
+          </div>
+        </div>
+
+
+        <div class="field-row">
+          <div class="field-number">۱۲-</div>
+
+          <div class="field-content">
+
+            وثایق و تضمینات پیشنهادی برای انجام معامله:
+
+            <span class="long-line">
+              {{collateralType}}
+            </span>
+
+          </div>
+        </div>
+
+
+        <div class="field-row">
+          <div class="field-number">۱۳-</div>
+
+          <div class="field-content">
+
+            شماره حساب سپرده:
+
+            <span class="medium-line">
+              {{nationalCode}}
+            </span>
+
+            نزد بانک:
+
+            <span class="medium-line">
+              {{branchName}}
+            </span>
+
+          </div>
+        </div>
+
+
+        <div class="field-row">
+          <div class="field-number">۱۴-</div>
+
+          <div class="field-content">
+
+            سابقه فعالیت و تجربه کاری در مشاغل:
+
+            <span class="long-line">
+              {{facilityDescription}}
+            </span>
+
+          </div>
+        </div>
+
+
+        <div class="field-row">
+          <div class="field-number">۱۵-</div>
+
+          <div class="field-content">
+
+            میزان سرمایه نقدی پرداخت‌شده شرکت:
+
+            <span class="medium-line">
+              {{prepayment}}
+            </span>
+
+            ریال
+
+          </div>
+        </div>
+
+
+        <div class="field-row">
+          <div class="field-number">۱۶-</div>
+
+          <div class="field-content">
+
+            سایر اطلاعات مورد نیاز:
+
+            <span class="long-line">
+              {{collateralDescription}}
+            </span>
+
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- ================= DECLARATION ================= -->
+
+      <section class="intro">
+
+        <p>
+          اینجانب ضمن تأیید صحت اطلاعات فوق، درخواست انجام معامله
+          مرابحه را مطابق مقررات و ضوابط بانک اعلام می‌نمایم.
+        </p>
+
+        <p>
+          همچنین متعهد می‌شوم کلیه مدارک و اطلاعات مورد نیاز بانک
+          را ارائه نموده و در صورت موافقت بانک، نسبت به انعقاد قرارداد
+          و انجام تعهدات خود در موعد مقرر اقدام نمایم.
+        </p>
+
+      </section>
+
+
+      <!-- ================= SIGNATURE ================= -->
+
+      <section class="signature-section">
+
+        <table class="signature-table">
+
+          <tr>
+
+            <td>
+              <div class="signature-title">
+                امضاء متقاضی
+              </div>
+
+              {{applicantName}}
+            </td>
+
+            <td>
+              <div class="signature-title">
+                امضاء و تأیید شعبه
+              </div>
+
+              {{branchName}}
+            </td>
+
+            <td>
+              <div class="signature-title">
+                امضاء ضامن / ضامنین
+              </div>
+
+              {{guarantor1Name}}
+            </td>
+
+          </tr>
+
+        </table>
+
+      </section>
+
+
+      <!-- ================= FOOTER ================= -->
+
+      <div class="footer">
+
+        <span>
+          شماره قرارداد:
+        </span>
+
+        {{contractNumber}}
+
+        &nbsp;&nbsp;&nbsp;
+
+        <span>
+          تاریخ:
+        </span>
+
+        {{contractDate}}
+
+      </div>
+
+    </div>
+
+  </div>
+  <!-- =========================================================
+     PAGE 2
+     وضعیت مالی و مشخصات املاک
+     ========================================================= -->
+
+  <div class="page page-2">
+
+    <div class="inner-border">
+
+      <!-- ================= PAGE 2 HEADER ================= -->
+
+      <div class="page-header">
+
+        <div class="page-header-right">
+          <div>
+            شماره قرارداد:
+            <span class="header-line">
+              {{contractNumber}}
+            </span>
+          </div>
+
+          <div>
+            کد:
+            <span class="header-line">
+              {{contractCode}}
+            </span>
+          </div>
+        </div>
+
+        <div class="page-header-center">
+          <strong>بسمه تعالی</strong>
+        </div>
+
+        <div class="page-header-left">
+          <div>
+            تاریخ:
+            <span class="header-line">
+              {{contractDate}}
+            </span>
+          </div>
+
+          <div>
+            شعبه:
+            <span class="header-line">
+              {{branchName}}
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- =====================================================
+         17 - FINANCIAL STATUS
+         ===================================================== -->
+
+      <section class="section">
+
+        <div class="section-title">
+          ۱۷. وضعیت مالی اینجانب به شرح زیر می‌باشد:
+        </div>
+
+        <div class="financial-row">
+
+          <span class="financial-text">
+            ۱-۱۷ موجودی نزد بانک‌ها
+            (نام بانک‌ها و شعب ذیربط به شرح لیست پیوست)
+            جمعاً
+          </span>
+
+          <span class="financial-value">
+            {{bankBalance}}
+          </span>
+
+          <span>ریال</span>
+
+        </div>
+
+
+        <div class="financial-row">
+
+          <span class="financial-text">
+            ۲-۱۷ موجودی‌های جنسی
+            (مقدار و نوع اجناس به شرح پیوست)
+            جمعاً
+          </span>
+
+          <span class="financial-value">
+            {{inventoryValue}}
+          </span>
+
+          <span>ریال</span>
+
+        </div>
+
+
+        <div class="financial-row">
+
+          <span class="financial-text">
+            ۳-۱۷ سایر دارایی‌های جاری
+            (به شرح جدول پیوست)
+            جمعاً
+          </span>
+
+          <span class="financial-value">
+            {{otherCurrentAssets}}
+          </span>
+
+          <span>ریال</span>
+
+        </div>
+
+
+        <div class="financial-row financial-total">
+
+          <span class="financial-text">
+            جمع مطالبات و دارایی‌های جاری جمعاً
+          </span>
+
+          <span class="financial-value">
+            {{totalCurrentAssets}}
+          </span>
+
+          <span>ریال</span>
+
+        </div>
+
+
+        <div class="deduction-title">
+          کسر می‌شود:
+        </div>
+
+
+        <div class="financial-row">
+
+          <span class="financial-text">
+            ۴-۱۷ بدهی به بانک‌ها
+            (نام بانک‌ها و وضعیت ذیربط به شرح لیست پیوست)
+            جمعاً
+          </span>
+
+          <span class="financial-value">
+            {{bankDebts}}
+          </span>
+
+          <span>ریال</span>
+
+        </div>
+
+
+        <div class="financial-row">
+
+          <span class="financial-text">
+            ۵-۱۷ بدهی به اشخاص و هر نوع بدهی جاری
+            (به شرح لیست پیوست)
+            جمعاً
+          </span>
+
+          <span class="financial-value">
+            {{otherCurrentDebts}}
+          </span>
+
+          <span>ریال</span>
+
+        </div>
+
+
+        <div class="financial-row financial-total">
+
+          <span class="financial-text">
+            جمع بدهی‌های جاری به بانک‌ها و اشخاص جمعاً
+          </span>
+
+          <span class="financial-value">
+            {{totalCurrentDebts}}
+          </span>
+
+          <span>ریال</span>
+
+        </div>
+
+
+        <div class="financial-row financial-total">
+
+          <span class="financial-text">
+            خالص سرمایه در گردش اینجانب جمعاً
+          </span>
+
+          <span class="financial-value">
+            {{workingCapital}}
+          </span>
+
+          <span>ریال</span>
+
+        </div>
+
+      </section>
+
+
+      <!-- =====================================================
+         PROPERTY INFORMATION
+         ===================================================== -->
+
+      <section class="section">
+
+        <div class="section-title">
+          ۱۸. مشخصات املاک غیرمنقول ملکی اینجانب:
+        </div>
+
+        <table class="property-table">
+
+          <thead>
+
+            <tr>
+              <th>ردیف</th>
+              <th>شماره سند مالکیت</th>
+              <th>مساحت<br>(مترمربع)</th>
+              <th>کاربری</th>
+              <th>برآورد قیمت روز<br>(ریال)</th>
+              <th>نشانی ملک</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            <tr>
+              <td>۱</td>
+              <td>{{property1DocumentNumber}}</td>
+              <td>{{property1Area}}</td>
+              <td>{{property1Usage}}</td>
+              <td>{{property1Value}}</td>
+              <td>{{property1Address}}</td>
+            </tr>
+
+            <tr>
+              <td>۲</td>
+              <td>{{property2DocumentNumber}}</td>
+              <td>{{property2Area}}</td>
+              <td>{{property2Usage}}</td>
+              <td>{{property2Value}}</td>
+              <td>{{property2Address}}</td>
+            </tr>
+
+            <tr>
+              <td>۳</td>
+              <td>{{property3DocumentNumber}}</td>
+              <td>{{property3Area}}</td>
+              <td>{{property3Usage}}</td>
+              <td>{{property3Value}}</td>
+              <td>{{property3Address}}</td>
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </section>
+
+
+      <!-- =====================================================
+         APPLICANT SIGNATURE
+         ===================================================== -->
+
+      <section class="applicant-signature">
+
+        <div>
+          نام و نام خانوادگی:
+          <strong>{{applicantName}}</strong>
+        </div>
+
+        <div class="signature-space">
+          امضای متقاضی
+        </div>
+
+      </section>
+
+
+      <!-- =====================================================
+         ATTACHMENTS
+         ===================================================== -->
+
+      <section class="attachments">
+
+        <div class="section-title">
+          ضمائم
+          <span class="small-text">
+            (هر یک از مدارک مذکور که به سوابق و از قبل تحویل شعبه شده باشد،
+            اخذ مجدد آن ضروری نیست)
+          </span>
+        </div>
+
+        <ol class="attachment-list">
+
+          <li>
+            اصل و تصویر شناسنامه و کارت ملی؛ تصویر کلیه صفحات شناسنامه
+            مدیرعامل و اعضای هیأت مدیره
+          </li>
+
+          <li>
+            تصویر اساسنامه ممهور به مهر اداره ثبت شرکت‌ها
+          </li>
+
+          <li>
+            تصویر شرکتنامه
+            (در مورد شرکت‌های غیر سهامی)
+          </li>
+
+          <li>
+            روزنامه‌های رسمی حاوی ثبت شرکت و ثبت آخرین تغییرات
+            در ارکان شرکت و ثبت انتخاب هیأت مدیره و صاحبان امضای مجاز شرکت
+          </li>
+
+          <li>
+            لیست سهامداران عمده و درصد سهام آن‌ها
+          </li>
+
+          <li>
+            آخرین اظهارنامه مالیاتی شرکت ممهور به مهر اداره دارایی محل
+          </li>
+
+          <li>
+            مفاصاحساب مالیاتی
+            (گواهی شماره یک ماده ۱۸۶ قانون مالیات‌های مستقیم)
+          </li>
+
+          <li>
+            صورت‌های مالی سه دوره گذشته شرکت ممهور به مهر حسابرس
+          </li>
+
+          <li>
+            تصویر کامل اسناد مالکیت اموال غیرمنقول متقاضی
+          </li>
+
+          <li>
+            تصویر جواز کسب / کارت بازرگانی / پروانه بهره‌برداری
+            لازم در امور واردات و یا اجرای طرح
+          </li>
+
+          <li>
+            تصویر اسناد مالکیت / سرقفلی / اجاره محل کار متقاضی
+          </li>
+
+          <li>
+            پیش‌فاکتور / فاکتورهای خرید اموال مورد معامله
+          </li>
+
+          <li>
+            مجوزهای لازم در صورتی که مورد معامله اجرای طرح
+            یا مابه‌التفاوت باشد
+          </li>
+
+          <li>
+            صورت برآورد هزینه‌های پیش‌بینی شده برای انجام معامله
+            به تفکیک هر نوع خرید
+          </li>
+
+          <li>
+            سایر مدارک و مستندات به تشخیص پست بانک
+          </li>
+
+        </ol>
+
+      </section>
+
+
+      <!-- =====================================================
+         BRANCH SECTION
+         ===================================================== -->
+
+      <section class="branch-approval">
+
+        <div class="branch-title">
+          این قسمت توسط شعبه تکمیل شود:
+        </div>
+
+        <p class="branch-text">
+
+          انجام معامله مرابحه با آقای / خانم / شرکت
+
+          <span class="inline-value">
+            {{applicantName}}
+          </span>
+
+          با مشخصات مذکور در این برگ درخواست و با توجه به اطلاعات
+          مأخوذه به مبلغ به عدد
+
+          <span class="inline-value">
+            {{salePrice}}
+          </span>
+
+          ریال،
+
+          به حروف
+
+          <span class="inline-value wide">
+            {{salePriceWords}}
+          </span>
+
+          و به مدت
+
+          <span class="inline-value">
+            {{contractDuration}}
+          </span>
+
+          ماه و برآورد سود
+
+          <span class="inline-value">
+            {{interestRate}}
+          </span>
+
+          درصد، در چارچوب ضوابط اجرایی پست بانک مورد تأیید است.
+
+        </p>
+
+
+        <p class="branch-text">
+
+          دفتر موافق مرجع تصویب است و تسهیلات پیشنهاد می‌دهد.
+
+        </p>
+
+
+        <div class="approval-signatures">
+
+          <div class="approval-cell">
+            <div>شعبه</div>
+            <div class="signature-line">
+              {{branchName}}
+            </div>
+          </div>
+
+          <div class="approval-cell">
+            <div>امضاء مسئول</div>
+            <div class="signature-line"></div>
+          </div>
+
+          <div class="approval-cell">
+            <div>امضاء رئیس شعبه</div>
+            <div class="signature-line"></div>
+          </div>
+
+          <div class="approval-cell">
+            <div>مهر شعبه</div>
+            <div class="signature-line"></div>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =====================================================
+         PAGE 2 FOOTER
+         ===================================================== -->
+
+      <div class="page-footer">
+
+        <span>
+          متقاضی:
+          {{applicantName}}
+        </span>
+
+        <span>
+          شماره قرارداد:
+          {{contractNumber}}
+        </span>
+
+        <span>
+          تاریخ:
+          {{contractDate}}
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+</body>
+
+</html>

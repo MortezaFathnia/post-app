@@ -1,0 +1,1553 @@
+/* ============================================================
+   Shared styles for every generated document
+   Template-specific rules below are scoped by body.template-*
+   ============================================================ */
+:root {
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  direction: rtl;
+  background: #eef1f5;
+}
+
+body {
+  direction: rtl;
+  text-align: right;
+  font-family: "Vazirmatn", Tahoma, Arial, sans-serif;
+  color: #111;
+  background: #fff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+table {
+  border-collapse: collapse;
+  max-width: 100%;
+}
+
+th,
+td {
+  overflow-wrap: anywhere;
+}
+
+img {
+  max-width: 100%;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 10mm;
+}
+
+@media screen {
+  body {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 18px auto;
+    padding: 10mm;
+    box-shadow: 0 4px 24px rgba(15, 23, 42, .14);
+  }
+}
+
+@media print {
+
+  html,
+  body {
+    width: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  table,
+  tr,
+  img {
+    break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+}
+
+
+/* ===== credit-card/approval.html ===== */
+
+
+
+
+body.template-credit-card-approval * {
+  box-sizing: border-box;
+}
+
+body.template-credit-card-approval,
+body.template-credit-card-approval {
+  margin: 0;
+  padding: 0;
+  direction: rtl;
+  text-align: right;
+  background: #fff;
+  color: #000;
+  font-family: "Vazirmatn", Tahoma, Arial, sans-serif;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+body.template-credit-card-approval .page {
+  width: 100%;
+  max-width: 210mm;
+  margin: 0 auto;
+}
+
+body.template-credit-card-approval .header {
+  position: relative;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+body.template-credit-card-approval .header-code {
+  position: absolute;
+  left: 0;
+  top: 0;
+  direction: ltr;
+  font-size: 8px;
+}
+
+body.template-credit-card-approval .header-title {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 2px 0;
+}
+
+body.template-credit-card-approval .header-subtitle {
+  font-size: 11px;
+  font-weight: bold;
+  margin: 2px 0 5px;
+}
+
+body.template-credit-card-approval table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 0;
+  page-break-inside: avoid;
+}
+
+body.template-credit-card-approval th,
+body.template-credit-card-approval td {
+  border: 1px solid #000;
+  padding: 3px 4px;
+  vertical-align: middle;
+  text-align: center;
+  height: 24px;
+}
+
+body.template-credit-card-approval th {
+  font-weight: bold;
+  background: #fff;
+}
+
+body.template-credit-card-approval .section-title {
+  font-weight: bold;
+  text-align: center;
+  border: 1px solid #000;
+  border-bottom: none;
+  padding: 3px;
+  margin-top: 3px;
+}
+
+body.template-credit-card-approval .right {
+  text-align: right;
+}
+
+body.template-credit-card-approval .center {
+  text-align: center;
+}
+
+body.template-credit-card-approval .bold {
+  font-weight: bold;
+}
+
+body.template-credit-card-approval .value {
+  font-weight: bold;
+}
+
+body.template-credit-card-approval .small {
+  font-size: 8px;
+}
+
+body.template-credit-card-approval .very-small {
+  font-size: 7px;
+}
+
+/* =========================
+       TABLE 1
+       ========================= */
+
+body.template-credit-card-approval .table-1 th:nth-child(1) {
+  width: 18%;
+}
+
+body.template-credit-card-approval .table-1 th:nth-child(2) {
+  width: 14%;
+}
+
+body.template-credit-card-approval .table-1 th:nth-child(3) {
+  width: 18%;
+}
+
+body.template-credit-card-approval .table-1 th:nth-child(4) {
+  width: 12%;
+}
+
+body.template-credit-card-approval .table-1 th:nth-child(5) {
+  width: 38%;
+}
+
+/* =========================
+       TABLE 2
+       ========================= */
+
+body.template-credit-card-approval .table-2 .label {
+  width: 18%;
+  font-weight: bold;
+}
+
+body.template-credit-card-approval .table-2 .value-cell {
+  width: 32%;
+}
+
+body.template-credit-card-approval .table-2 .label-small {
+  width: 20%;
+  font-weight: bold;
+}
+
+body.template-credit-card-approval .table-2 .value-small {
+  width: 30%;
+}
+
+/* =========================
+       TABLE 3
+       ========================= */
+
+body.template-credit-card-approval .table-3 th:nth-child(1) {
+  width: 8%;
+}
+
+body.template-credit-card-approval .table-3 th:nth-child(2) {
+  width: 28%;
+}
+
+body.template-credit-card-approval .table-3 th:nth-child(3) {
+  width: 12%;
+}
+
+body.template-credit-card-approval .table-3 th:nth-child(4) {
+  width: 32%;
+}
+
+body.template-credit-card-approval .table-3 th:nth-child(5) {
+  width: 20%;
+}
+
+/* =========================
+       TABLE 4
+       ========================= */
+
+body.template-credit-card-approval .table-4 th:nth-child(1) {
+  width: 25%;
+}
+
+body.template-credit-card-approval .table-4 th:nth-child(2) {
+  width: 25%;
+}
+
+body.template-credit-card-approval .table-4 th:nth-child(3) {
+  width: 25%;
+}
+
+body.template-credit-card-approval .table-4 th:nth-child(4) {
+  width: 25%;
+}
+
+/* =========================
+       TABLE 5
+       ========================= */
+
+body.template-credit-card-approval .table-5 th:first-child {
+  width: 8%;
+}
+
+body.template-credit-card-approval .table-5 th:last-child {
+  width: 92%;
+}
+
+/* =========================
+       TABLE 6
+       ========================= */
+
+body.template-credit-card-approval .table-6 th:first-child {
+  width: 8%;
+}
+
+body.template-credit-card-approval .table-6 th:last-child {
+  width: 92%;
+}
+
+/* =========================
+       TABLE 7
+       ========================= */
+
+body.template-credit-card-approval .committee-table th {
+  height: 30px;
+}
+
+body.template-credit-card-approval .committee-table td {
+  height: 75px;
+  vertical-align: top;
+  padding-top: 8px;
+}
+
+body.template-credit-card-approval .signature-space {
+  height: 35px;
+}
+
+body.template-credit-card-approval .footer {
+  margin-top: 4px;
+  text-align: center;
+  font-size: 7px;
+}
+
+@media print {
+
+  body.template-credit-card-approval,
+  body.template-credit-card-approval {
+    background: #fff;
+  }
+
+  body.template-credit-card-approval .page {
+    width: 100%;
+    max-width: none;
+  }
+
+  body.template-credit-card-approval table {
+    page-break-inside: avoid;
+  }
+
+  body.template-credit-card-approval tr {
+    page-break-inside: avoid;
+  }
+
+}
+
+
+/* ===== credit-card/contract.html ===== */
+
+
+body.template-credit-card-contract,
+body.template-credit-card-contract {
+  direction: rtl;
+  text-align: right;
+}
+
+body.template-credit-card-contract {
+  direction: rtl;
+  text-align: right;
+  font-family: "Vazirmatn", Tahoma, Arial, sans-serif;
+}
+
+body.template-credit-card-contract table {
+  direction: rtl;
+}
+
+body.template-credit-card-contract .text-center {
+  text-align: center;
+}
+
+body.template-credit-card-contract .text-right {
+  text-align: right;
+}
+
+body.template-credit-card-contract .text-left {
+  text-align: left;
+}
+
+
+
+body.template-credit-card-contract * {
+  box-sizing: border-box;
+}
+
+body.template-credit-card-contract {
+  font-family: "Vazirmatn", Tahoma, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.9;
+  color: #000;
+  background: #fff;
+}
+
+body.template-credit-card-contract .page {
+  width: 100%;
+}
+
+body.template-credit-card-contract .center {
+  text-align: center;
+}
+
+body.template-credit-card-contract .top-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 10px;
+}
+
+body.template-credit-card-contract .photo {
+  width: 75px;
+  height: 95px;
+  border: 1px solid #000;
+  text-align: center;
+  font-size: 11px;
+  padding-top: 12px;
+}
+
+body.template-credit-card-contract h1 {
+  font-size: 20px;
+  margin: 10px 0 20px;
+}
+
+body.template-credit-card-contract h2 {
+  font-size: 15px;
+  margin-top: 18px;
+  margin-bottom: 8px;
+}
+
+body.template-credit-card-contract .line {
+  border-bottom: 1px dotted #000;
+  display: inline-block;
+  min-width: 120px;
+  height: 18px;
+}
+
+body.template-credit-card-contract .w80 {
+  min-width: 80px;
+}
+
+body.template-credit-card-contract .w150 {
+  min-width: 150px;
+}
+
+body.template-credit-card-contract .w220 {
+  min-width: 220px;
+}
+
+body.template-credit-card-contract .w320 {
+  min-width: 320px;
+}
+
+body.template-credit-card-contract .row {
+  display: flex;
+  gap: 18px;
+  margin: 6px 0;
+}
+
+body.template-credit-card-contract .col {
+  flex: 1;
+}
+
+body.template-credit-card-contract table.sign {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 25px;
+}
+
+body.template-credit-card-contract table.sign td {
+  border: 1px solid #000;
+  height: 90px;
+  text-align: center;
+  vertical-align: top;
+  padding-top: 8px;
+}
+
+body.template-credit-card-contract .small {
+  font-size: 12px;
+}
+
+@font-face {
+  font-family: "Vazirmatn";
+  src: local("Vazirmatn");
+}
+
+body.template-credit-card-contract {
+  font-family: "Vazirmatn", Tahoma, sans-serif;
+  direction: rtl;
+  background: #fff;
+  color: #000;
+  margin: 40px;
+  line-height: 2;
+  font-size: 15px;
+}
+
+body.template-credit-card-contract .page {
+  max-width: 900px;
+  margin: auto;
+}
+
+body.template-credit-card-contract h2 {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+body.template-credit-card-contract h3 {
+  margin-top: 28px;
+  margin-bottom: 12px;
+}
+
+body.template-credit-card-contract p {
+  text-align: justify;
+}
+
+body.template-credit-card-contract .article {
+  margin-bottom: 22px;
+}
+
+body.template-credit-card-contract .blank {
+  display: inline-block;
+  border-bottom: 1px solid #000;
+  min-width: 140px;
+}
+
+body.template-credit-card-contract table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 40px;
+}
+
+body.template-credit-card-contract td {
+  border: 1px solid #000;
+  height: 95px;
+  text-align: center;
+  vertical-align: top;
+  padding: 10px;
+}
+
+body.template-credit-card-contract .small {
+  font-size: 13px;
+}
+
+
+/* ===== debt-discounting/commitment.html ===== */
+
+
+
+
+body.template-debt-discounting-commitment * {
+  box-sizing: border-box;
+}
+
+body.template-debt-discounting-commitment,
+body.template-debt-discounting-commitment {
+  margin: 0;
+  padding: 0;
+  direction: rtl;
+  background: #fff;
+  color: #000;
+  font-family: "Vazirmatn", Tahoma, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+body.template-debt-discounting-commitment {
+  width: 100%;
+}
+
+body.template-debt-discounting-commitment .page {
+  width: 100%;
+  max-width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 0;
+}
+
+body.template-debt-discounting-commitment .header {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+body.template-debt-discounting-commitment .bismillah {
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+body.template-debt-discounting-commitment .bank-name {
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+body.template-debt-discounting-commitment .document-title {
+  font-size: 17px;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+body.template-debt-discounting-commitment .top-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 22px;
+  margin-bottom: 10px;
+  line-height: 2.2;
+}
+
+body.template-debt-discounting-commitment .top-info-right {
+  width: 42%;
+  text-align: right;
+}
+
+body.template-debt-discounting-commitment .top-info-left {
+  width: 55%;
+  text-align: right;
+}
+
+body.template-debt-discounting-commitment .top-info p {
+  margin: 0;
+}
+
+body.template-debt-discounting-commitment .field-value {
+  font-weight: bold;
+}
+
+body.template-debt-discounting-commitment .documents-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+body.template-debt-discounting-commitment .documents-table th,
+body.template-debt-discounting-commitment .documents-table td {
+  border: 1px solid #000;
+  padding: 4px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+body.template-debt-discounting-commitment .documents-table th {
+  font-weight: bold;
+  height: 32px;
+}
+
+body.template-debt-discounting-commitment .documents-table td {
+  height: 27px;
+}
+
+body.template-debt-discounting-commitment .documents-table .row-number {
+  width: 6%;
+}
+
+body.template-debt-discounting-commitment .documents-table .document-type {
+  width: 9%;
+}
+
+body.template-debt-discounting-commitment .documents-table .due-date {
+  width: 18%;
+}
+
+body.template-debt-discounting-commitment .documents-table .serial {
+  width: 17%;
+}
+
+body.template-debt-discounting-commitment .documents-table .nominal {
+  width: 22%;
+}
+
+body.template-debt-discounting-commitment .documents-table .description {
+  width: 28%;
+}
+
+body.template-debt-discounting-commitment .documents-table .description-cell {
+  vertical-align: top;
+}
+
+body.template-debt-discounting-commitment .statement {
+  margin-top: 12px;
+  text-align: justify;
+  line-height: 2.25;
+}
+
+body.template-debt-discounting-commitment .statement p {
+  margin: 7px 0;
+}
+
+body.template-debt-discounting-commitment .signature-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-top: 14px;
+}
+
+body.template-debt-discounting-commitment .signature-table th,
+body.template-debt-discounting-commitment .signature-table td {
+  border: 1px solid #000;
+  text-align: center;
+  vertical-align: top;
+}
+
+body.template-debt-discounting-commitment .signature-table th {
+  height: 35px;
+  padding: 5px;
+  font-weight: bold;
+}
+
+body.template-debt-discounting-commitment .signature-table td {
+  height: 85px;
+  padding: 7px;
+}
+
+body.template-debt-discounting-commitment .signature-placeholder {
+  margin-top: 25px;
+  height: 35px;
+}
+
+body.template-debt-discounting-commitment .signature-note {
+  margin-top: 5px;
+  text-align: right;
+  font-size: 11px;
+}
+
+body.template-debt-discounting-commitment .branch-signatures {
+  margin-top: 30px;
+  text-align: right;
+  font-weight: bold;
+  line-height: 2.4;
+}
+
+body.template-debt-discounting-commitment .branch-signatures span {
+  display: inline-block;
+  margin-left: 50px;
+}
+
+body.template-debt-discounting-commitment .print-only {
+  display: none;
+}
+
+@media print {
+
+  body.template-debt-discounting-commitment .no-print {
+    display: none !important;
+  }
+
+  body.template-debt-discounting-commitment .print-only {
+    display: block;
+  }
+
+  body.template-debt-discounting-commitment .page {
+    margin: 0;
+    width: 100%;
+    min-height: auto;
+  }
+
+  body.template-debt-discounting-commitment .documents-table {
+    page-break-inside: avoid;
+  }
+
+  body.template-debt-discounting-commitment .signature-table {
+    page-break-inside: avoid;
+  }
+
+}
+
+
+/* ===== debt-discounting/contract.html ===== */
+
+
+
+
+body.template-debt-discounting-contract * {
+  box-sizing: border-box;
+}
+
+body.template-debt-discounting-contract,
+body.template-debt-discounting-contract {
+  margin: 0;
+  padding: 0;
+  direction: rtl;
+  text-align: right;
+  font-family: "Vazirmatn", Tahoma, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 2;
+  color: #111;
+  background: #fff;
+}
+
+body.template-debt-discounting-contract {
+  padding: 0;
+}
+
+body.template-debt-discounting-contract .document {
+  width: 100%;
+  max-width: 210mm;
+  margin: 0 auto;
+}
+
+body.template-debt-discounting-contract .header {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+body.template-debt-discounting-contract .header-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+body.template-debt-discounting-contract .header-subtitle {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+body.template-debt-discounting-contract .contract-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 12px 0;
+  border: 1px solid #000;
+  padding: 8px;
+}
+
+body.template-debt-discounting-contract .contract-info-item {
+  padding: 3px 6px;
+}
+
+body.template-debt-discounting-contract .article {
+  margin-top: 14px;
+  page-break-inside: auto;
+}
+
+body.template-debt-discounting-contract .article-title {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+body.template-debt-discounting-contract .article-content {
+  text-align: justify;
+}
+
+body.template-debt-discounting-contract .article-content p {
+  margin: 5px 0;
+  text-align: justify;
+}
+
+body.template-debt-discounting-contract .subsection {
+  margin-right: 15px;
+  margin-top: 5px;
+}
+
+body.template-debt-discounting-contract .bold {
+  font-weight: bold;
+}
+
+body.template-debt-discounting-contract .underline {
+  text-decoration: underline;
+}
+
+body.template-debt-discounting-contract .center {
+  text-align: center;
+}
+
+body.template-debt-discounting-contract .left {
+  text-align: left;
+}
+
+body.template-debt-discounting-contract table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  page-break-inside: auto;
+}
+
+body.template-debt-discounting-contract th,
+body.template-debt-discounting-contract td {
+  border: 1px solid #000;
+  padding: 5px 6px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+body.template-debt-discounting-contract th {
+  font-weight: bold;
+}
+
+body.template-debt-discounting-contract .documents-table {
+  font-size: 10px;
+}
+
+body.template-debt-discounting-contract .documents-table th,
+body.template-debt-discounting-contract .documents-table td {
+  padding: 4px;
+}
+
+body.template-debt-discounting-contract .total-row {
+  font-weight: bold;
+}
+
+body.template-debt-discounting-contract .signature-section {
+  margin-top: 25px;
+  page-break-inside: avoid;
+}
+
+body.template-debt-discounting-contract .signature-title {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+body.template-debt-discounting-contract .signature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+body.template-debt-discounting-contract .signature-box {
+  border: 1px solid #000;
+  min-height: 110px;
+  padding: 8px;
+  text-align: center;
+}
+
+body.template-debt-discounting-contract .signature-space {
+  height: 55px;
+}
+
+body.template-debt-discounting-contract .footer {
+  margin-top: 25px;
+  padding-top: 8px;
+  border-top: 1px solid #000;
+  text-align: center;
+  font-size: 9px;
+}
+
+body.template-debt-discounting-contract .page-break {
+  page-break-before: always;
+}
+
+body.template-debt-discounting-contract .no-break {
+  page-break-inside: avoid;
+}
+
+body.template-debt-discounting-contract .formula {
+  border: 1px solid #000;
+  padding: 10px;
+  margin: 10px 0;
+  text-align: center;
+  font-weight: bold;
+}
+
+body.template-debt-discounting-contract .field {
+  display: inline-block;
+  min-width: 80px;
+}
+
+@media print {
+
+  body.template-debt-discounting-contract,
+  body.template-debt-discounting-contract {
+    background: #fff;
+  }
+
+  body.template-debt-discounting-contract .document {
+    width: 100%;
+    max-width: none;
+  }
+
+  body.template-debt-discounting-contract .no-print {
+    display: none !important;
+  }
+
+  body.template-debt-discounting-contract .signature-section {
+    page-break-inside: avoid;
+  }
+
+  body.template-debt-discounting-contract table {
+    page-break-inside: auto;
+  }
+
+  body.template-debt-discounting-contract tr {
+    page-break-inside: avoid;
+  }
+
+  body.template-debt-discounting-contract .article {
+    page-break-inside: auto;
+  }
+
+}
+
+
+/* ===== morabaha/contract.html ===== */
+
+
+body.template-morabaha-contract,
+body.template-morabaha-contract {
+  direction: rtl;
+  text-align: right;
+  position: relative;
+  font-family: "Vazirmatn", Tahoma, Arial, sans-serif;
+}
+
+
+body.template-morabaha-contract table {
+  direction: rtl;
+}
+
+body.template-morabaha-contract .text-center {
+  text-align: center;
+}
+
+body.template-morabaha-contract .text-right {
+  text-align: right;
+}
+
+body.template-morabaha-contract .text-left {
+  text-align: left;
+}
+
+
+
+body.template-morabaha-contract * {
+  box-sizing: border-box;
+}
+
+body.template-morabaha-contract,
+body.template-morabaha-contract {
+  margin: 0;
+  padding: 0;
+  direction: rtl;
+  font-family: "Vazirmatn", Tahoma, Arial, sans-serif;
+  color: #111;
+  background: #fff;
+  font-size: 12px;
+  line-height: 2;
+}
+
+body.template-morabaha-contract {
+  padding-bottom: 25mm;
+}
+
+body.template-morabaha-contract .document {
+  width: 100%;
+  max-width: 210mm;
+  margin: 0 auto;
+}
+
+body.template-morabaha-contract .header {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+body.template-morabaha-contract .bismillah {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+body.template-morabaha-contract .meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+body.template-morabaha-contract h1 {
+  text-align: center;
+  font-size: 18px;
+  margin: 5px 0 12px;
+}
+
+body.template-morabaha-contract h2 {
+  font-size: 13px;
+  margin: 12px 0 4px;
+}
+
+body.template-morabaha-contract p {
+  margin: 4px 0;
+  text-align: justify;
+}
+
+body.template-morabaha-contract .signature-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 25mm;
+  background: #fff;
+  border-top: 1px solid #222;
+  padding: 3mm 8mm 2mm;
+  z-index: 1000;
+}
+
+body.template-morabaha-contract .signature-footer table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+body.template-morabaha-contract .signature-footer td {
+  width: 33.333%;
+  border: 0;
+  text-align: center;
+  vertical-align: top;
+  padding: 0 4px;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+body.template-morabaha-contract .signature-title {
+  font-weight: 700;
+  display: block;
+}
+
+body.template-morabaha-contract .signature-line {
+  display: block;
+  height: 12mm;
+  border-bottom: 1px dotted #555;
+  margin: 1mm 8mm 0;
+}
+
+body.template-morabaha-contract .signature-note {
+  font-size: 8.5px;
+}
+
+body.template-morabaha-contract .page-break {
+  break-before: page;
+  page-break-before: always;
+}
+
+body.template-morabaha-contract .keep {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+body.template-morabaha-contract .loan-box {
+  border: 1px solid #555;
+  padding: 5px 8px;
+  margin: 8px 0;
+}
+
+body.template-morabaha-contract .field {
+  border-bottom: 1px dotted #777;
+  padding: 0 4px;
+}
+
+body.template-morabaha-contract .check {
+  white-space: nowrap;
+}
+
+body.template-morabaha-contract .small {
+  font-size: 10px;
+}
+
+@media screen {
+
+  body.template-morabaha-contract {
+    background: #eee;
+    padding: 15px 15px 45mm;
+    position: relative;
+    display:inline-block;
+    width: 100%;
+  }
+
+  body.template-morabaha-contract .document {
+    background: #fff;
+    padding: 12mm;
+    box-shadow: 0 0 8px rgba(0, 0, 0, .12);
+  }
+
+  body.template-morabaha-contract .signature-footer {
+    position: absolute;
+    bottom: 0;
+    left: 15px;
+    right: 15px;
+  }
+
+}
+
+@media print {
+
+  body.template-morabaha-contract .signature-footer {
+    position: absolute;
+    bottom: 0;
+  }
+
+}
+
+
+/* ===== morabaha/request.html ===== */
+
+
+/* =========================================================
+   MULTI-PAGE A4
+   ========================================================= */
+
+body.template-morabaha-request .page {
+  width: 190mm;
+  min-height: 277mm;
+  margin: 0 auto;
+  padding: 7mm;
+  position: relative;
+  background: #fff;
+}
+
+body.template-morabaha-request .page-2 {
+  page-break-before: always;
+  break-before: page;
+}
+
+body.template-morabaha-request .inner-border {
+  min-height: 261mm;
+  border: 1px solid #777;
+  padding: 5mm 6mm;
+}
+
+
+/* =========================================================
+   PAGE 2 HEADER
+   ========================================================= */
+
+body.template-morabaha-request .page-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: start;
+  min-height: 17mm;
+  margin-bottom: 3mm;
+  font-size: 9px;
+}
+
+body.template-morabaha-request .page-header-right {
+  text-align: right;
+}
+
+body.template-morabaha-request .page-header-center {
+  text-align: center;
+  padding-top: 1mm;
+}
+
+body.template-morabaha-request .page-header-left {
+  text-align: left;
+}
+
+body.template-morabaha-request .page-header-right>div,
+body.template-morabaha-request .page-header-left>div {
+  margin-bottom: 2mm;
+}
+
+body.template-morabaha-request .header-line {
+  display: inline-block;
+  min-width: 25mm;
+  border-bottom: 1px dotted #555;
+  padding: 0 2mm;
+}
+
+
+/* =========================================================
+   SECTION
+   ========================================================= */
+
+body.template-morabaha-request .section {
+  margin-top: 3mm;
+}
+
+body.template-morabaha-request .section-title {
+  font-weight: bold;
+  margin-bottom: 2mm;
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   FINANCIAL ROWS
+   ========================================================= */
+
+body.template-morabaha-request .financial-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 3mm;
+  min-height: 8mm;
+  font-size: 9px;
+  text-align: right;
+}
+
+body.template-morabaha-request .financial-text {
+  flex: 1;
+}
+
+body.template-morabaha-request .financial-value {
+  min-width: 35mm;
+  text-align: center;
+  border-bottom: 1px dotted #555;
+  min-height: 5mm;
+}
+
+body.template-morabaha-request .financial-total {
+  font-weight: bold;
+}
+
+body.template-morabaha-request .deduction-title {
+  margin-top: 2mm;
+  margin-bottom: 1mm;
+  font-weight: bold;
+}
+
+
+/* =========================================================
+   PROPERTY TABLE
+   ========================================================= */
+
+body.template-morabaha-request .property-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 3mm;
+  table-layout: fixed;
+  font-size: 8px;
+}
+
+body.template-morabaha-request .property-table th,
+body.template-morabaha-request .property-table td {
+  border: 1px solid #000;
+  padding: 2mm 1mm;
+  text-align: center;
+  vertical-align: middle;
+  height: 10mm;
+}
+
+body.template-morabaha-request .property-table th {
+  font-weight: bold;
+  background: #fafafa;
+}
+
+body.template-morabaha-request .property-table th:nth-child(1) {
+  width: 8%;
+}
+
+body.template-morabaha-request .property-table th:nth-child(2) {
+  width: 18%;
+}
+
+body.template-morabaha-request .property-table th:nth-child(3) {
+  width: 13%;
+}
+
+body.template-morabaha-request .property-table th:nth-child(4) {
+  width: 12%;
+}
+
+body.template-morabaha-request .property-table th:nth-child(5) {
+  width: 19%;
+}
+
+body.template-morabaha-request .property-table th:nth-child(6) {
+  width: 30%;
+}
+
+
+/* =========================================================
+   APPLICANT SIGNATURE
+   ========================================================= */
+
+body.template-morabaha-request .applicant-signature {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 5mm;
+  font-size: 9px;
+}
+
+body.template-morabaha-request .signature-space {
+  width: 45mm;
+  height: 18mm;
+  text-align: center;
+  padding-top: 2mm;
+}
+
+
+/* =========================================================
+   ATTACHMENTS
+   ========================================================= */
+
+body.template-morabaha-request .attachments {
+  margin-top: 3mm;
+}
+
+body.template-morabaha-request .small-text {
+  font-size: 7px;
+  font-weight: normal;
+}
+
+body.template-morabaha-request .attachment-list {
+  margin: 1mm 0 0;
+  padding-right: 7mm;
+  padding-left: 0;
+  font-size: 7.5px;
+  line-height: 1.65;
+}
+
+body.template-morabaha-request .attachment-list li {
+  padding-right: 1mm;
+}
+
+
+/* =========================================================
+   BRANCH APPROVAL
+   ========================================================= */
+
+body.template-morabaha-request .branch-approval {
+  border: 1px solid #000;
+  padding: 3mm;
+  margin-top: 4mm;
+  font-size: 8px;
+}
+
+body.template-morabaha-request .branch-title {
+  font-weight: bold;
+  margin-bottom: 2mm;
+}
+
+body.template-morabaha-request .branch-text {
+  text-align: justify;
+  line-height: 2;
+  margin: 1mm 0;
+}
+
+body.template-morabaha-request .inline-value {
+  display: inline-block;
+  min-width: 25mm;
+  border-bottom: 1px dotted #555;
+  padding: 0 2mm;
+  text-align: center;
+}
+
+body.template-morabaha-request .inline-value.wide {
+  min-width: 45mm;
+}
+
+
+/* =========================================================
+   APPROVAL SIGNATURES
+   ========================================================= */
+
+body.template-morabaha-request .approval-signatures {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2mm;
+  margin-top: 5mm;
+}
+
+body.template-morabaha-request .approval-cell {
+  text-align: center;
+  min-height: 18mm;
+}
+
+body.template-morabaha-request .signature-line {
+  margin-top: 8mm;
+  border-bottom: 1px dotted #555;
+  min-height: 5mm;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+body.template-morabaha-request .page-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4mm;
+  padding-top: 2mm;
+  border-top: 1px solid #777;
+  font-size: 7px;
+}
+
+
+/* =========================================================
+   PRINT
+   ========================================================= */
+
+@media print {
+
+
+  body.template-morabaha-request {
+    margin: 0;
+    background: #fff;
+  }
+
+  body.template-morabaha-request .page {
+    width: 190mm;
+    min-height: 277mm;
+    margin: 0;
+    padding: 7mm;
+    page-break-after: always;
+    break-after: page;
+  }
+
+  body.template-morabaha-request .page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+
+}
+/* Loan-type selection used by the existing Morabaha request template. */
+.checkbox-box {
+  display: inline-flex;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #111;
+  vertical-align: middle;
+  align-items: center;
+  justify-content: center;
+}
+.checkbox-box.checked::after {
+  content: "✓";
+  font-size: 11px;
+  line-height: 1;
+  font-weight: bold;
+}
+
+
+/* Date shown at the top of every generated contract/form */
+.document-date-top {
+  direction: rtl;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  font-family: inherit;
+  font-size: 10pt;
+  line-height: 1.5;
+  margin: 0 0 8px;
+  padding: 0 0 4px;
+  color: #222;
+}
+.document-date-top strong {
+  font-weight: 700;
+}
+@media print {
+  .document-date-top {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+}

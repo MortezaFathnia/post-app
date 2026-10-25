@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>قرارداد مراجعه صدور کارت اعتباری</title>
+
+    </head>
+
+<body class="template-credit-card-contract">
+  <div class="document-date-top"><strong>تاریخ:</strong> {{documentDate}}</div>
+
+
+    <div class="page">
+
+        <div class="center">
+            <div>بسمه تعالی</div>
+            <h2>پست بانک ایران</h2>
+            <h1>قرارداد مراجعه صدور کارت اعتباری</h1>
+        </div>
+
+        <div class="top-info">
+
+            <div>
+                تاریخ: <span class="line w150">{{date}}</span><br>
+                شماره تسهیلات: <span class="line w150">{{loanNumber}}</span>
+            </div>
+
+            <div class="photo">
+                محل الصاق<br>۴×۳<br>تصویر
+            </div>
+
+        </div>
+
+        <h2>ماده ۱- طرفین قرارداد</h2>
+
+        <p>
+            این قرارداد بر اساس قانون عملیات بانکی بدون ربا و دستورالعمل‌های بانک مرکزی جمهوری اسلامی ایران بین طرفین
+            زیر منعقد می‌شود.
+        </p>
+
+        <h2>الف- بانک</h2>
+
+        <p>
+            پست بانک ایران با شناسه ملی
+            <span class="line w220">{{bankNationalId}}</span>
+            به نمایندگی
+            <span class="line w220">{{bankRepresentative}}</span>
+            که از این پس «بانک» نامیده می‌شود.
+        </p>
+
+        <h2>ب- متقاضی</h2>
+
+        <div class="row">
+            <div class="col">نام و نام خانوادگی: <span class="line">{{fullName}}</span></div>
+            <div class="col">فرزند: <span class="line w80">{{fatherName}}</span></div>
+        </div>
+
+        <div class="row">
+            <div class="col">تاریخ تولد: <span class="line">{{birthDate}}</span></div>
+            <div class="col">شماره شناسنامه: <span class="line">{{birthCertificate}}</span></div>
+        </div>
+
+        <div class="row">
+            <div class="col">محل صدور: <span class="line">{{birthPlace}}</span></div>
+            <div class="col">شماره ملی: <span class="line">{{nationalCode}}</span></div>
+        </div>
+
+        <div class="row">
+            <div class="col">کد اقتصادی: <span class="line">{{economicCode}}</span></div>
+            <div class="col">کد پستی: <span class="line">{{postalCode}}</span></div>
+        </div>
+
+        <div class="row">
+            <div class="col">نشانی: <span class="line w320">{{address}}</span></div>
+        </div>
+
+        <div class="row">
+            <div class="col">تلفن ثابت: <span class="line">{{phone}}</span></div>
+            <div class="col">تلفن همراه: <span class="line">{{mobile}}</span></div>
+        </div>
+
+        <div class="row">
+            <div class="col">پست الکترونیک: <span class="line w220">{{email}}</span></div>
+        </div>
+
+        <p>که از این پس در این قرارداد «متقاضی» نامیده می‌شود.</p>
+
+        <h2>ج- ضامن اول</h2>
+
+        <div class="row">
+            <div class="col">نام و نام خانوادگی: <span class="line">{{guarantor1Name}}</span></div>
+            <div class="col">شماره ملی: <span class="line">{{guarantor1NationalCode}}</span></div>
+        </div>
+
+        <div class="row">
+            <div class="col">نشانی: <span class="line w320">{{guarantor1Address}}</span></div>
+        </div>
+
+        <div class="row">
+            <div class="col">تلفن همراه: <span class="line">{{guarantor1Mobile}}</span></div>
+            <div class="col">پست الکترونیک: <span class="line">{{guarantor1Email}}</span></div>
+        </div>
+
+        <h2>ضامن دوم</h2>
+
+        <div class="row">
+            <div class="col">نام و نام خانوادگی: <span class="line">{{guarantor2Name}}</span></div>
+            <div class="col">شماره ملی: <span class="line">{{guarantor2NationalCode}}</span></div>
+        </div>
+
+        <div class="row">
+            <div class="col">نشانی: <span class="line w320">{{guarantor2Address}}</span></div>
+        </div>
+
+        <div class="row">
+            <div class="col">تلفن همراه: <span class="line">{{guarantor2Mobile}}</span></div>
+            <div class="col">پست الکترونیک: <span class="line">{{guarantor2Email}}</span></div>
+        </div>
+
+        <p class="small">
+            نشانی، شماره تلفن و پست الکترونیکی اعلام‌شده توسط متقاضی و ضامنین جهت کلیه مکاتبات و ابلاغ‌های بانک معتبر
+            خواهد بود.
+        </p>
+
+        <table class="sign">
+            <tr>
+                <td>محل امضاء و مهر بانک</td>
+                <td>محل امضاء متقاضی</td>
+                <td>محل امضاء ضامن / وثیقه‌گذاران</td>
+            </tr>
+        </table>
+
+    </div>
+
+
+    <div class="page">
+
+        <div class="page-number">صفحه ۲</div>
+
+        <div class="article">
+            <p>
+                مشتری با ارائه مدارک و امضای این قرارداد، درخواست استفاده از تسهیلات کارت اعتباری را ارائه نموده و متعهد
+                می‌گردد از کارت صرفاً مطابق ضوابط بانک استفاده نماید. استفاده از کارت به منزله پذیرش تمامی شرایط این
+                قرارداد بوده و مسئولیت حفظ کارت، رمز عبور و اطلاعات محرمانه بر عهده مشتری است.
+            </p>
+        </div>
+
+        <div class="article">
+
+            <h3>ماده ۳- سقف اعتبار کارت اعتباری</h3>
+
+            <p>
+                سقف اعتبار کارت اعتباری معادل مبلغ
+                <span class="field">{{creditLimit}}</span>
+                ریال
+                (به حروف
+                <span class="field">{{creditLimitWords}}</span>)
+                تعیین می‌گردد.
+            </p>
+
+            <p>
+                بانک می‌تواند با رعایت مقررات، نسبت به اصلاح یا بازنگری سقف اعتبار اقدام نماید.
+            </p>
+
+            <p>
+                تبصره ۱- مشتری موظف است از اعتبار تخصیص‌یافته صرفاً در چهارچوب مقررات بانک استفاده نموده و از هرگونه
+                استفاده مغایر با قوانین خودداری نماید.
+            </p>
+
+            <p>
+                تبصره ۲- در صورت تأخیر در پرداخت بدهی، جرائم و هزینه‌های قانونی مطابق مقررات بانک اعمال خواهد شد.
+            </p>
+
+        </div>
+
+        <div class="article">
+
+            <h3>ماده ۴- مدت قرارداد و مدت اعتبار کارت اعتباری</h3>
+
+            <p>
+                اعتبار این قرارداد از تاریخ
+                <span class="field">{{issueDate}}</span>
+                آغاز شده و تا پایان مدت اعتبار مندرج بر روی کارت معتبر خواهد بود.
+            </p>
+
+            <p>
+                بانک در صورت رعایت تعهدات مشتری می‌تواند نسبت به تمدید کارت اقدام نماید.
+            </p>
+
+            <p>
+                مدت اعتبار کارت
+                <span class="field">{{cardValidityDays}}</span>
+                روز از تاریخ صدور خواهد بود.
+            </p>
+
+            <p>
+                تاریخ انقضای کارت:
+                <span class="field">{{expiryDate}}</span>
+            </p>
+
+        </div>
+
+        <div class="article">
+
+            <h3>ماده ۵- نرخ سود و نحوه محاسبه</h3>
+
+            <p>
+                نرخ سود تسهیلات اعطایی معادل
+                <span class="field">{{interestRate}}</span>
+                درصد سالانه بوده و مطابق مقررات بانک محاسبه می‌گردد.
+            </p>
+
+            <p>
+                در صورت تسویه زودتر از موعد، محاسبات مطابق ضوابط بانک انجام خواهد شد.
+            </p>
+
+        </div>
+
+        <div class="article">
+
+            <h3>ماده ۶- مدت بازپرداخت تسهیلات</h3>
+
+            <p>
+                مدت بازپرداخت تسهیلات حداکثر
+                <span class="field">{{repaymentMonths}}</span>
+                ماه از تاریخ صدور خواهد بود.
+            </p>
+
+        </div>
+
+        <div class="article">
+
+            <h3>ماده ۷- نحوه دسترسی مشتری به صورت‌حساب</h3>
+
+            <p>
+                صورت‌حساب مشتری به صورت ماهانه صادر شده و از طریق سامانه‌های بانک در اختیار وی قرار می‌گیرد.
+            </p>
+
+            <p>
+                اطلاعاتی از قبیل سقف اعتبار، مبلغ استفاده‌شده، مانده بدهی، سود، جرائم و مبلغ قابل پرداخت در صورت‌حساب
+                درج خواهد شد.
+            </p>
+
+        </div>
+
+        <div class="article">
+
+            <h3>ماده ۸- نحوه پرداخت صورت‌حساب</h3>
+
+            <p>
+                مشتری موظف است مبلغ مندرج در صورت‌حساب را از طریق شعب بانک، درگاه‌های الکترونیکی یا سایر روش‌های اعلامی
+                بانک پرداخت نماید.
+            </p>
+
+        </div>
+
+        <div class="article">
+
+            <h3>ماده ۹- کارمزد صدور و ابطال سالانه کارت اعتباری</h3>
+
+            <p>
+                کارمزد صدور و ابطال سالانه کارت اعتباری مطابق دستورالعمل‌های بانک دریافت خواهد شد.
+            </p>
+
+        </div>
+
+        <table class="signature">
+            <tr>
+                <td>محل امضاء و مهر بانک</td>
+                <td>محل امضاء / مهر مشتری</td>
+                <td>محل امضاء ضامن / وثیقه‌گذار</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+
+    </div>
+</body>
+
+</html>

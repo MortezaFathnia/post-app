@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>قرارداد خرید دین - پست بانک ایران</title>
+
+  </head>
+
+<body class="template-debt-discounting-contract">
+  <div class="document-date-top"><strong>تاریخ:</strong> {{documentDate}}</div>
+
+
+<div class="document">
+
+  <!-- ================= HEADER ================= -->
+
+  <header class="header">
+    <div class="header-title">
+      بسمه تعالی
+    </div>
+
+    <div class="header-subtitle">
+      پست بانک ایران
+    </div>
+
+    <div class="header-subtitle">
+      قرارداد خرید دین
+    </div>
+  </header>
+
+  <!-- ================= CONTRACT INFO ================= -->
+
+  <div class="contract-info">
+    <div class="contract-info-item">
+      <strong>شماره قرارداد:</strong>
+      {{contractNumber}}
+    </div>
+
+    <div class="contract-info-item">
+      <strong>تاریخ قرارداد:</strong>
+      {{contractDate}}
+    </div>
+
+    <div class="contract-info-item">
+      <strong>شعبه:</strong>
+      {{branchName}}
+    </div>
+
+    <div class="contract-info-item">
+      <strong>کد شعبه:</strong>
+      {{branchCode}}
+    </div>
+  </div>
+
+  <!-- ================= INTRODUCTION ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      مقدمه
+    </div>
+
+    <div class="article-content">
+      <p>
+        این قرارداد با توجه به ضوابط و مقررات جاری پست بانک ایران و در چارچوب
+        مقررات مربوط به خرید دین، بین طرفین زیر منعقد گردید و طرفین با امضای
+        آن، کلیه مفاد و شرایط قرارداد را پذیرفتند.
+      </p>
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 1 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۱- طرفین قرارداد
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        این قرارداد فی‌مابین اشخاص زیر منعقد می‌گردد:
+      </p>
+
+      <p>
+        <span class="bold">الف- پست بانک ایران</span>
+        شعبه
+        <strong>{{branchName}}</strong>
+        کد شعبه
+        <strong>{{branchCode}}</strong>
+        به نشانی
+        <strong>{{branchAddress}}</strong>
+        با نمایندگی آقای/خانم
+        <strong>{{bankRepresentative}}</strong>
+        که از این پس در این قرارداد «بانک» نامیده می‌شود.
+      </p>
+
+      <p>
+        <span class="bold">ب- فروشنده / انتقال‌دهنده اسناد</span>
+      </p>
+
+      <p>
+        نام و نام خانوادگی / نام شرکت:
+        <strong>{{applicantName}}</strong>
+      </p>
+
+      <p>
+        نام پدر:
+        <strong>{{fatherName}}</strong>
+        &nbsp;&nbsp;
+        تاریخ تولد:
+        <strong>{{birthDate}}</strong>
+        &nbsp;&nbsp;
+        شماره شناسنامه:
+        <strong>{{birthCertificateNumber}}</strong>
+      </p>
+
+      <p>
+        محل تولد:
+        <strong>{{birthPlace}}</strong>
+        &nbsp;&nbsp;
+        سریال شناسنامه:
+        <strong>{{birthCertificateSerial}}</strong>
+      </p>
+
+      <p>
+        کد ملی:
+        <strong>{{nationalCode}}</strong>
+        &nbsp;&nbsp;
+        شماره اقتصادی:
+        <strong>{{companyEconomicCode}}</strong>
+      </p>
+
+      <p>
+        نشانی:
+        <strong>{{address}}</strong>
+      </p>
+
+      <p>
+        کد پستی:
+        <strong>{{postalCode}}</strong>
+        &nbsp;&nbsp;
+        تلفن:
+        <strong>{{landline}}</strong>
+        &nbsp;&nbsp;
+        تلفن همراه:
+        <strong>{{mobile}}</strong>
+      </p>
+
+      <p>
+        پست الکترونیکی:
+        <strong>{{email}}</strong>
+      </p>
+
+      <p>
+        که از این پس در این قرارداد «فروشنده» نامیده می‌شود.
+      </p>
+
+      <p>
+        <span class="bold">ج- ضامنین</span>
+      </p>
+
+      <p>
+        ضامن اول:
+        <strong>{{guarantor1Name}}</strong>
+        فرزند:
+        <strong>{{guarantor1FatherName}}</strong>
+        کد ملی:
+        <strong>{{guarantor1NationalCode}}</strong>
+      </p>
+
+      <p>
+        نشانی:
+        <strong>{{guarantor1Address}}</strong>
+        کد پستی:
+        <strong>{{guarantor1PostalCode}}</strong>
+        تلفن:
+        <strong>{{guarantor1Landline}}</strong>
+        همراه:
+        <strong>{{guarantor1Mobile}}</strong>
+      </p>
+
+      <p>
+        ضامن دوم:
+        <strong>{{guarantor2Name}}</strong>
+        فرزند:
+        <strong>{{guarantor2FatherName}}</strong>
+        کد ملی:
+        <strong>{{guarantor2NationalCode}}</strong>
+      </p>
+
+      <p>
+        نشانی:
+        <strong>{{guarantor2Address}}</strong>
+        کد پستی:
+        <strong>{{guarantor2PostalCode}}</strong>
+        تلفن:
+        <strong>{{guarantor2Landline}}</strong>
+        همراه:
+        <strong>{{guarantor2Mobile}}</strong>
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 2 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۲- موضوع قرارداد
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        موضوع قرارداد عبارت است از خرید دین و مطالبات مدت‌دار ناشی از اسناد
+        تجاری واجد شرایط از فروشنده توسط بانک، مطابق شرایط و ضوابط مقرر در
+        این قرارداد.
+      </p>
+
+      <p>
+        اسناد تجاری موضوع قرارداد به شرح جدول زیر می‌باشد:
+      </p>
+
+      <table class="documents-table">
+        <thead>
+          <tr>
+            <th>ردیف</th>
+            <th>نوع سند</th>
+            <th>تاریخ سررسید</th>
+            <th>شماره / سریال</th>
+            <th>مبلغ اسمی</th>
+            <th>مبلغ پرداختی</th>
+            <th>متعهد / بدهکار</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td>۱</td>
+            <td>{{debtDocumentType1}}</td>
+            <td>{{debtDocumentDueDate1}}</td>
+            <td>{{debtDocumentSerial1}}</td>
+            <td>{{debtDocumentNominalAmount1}}</td>
+            <td>{{debtDocumentPaidAmount1}}</td>
+            <td>{{debtDocumentObligor1}}</td>
+          </tr>
+
+          <tr>
+            <td>۲</td>
+            <td>{{debtDocumentType2}}</td>
+            <td>{{debtDocumentDueDate2}}</td>
+            <td>{{debtDocumentSerial2}}</td>
+            <td>{{debtDocumentNominalAmount2}}</td>
+            <td>{{debtDocumentPaidAmount2}}</td>
+            <td>{{debtDocumentObligor2}}</td>
+          </tr>
+
+          <tr>
+            <td>۳</td>
+            <td>{{debtDocumentType3}}</td>
+            <td>{{debtDocumentDueDate3}}</td>
+            <td>{{debtDocumentSerial3}}</td>
+            <td>{{debtDocumentNominalAmount3}}</td>
+            <td>{{debtDocumentPaidAmount3}}</td>
+            <td>{{debtDocumentObligor3}}</td>
+          </tr>
+
+          <tr class="total-row">
+            <td colspan="4">جمع</td>
+            <td>{{debtDocumentTotalNominalAmount}}</td>
+            <td>{{debtDocumentTotalPaidAmount}}</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 3 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۳- مبلغ قرارداد
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        مبلغ اسمی مطالبات و اسناد تجاری موضوع این قرارداد:
+        <strong>{{debtDocumentTotalNominalAmount}}</strong>
+        ریال می‌باشد.
+      </p>
+
+      <p>
+        مبلغ خرید دین توسط بانک:
+        <strong>{{purchasePrice}}</strong>
+        ریال،
+        معادل:
+        <strong>{{purchasePriceWords}}</strong>
+        ریال می‌باشد.
+      </p>
+
+      <p>
+        مبلغ مزبور پس از کسر سود و سایر کسورات قانونی و قراردادی، مطابق مفاد
+        این قرارداد به فروشنده پرداخت خواهد شد.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 4 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۴- مدت قرارداد
+    </div>
+
+    <div class="article-content">
+      <p>
+        مدت قرارداد از تاریخ انعقاد قرارداد آغاز و تا تسویه کامل تعهدات
+        فروشنده در برابر بانک ادامه خواهد داشت.
+      </p>
+
+      <p>
+        تاریخ شروع:
+        <strong>{{contractDate}}</strong>
+        &nbsp;&nbsp;
+        مدت:
+        <strong>{{contractDuration}}</strong>
+      </p>
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 5 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۵- نحوه پرداخت
+    </div>
+
+    <div class="article-content">
+      <p>
+        بانک پس از احراز اصالت، اعتبار و قابلیت وصول اسناد موضوع قرارداد و
+        انجام تشریفات قانونی و بانکی، مبلغ خرید دین را طبق مفاد این قرارداد
+        پرداخت خواهد نمود.
+      </p>
+
+      <p>
+        مبلغ قابل پرداخت:
+        <strong>{{payableAmount}}</strong>
+        ریال.
+      </p>
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 6 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۶- تعهدات فروشنده
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        ۱- فروشنده متعهد است اصالت اسناد و مطالبات موضوع قرارداد را تضمین نماید.
+      </p>
+
+      <p>
+        ۲- فروشنده متعهد است کلیه اطلاعات و مدارک مربوط به اسناد تجاری را
+        صحیح و کامل در اختیار بانک قرار دهد.
+      </p>
+
+      <p>
+        ۳- فروشنده مسئول پاسخگویی در خصوص هرگونه ادعای اشخاص ثالث نسبت به
+        اسناد و مطالبات موضوع قرارداد می‌باشد.
+      </p>
+
+      <p>
+        ۴- فروشنده متعهد است در صورت مطالبه بانک، کلیه اسناد و مدارک لازم را
+        ارائه نماید.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 7 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۷- تعهدات بانک
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        بانک متعهد است پس از تکمیل مدارک و انجام بررسی‌های لازم، مبلغ مورد
+        توافق را مطابق مقررات و مفاد این قرارداد پرداخت نماید.
+      </p>
+
+      <p>
+        بانک مجاز است در صورت عدم احراز شرایط قانونی، اعتبار اسناد یا صحت
+        اطلاعات ارائه‌شده، از انجام معامله خودداری نماید.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 8 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۸- نرخ سود و هزینه‌ها
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        نرخ سود مورد توافق:
+        <strong>{{debtProfitRate}}</strong>
+        درصد می‌باشد.
+      </p>
+
+      <p>
+        کلیه هزینه‌ها، کارمزدها، مالیات‌ها و کسورات قانونی مطابق مقررات
+        جاری بانک محاسبه و از محل مبالغ قابل پرداخت کسر خواهد شد.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 9 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۹- تضمینات
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        به منظور تضمین انجام تعهدات، تضمینات زیر در اختیار بانک قرار گرفته است:
+      </p>
+
+      <p>
+        نوع تضمین:
+        <strong>{{collateralType}}</strong>
+      </p>
+
+      <p>
+        شرح تضمین:
+        <strong>{{collateralDescription}}</strong>
+      </p>
+
+      <p>
+        ارزش تضمین:
+        <strong>{{collateralValue}}</strong>
+        ریال.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 10 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۱۰- مسئولیت ضامنین
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        ضامنین با امضای این قرارداد، پرداخت و ایفای کلیه تعهدات فروشنده
+        در قبال بانک را طبق مفاد قرارداد و قوانین و مقررات مربوط تضمین
+        می‌نمایند.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 11 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۱۱- سررسید اسناد
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        فروشنده موظف است کلیه اطلاعات مربوط به تاریخ سررسید اسناد را به
+        صورت صحیح در اختیار بانک قرار دهد.
+      </p>
+
+      <p>
+        سررسید اسناد مطابق اطلاعات مندرج در جدول ماده ۲ این قرارداد خواهد بود.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 12 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۱۲- عدم پرداخت اسناد
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        در صورت عدم پرداخت هر یک از اسناد در سررسید، فروشنده و ضامنین موظف
+        به ایفای تعهدات خود در برابر بانک خواهند بود.
+      </p>
+
+      <p>
+        بانک حق خواهد داشت مطالبات خود را از محل تضمینات و سایر طرق قانونی
+        وصول نماید.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 13 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۱۳- وجه التزام تأخیر
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        در صورت تأخیر در ایفای تعهدات، وجه التزام تأخیر مطابق مقررات جاری
+        بانک و مفاد قرارداد محاسبه خواهد شد.
+      </p>
+
+      <p>
+        نرخ وجه التزام:
+        <strong>{{latePaymentRate}}</strong>
+        درصد.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 14 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۱۴- اقرار و تضمین فروشنده
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        فروشنده اقرار می‌نماید که اسناد موضوع قرارداد متعلق به وی بوده و
+        انتقال آنها به بانک با منع قانونی مواجه نمی‌باشد.
+      </p>
+
+      <p>
+        فروشنده همچنین صحت کلیه اطلاعات و مدارک ارائه‌شده به بانک را
+        تضمین می‌نماید.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 15 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۱۵- ممنوعیت انتقال
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        فروشنده پس از انتقال اسناد و مطالبات به بانک، حق انتقال مجدد یا
+        ایجاد هرگونه حق برای اشخاص ثالث نسبت به آنها را نخواهد داشت.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 16 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۱۶- فسخ قرارداد
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        در صورت تخلف فروشنده از مفاد قرارداد یا کشف عدم اصالت اسناد و مدارک،
+        بانک حق خواهد داشت مطابق قوانین و مقررات نسبت به فسخ قرارداد و
+        مطالبه حقوق خود اقدام نماید.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 17 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۱۷- موارد سکوت قرارداد
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        در مواردی که در این قرارداد پیش‌بینی نشده است، قوانین و مقررات
+        جاری جمهوری اسلامی ایران و ضوابط و مقررات پست بانک ایران ملاک عمل
+        خواهد بود.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 18 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۱۸- اقامتگاه قانونی
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        نشانی مندرج در این قرارداد، اقامتگاه قانونی طرفین محسوب می‌شود و
+        هرگونه تغییر نشانی باید به صورت کتبی به طرف مقابل اعلام گردد.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 19 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۱۹- حل اختلاف
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        اختلافات ناشی از تفسیر یا اجرای این قرارداد، ابتدا از طریق مذاکره
+        و توافق طرفین حل‌وفصل خواهد شد و در صورت عدم حصول توافق، از طریق
+        مراجع صالح قانونی رسیدگی خواهد شد.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 20 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۲۰- تعداد نسخ
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        این قرارداد در
+        <strong>{{copyCount}}</strong>
+        نسخه متحدالمتن تنظیم و پس از امضای طرفین، هر نسخه دارای اعتبار واحد
+        می‌باشد.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 21 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۲۱- اعتبار قرارداد
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        طرفین با امضای این قرارداد اقرار می‌نمایند که مفاد آن را به طور
+        کامل مطالعه و با اطلاع از آثار و تعهدات ناشی از آن، قرارداد را
+        پذیرفته‌اند.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= ARTICLE 22 ================= -->
+
+  <div class="article">
+    <div class="article-title">
+      ماده ۲۲- سایر شرایط
+    </div>
+
+    <div class="article-content">
+
+      <p>
+        کلیه شرایط و تعهدات مندرج در این قرارداد برای طرفین لازم‌الاجرا بوده
+        و امضای ذیل قرارداد به منزله قبول کامل مفاد آن می‌باشد.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ================= SIGNATURES ================= -->
+
+  <div class="signature-section">
+
+    <div class="signature-title">
+      امضاء و اثر انگشت طرفین و ضامنین
+    </div>
+
+    <div class="signature-grid">
+
+      <div class="signature-box">
+        <strong>پست بانک ایران</strong>
+
+        <div>
+          شعبه:
+          {{branchName}}
+        </div>
+
+        <div>
+          نماینده:
+          {{bankRepresentative}}
+        </div>
+
+        <div class="signature-space"></div>
+
+        <div>
+          امضاء و مهر
+        </div>
+      </div>
+
+      <div class="signature-box">
+        <strong>فروشنده</strong>
+
+        <div>
+          {{applicantName}}
+        </div>
+
+        <div class="signature-space"></div>
+
+        <div>
+          امضاء و اثر انگشت
+        </div>
+      </div>
+
+      <div class="signature-box">
+        <strong>ضامن اول</strong>
+
+        <div>
+          {{guarantor1Name}}
+        </div>
+
+        <div class="signature-space"></div>
+
+        <div>
+          امضاء و اثر انگشت
+        </div>
+      </div>
+
+      <div class="signature-box">
+        <strong>ضامن دوم</strong>
+
+        <div>
+          {{guarantor2Name}}
+        </div>
+
+        <div class="signature-space"></div>
+
+        <div>
+          امضاء و اثر انگشت
+        </div>
+      </div>
+
+      <div class="signature-box">
+        <strong>ضامن سوم</strong>
+
+        <div>
+          {{guarantor3Name}}
+        </div>
+
+        <div class="signature-space"></div>
+
+        <div>
+          امضاء و اثر انگشت
+        </div>
+      </div>
+
+      <div class="signature-box">
+        <strong>صاحب / ارائه‌دهنده تضمین</strong>
+
+        <div>
+          {{collateralOwnerName}}
+        </div>
+
+        <div class="signature-space"></div>
+
+        <div>
+          امضاء و اثر انگشت
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= FOOTER ================= -->
+
+  <footer class="footer">
+    <div>
+      پست بانک ایران - قرارداد خرید دین
+    </div>
+
+    <div>
+      شماره قرارداد: {{contractNumber}}
+      &nbsp;&nbsp;&nbsp;
+      تاریخ: {{contractDate}}
+    </div>
+  </footer>
+
+</div>
+
+</body>
+</html>

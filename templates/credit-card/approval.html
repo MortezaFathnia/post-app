@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>فرم شماره (۱) - اطلاعات تسهیلات</title>
+
+  </head>
+
+<body class="template-credit-card-approval">
+  <div class="document-date-top"><strong>تاریخ:</strong> {{documentDate}}</div>
+
+
+<div class="page">
+
+  <!-- =====================================================
+       HEADER
+       ===================================================== -->
+
+  <header class="header">
+
+    <div class="header-code">
+      V030304
+    </div>
+
+    <div class="header-title">
+      فرم شماره (۱)
+    </div>
+
+    <div class="header-subtitle">
+      اطلاعات تسهیلات
+    </div>
+
+  </header>
+
+
+  <!-- =====================================================
+       جدول (1)
+       اطلاعات متقاضی
+       ===================================================== -->
+
+  <div class="section-title">
+    جدول (۱)
+  </div>
+
+  <table class="table-1">
+
+    <thead>
+      <tr>
+        <th>نام متقاضی</th>
+        <th>شخصیت متقاضی</th>
+        <th>نوع مصوبه</th>
+        <th>شعبه</th>
+        <th>مرجع تصویب نهایی</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr>
+
+        <td>
+          {{applicantName}}
+        </td>
+
+        <td>
+          {{customerTypeTitle}}
+        </td>
+
+        <td>
+          {{approvalType}}
+        </td>
+
+        <td>
+          {{branchName}}
+        </td>
+
+        <td>
+          {{finalApprovalAuthority}}
+        </td>
+
+      </tr>
+    </tbody>
+
+  </table>
+
+
+  <!-- =====================================================
+       جدول (2)
+       اطلاعات درخواست
+       ===================================================== -->
+
+  <div class="section-title">
+    جدول (۲)
+  </div>
+
+  <table class="table-2">
+
+    <tbody>
+
+      <tr>
+
+        <th class="label">
+          شماره درخواست
+        </th>
+
+        <td class="value-cell">
+          {{requestNumber}}
+        </td>
+
+        <th class="label">
+          تاریخ درخواست
+        </th>
+
+        <td class="value-cell">
+          {{requestDate}}
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <th class="label">
+          مبلغ درخواست
+        </th>
+
+        <td class="value-cell">
+          {{requestedAmount}}
+        </td>
+
+        <th class="label">
+          شناسه / کد ملی
+        </th>
+
+        <td class="value-cell">
+          {{nationalCode}}
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <th class="label">
+          شماره / کد اقتصادی
+        </th>
+
+        <td class="value-cell">
+          {{economicCode}}
+        </td>
+
+        <td colspan="2">
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <th class="label">
+          نام کارشناس اعتباری /
+          مسئول تهیه گزارش
+        </th>
+
+        <td colspan="3">
+          {{creditExpertName}}
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <th class="label">
+          شماره گزارش
+        </th>
+
+        <td>
+          {{reportNumber}}
+        </td>
+
+        <th class="label">
+          تاریخ گزارش کارشناسی
+        </th>
+
+        <td>
+          {{reportDate}}
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <th class="label">
+          شماره پاسخ حوزه
+        </th>
+
+        <td>
+          {{areaResponseNumber}}
+        </td>
+
+        <th class="label">
+          تاریخ پاسخ حوزه مالیاتی
+        </th>
+
+        <td>
+          {{taxResponseDate}}
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <th class="label">
+          منبع تأمین تسهیلات
+        </th>
+
+        <td colspan="3">
+          {{financingSource}}
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <th class="label">
+          محل مصرف
+        </th>
+
+        <td colspan="3">
+          {{placeOfUse}}
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <th class="label">
+          کد فعالیت SIC
+        </th>
+
+        <td colspan="3">
+          {{sicCode}}
+        </td>
+
+      </tr>
+
+    </tbody>
+
+  </table>
+
+
+  <!-- =====================================================
+       جدول (3)
+       مبلغ و شرایط تسهیلات
+       ===================================================== -->
+
+  <div class="section-title">
+    جدول (۳)
+  </div>
+
+  <table class="table-3">
+
+    <thead>
+      <tr>
+        <th>ردیف</th>
+        <th>شرح</th>
+        <th>حروف</th>
+        <th>مبلغ / توضیحات</th>
+        <th>واحد</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      <tr>
+
+        <td>۱</td>
+
+        <td>
+          مبلغ خرید نقدی
+        </td>
+
+        <td>
+          حروف
+        </td>
+
+        <td>
+          {{purchasePriceWords}}
+        </td>
+
+        <td>
+          {{purchasePrice}}
+          ریال
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <td>۲</td>
+
+        <td>
+          مبلغ تسهیلات مصوب
+        </td>
+
+        <td>
+          حروف
+        </td>
+
+        <td>
+          {{approvedFacilityAmountWords}}
+        </td>
+
+        <td>
+          {{approvedFacilityAmount}}
+          ریال
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <td>۳</td>
+
+        <td>
+          پیش پرداخت مشتری
+        </td>
+
+        <td>
+          حروف
+        </td>
+
+        <td>
+          {{prepaymentWords}}
+        </td>
+
+        <td>
+          {{prepayment}}
+          ریال
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <td>۴</td>
+
+        <td colspan="2">
+          هدف از پرداخت
+        </td>
+
+        <td colspan="2">
+          {{facilityPurpose}}
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <td>۵</td>
+
+        <td colspan="2">
+          نحوه پرداخت تسهیلات
+        </td>
+
+        <td colspan="2">
+          {{paymentMethod}}
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <td>۶</td>
+
+        <td colspan="2">
+          نرخ سود
+        </td>
+
+        <td colspan="2">
+          {{interestRate}}
+          درصد
+        </td>
+
+      </tr>
+
+    </tbody>
+
+  </table>
+
+
+  <!-- =====================================================
+       جدول (4)
+       دوره بازپرداخت
+       ===================================================== -->
+
+  <div class="section-title">
+    جدول (۴)
+  </div>
+
+  <table class="table-4">
+
+    <thead>
+      <tr>
+        <th>
+          مدت تا سررسید قرارداد
+        </th>
+
+        <th>
+          دوره تنفس (برحسب روز)
+        </th>
+
+        <th>
+          تعداد اقساط
+        </th>
+
+        <th>
+          فاصله اقساط
+        </th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      <tr>
+
+        <td>
+          {{contractDuration}}
+        </td>
+
+        <td>
+          {{gracePeriodDays}}
+        </td>
+
+        <td>
+          {{installmentCount}}
+        </td>
+
+        <td>
+          {{installmentInterval}}
+        </td>
+
+      </tr>
+
+    </tbody>
+
+  </table>
+
+
+  <!-- =====================================================
+       جدول (5)
+       وثایق و تضمینات
+       ===================================================== -->
+
+  <div class="section-title">
+    جدول (۵) - وثایق و تضمینات
+  </div>
+
+  <table class="table-5">
+
+    <thead>
+      <tr>
+        <th>ردیف</th>
+        <th>نوع وثیقه / تضمین</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      <tr>
+
+        <td>۱</td>
+
+        <td class="right">
+          {{collateralDescription}}
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <td>۲</td>
+
+        <td class="right">
+          {{collateralDescription2}}
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <td>۳</td>
+
+        <td class="right">
+          {{collateralDescription3}}
+        </td>
+
+      </tr>
+
+    </tbody>
+
+  </table>
+
+
+  <!-- =====================================================
+       جدول (6)
+       شرایط
+       ===================================================== -->
+
+  <div class="section-title">
+    جدول (۶) - شرایط
+  </div>
+
+  <table class="table-6">
+
+    <thead>
+      <tr>
+        <th>ردیف</th>
+        <th>شرایط و توضیحات</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      <tr>
+
+        <td>۱</td>
+
+        <td class="right">
+          {{condition1}}
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <td>۲</td>
+
+        <td class="right">
+          {{condition2}}
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <td>۳</td>
+
+        <td class="right">
+          {{condition3}}
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <td>۴</td>
+
+        <td class="right">
+          {{condition4}}
+        </td>
+
+      </tr>
+
+    </tbody>
+
+  </table>
+
+
+  <!-- =====================================================
+       جدول (7)
+       اعضای کمیته اعتباری
+       ===================================================== -->
+
+  <div class="section-title">
+    جدول (۷) - اعضای کمیته اعتباری
+  </div>
+
+  <table class="committee-table">
+
+    <thead>
+
+      <tr>
+
+        <th>
+          رئیس شعبه
+        </th>
+
+        <th>
+          معاون شعبه
+        </th>
+
+        <th>
+          رئیس دایره اعتبارات /
+          اعضای کمیته اعتباری
+        </th>
+
+        <th>
+          رئیس دایره صندوق
+        </th>
+
+      </tr>
+
+    </thead>
+
+    <tbody>
+
+      <tr>
+
+        <td>
+
+          <div class="value">
+            {{branchManager}}
+          </div>
+
+          <div class="signature-space"></div>
+
+          امضاء
+
+        </td>
+
+        <td>
+
+          <div class="value">
+            {{branchDeputy}}
+          </div>
+
+          <div class="signature-space"></div>
+
+          امضاء
+
+        </td>
+
+        <td>
+
+          <div class="value">
+            {{creditCommitteeMember}}
+          </div>
+
+          <div class="signature-space"></div>
+
+          امضاء
+
+        </td>
+
+        <td>
+
+          <div class="value">
+            {{fundManager}}
+          </div>
+
+          <div class="signature-space"></div>
+
+          امضاء
+
+        </td>
+
+      </tr>
+
+    </tbody>
+
+  </table>
+
+
+  <!-- =====================================================
+       FOOTER
+       ===================================================== -->
+
+  <div class="footer">
+    فرم شماره (۱) - اطلاعات تسهیلات
+  </div>
+
+</div>
+
+</body>
+</html>
