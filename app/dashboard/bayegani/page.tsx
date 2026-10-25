@@ -65,7 +65,7 @@ export default function BayeganiPage() {
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div><h2 className="font-bold">رکوردهای بایگانی</h2><p className="mt-1 text-xs text-slate-500">کل رکوردهای ذخیره‌شده: {total.toLocaleString("fa-IR")} · نمایش حداکثر ۳۰۰ رکورد اخیر</p></div>
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="جستجو شماره تسهیلات، مشتری، کد بایگانی..." className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm sm:max-w-md" />
+        <div className="flex flex-col gap-2 sm:flex-row"><Link href="/dashboard/bayegani/new" className="whitespace-nowrap rounded-xl bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-700">+ ثبت رکورد جدید</Link><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="جستجو شماره تسهیلات، مشتری، کد بایگانی..." className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm sm:max-w-md" /></div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1100px] text-right text-sm">
