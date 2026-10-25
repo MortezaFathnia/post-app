@@ -217,7 +217,7 @@ export async function GET(request: NextRequest) {
         select: {
           id: true, sheetName: true, sourceRow: true, facilityNumber: true,
           customerNumber: true, archiveCode: true, facilityTitle: true, serial: true,
-          classification: true, status: true, startDate: true, endDate: true,
+          classification: true, counterLabel: true, status: true, startDate: true, endDate: true,
           approvedAmount: true, remainingAmount: true, nationalId: true,
         },
       }),
