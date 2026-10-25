@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { normalizeCounterName, normalizePersianText } from "@/lib/normalize-persian";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -18,8 +19,8 @@ function splitCounter(input: string): { code: string; name: string } | null {
 }
 
 function normalizeCounter(raw: Record<string, unknown>) {
-  let name = value(raw, "نام باجه");
-  let code = value(raw, "کد باجه", "باجه");
+  let name = normalizeCounterName(value(raw, "نام باجه"));
+  let code = normalizePersianText(value(raw, "کد باجه", "باجه"));
   const combinedName = splitCounter(name);
   if (combinedName) {
     code = code || combinedName.code;
