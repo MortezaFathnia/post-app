@@ -12,6 +12,11 @@ function value(raw: Record<string, unknown>, ...keys: string[]) {
   return "";
 }
 
+function customerNumberFromFacility(facilityNumber: string): string {
+  const parts = facilityNumber.trim().split(".");
+  return parts.length >= 3 ? (parts[2] || "").trim() : "";
+}
+
 export async function GET(_request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
   const recordId = Number(id);
@@ -31,12 +36,16 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ success: false, error: "اطلاعات ویرایش‌شده معتبر نیست." }, { status: 400 });
     }
     const raw = body.rawData as Record<string, unknown>;
+    const facilityNumber = value(raw, "شماره تسهيلات", "شماره تسهیلات");
+    const derivedCustomerNumber = customerNumberFromFacility(facilityNumber);
+    if (derivedCustomerNumber) raw["شماره مشتری"] = derivedCustomerNumber;
+    const customerNumber = derivedCustomerNumber || value(raw, "شماره مشتری", "شماره مشتري");
     const record = await prisma.bayeganiRecord.update({
       where: { id: recordId },
       data: {
         rawData: raw as never,
-        facilityNumber: value(raw, "شماره تسهيلات", "شماره تسهیلات") || null,
-        customerNumber: value(raw, "شماره مشتری", "شماره مشتري") || null,
+        facilityNumber: facilityNumber || null,
+        customerNumber: customerNumber || null,
         archiveCode: value(raw, "کد بایگانی", "شماره بایگانی", "کد بایگانی جدید") || null,
         facilityTitle: value(raw, "عنوان تسهیلات", "عنوان تسهيلات") || null,
         serial: value(raw, "سریال", "سریال2"),
