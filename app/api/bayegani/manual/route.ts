@@ -9,6 +9,19 @@ function value(raw: Record<string, unknown>, ...keys: string[]) {
   return "";
 }
 
+function normalizeCounter(raw: Record<string, unknown>) {
+  let name = value(raw, "نام باجه");
+  let code = value(raw, "کد باجه", "باجه");
+  const combined = name.match(/^(\\d+)\\s*-\\s*(.+)$/);
+  if (combined) {
+    if (!code) code = combined[1];
+    name = combined[2].trim();
+  }
+  raw["نام باجه"] = name;
+  raw["کد باجه"] = code;
+  return { name, code };
+}
+
 function customerNumberFromFacility(facilityNumber: string): string {
   const parts = facilityNumber.trim().split(".");
   return parts.length >= 3 ? (parts[2] || "").trim() : "";
@@ -26,6 +39,7 @@ export async function POST(request: NextRequest) {
     const derivedCustomerNumber = customerNumberFromFacility(facilityNumber);
     if (derivedCustomerNumber) raw["شماره مشتری"] = derivedCustomerNumber;
     const customerNumber = derivedCustomerNumber || value(raw, "شماره مشتری", "شماره مشتري");
+    const counter = normalizeCounter(raw);
     const record = await prisma.bayeganiRecord.create({
       data: {
         sourceFile: "ورود دستی", sheetName: "ورود دستی", sourceRow: Date.now(),
@@ -34,7 +48,7 @@ export async function POST(request: NextRequest) {
         archiveCode: value(raw, "کد بایگانی", "شماره بایگانی", "کد بایگانی جدید") || null,
         facilityTitle: value(raw, "عنوان تسهیلات", "عنوان تسهيلات") || null,
         serial: value(raw, "سریال", "سریال2"), classification: value(raw, "طبقه", "طبقه بایگانی"),
-        counterName: value(raw, "نام باجه"), counterCode: value(raw, "کد باجه", "باجه"),
+        counterName: counter.name, counterCode: counter.code,
         status: value(raw, "وضعیت کنونی", "وضعيت کنونی"),
         startDate: value(raw, "تاریخ شروع", "تاريخ شروع"),
         endDate: value(raw, "پایان قرارداد", " پایان قرارداد", "تاریخ پایان قرارداد"),
