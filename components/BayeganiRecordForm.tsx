@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import { normalizeCounterName, normalizePersianText } from "@/lib/normalize-persian";
 
 type Props = { recordId?: string };
 type ApiRecord = {
@@ -83,6 +84,8 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const raw = record.rawData && typeof record.rawData === "object" ? removeUnwantedColumns(record.rawData) : {};
         const next: Record<string, string> = { ...initialFields };
         for (const [key, value] of Object.entries(raw)) next[key] = value == null ? "" : String(value);
+        next["نام باجه"] = normalizeCounterName(next["نام باجه"] || "");
+        next["کد باجه"] = normalizePersianText(next["کد باجه"] || "");
         next["کد بایگانی جدید"] = buildNewArchiveCode(next);
         if (active) setFields(next);
       })
