@@ -25,6 +25,19 @@ function findValue(record: Record<string, unknown>, ...headers: string[]) {
   }
   return "";
 }
+function normalizeCounter(rawData: Record<string, unknown>) {
+  let name = findValue(rawData, "نام باجه");
+  let code = findValue(rawData, "کد باجه", "باجه");
+  const combined = name.match(/^(\\d+)\\s*-\\s*(.+)$/);
+  if (combined) {
+    if (!code) code = combined[1];
+    name = combined[2].trim();
+  }
+  if (name) rawData["نام باجه"] = name;
+  if (code) rawData["کد باجه"] = code;
+  return { name, code };
+}
+
 function customerNumberFromFacility(facilityNumber: string): string {
   const parts = facilityNumber.trim().split(".");
   return parts.length >= 3 ? (parts[2] || "").trim() : "";
@@ -35,6 +48,7 @@ function mapRow(rawData: Record<string, unknown>) {
   const derivedCustomerNumber = customerNumberFromFacility(facilityNumber);
   const customerNumber = derivedCustomerNumber || findValue(rawData, "شماره مشتری", "شماره مشتري");
   if (derivedCustomerNumber) rawData["شماره مشتری"] = derivedCustomerNumber;
+  const counter = normalizeCounter(rawData);
 
   return {
     facilityNumber,
@@ -43,8 +57,8 @@ function mapRow(rawData: Record<string, unknown>) {
     facilityTitle: findValue(rawData, "عنوان تسهیلات", "عنوان تسهيلات"),
     serial: findValue(rawData, "سریال", "سریال2"),
     classification: findValue(rawData, "طبقه", "طبقه بایگانی"),
-    counterName: findValue(rawData, "نام باجه"),
-    counterCode: findValue(rawData, "باجه", "کد باجه"),
+    counterName: counter.name,
+    counterCode: counter.code,
     status: findValue(rawData, "وضعيت کنونی", "وضعیت کنونی"),
     startDate: findValue(rawData, "تاريخ شروع", "تاریخ شروع"),
     endDate: findValue(rawData, " پایان قرارداد", "پایان قرارداد", "تاریخ پایان قرارداد"),
