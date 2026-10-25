@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { normalizeCounterName, normalizePersianText } from "@/lib/normalize-persian";
 
 export async function GET() {
   try {
@@ -16,8 +17,8 @@ export async function GET() {
 
     const unique = new Map<string, { name: string; code: string }>();
     for (const record of records) {
-      let name = record.counterName?.trim() ?? "";
-      let code = record.counterCode?.trim() ?? "";
+      let name = normalizeCounterName(record.counterName ?? "");
+      let code = normalizePersianText(record.counterCode ?? "");
       // Support legacy rows where either field contains "code-name".
       const combinedName = name.match(/^(\d+)\s*-\s*(.*)$/);
       if (combinedName) {
