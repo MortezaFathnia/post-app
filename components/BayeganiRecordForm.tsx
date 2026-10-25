@@ -114,7 +114,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         : await fetch("/api/bayegani/manual", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rawData: fields }),
+            body: JSON.stringify({ rawData: removeUnwantedColumns(fields) }),
           });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || "ذخیره اطلاعات ناموفق بود.");
@@ -151,39 +151,25 @@ export default function BayeganiRecordForm({ recordId }: Props) {
             <label key={key} className="block">
               <span className="mb-1.5 block text-sm font-medium text-slate-700">{key}</span>
               {key === "نام باجه" ? (
-                <>
-                  <input
-                    list="bayegani-counter-names"
-                    value={value}
-                    onChange={(event) => changeField(key, event.target.value)}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    placeholder="انتخاب یا وارد کردن نام باجه"
-                  />
-                  <datalist id="bayegani-counter-names">
-                    {counterOptions.filter((counter) => counter.name).map((counter) => (
-                      <option key={`${counter.name}-${counter.code}`} value={counter.name}>
-                        {counter.code ? `کد باجه: ${counter.code}` : ""}
-                      </option>
-                    ))}
-                  </datalist>
-                </>
-              ) : key === "کد باجه" ? (
-                <>
-                  <input
-                    list="bayegani-counter-codes"
-                    value={value}
-                    onChange={(event) => changeField(key, event.target.value)}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    placeholder="انتخاب یا وارد کردن کد باجه"
-                  />
-                  <datalist id="bayegani-counter-codes">
-                    {counterOptions.filter((counter) => counter.code).map((counter) => (
-                      <option key={`${counter.name}-${counter.code}`} value={counter.code}>
-                        {counter.name ? `نام باجه: ${counter.name}` : ""}
-                      </option>
-                    ))}
-                  </datalist>
-                </>
+                <select
+                  value={JSON.stringify([fields["نام باجه"] || "", fields["کد باجه"] || ""])}
+                  onChange={(event) => {
+                    try {
+                      const [name, code] = JSON.parse(event.target.value) as [string, string];
+                      setFields((current) => ({ ...current, "نام باجه": name, "کد باجه": code }));
+                    } catch {
+                      setFields((current) => ({ ...current, "نام باجه": "", "کد باجه": "" }));
+                    }
+                  }}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value={JSON.stringify(["", ""])}>انتخاب نام و کد باجه</option>
+                  {counterOptions.filter((counter) => counter.name || counter.code).map((counter) => (
+                    <option key={`${counter.name}-${counter.code}`} value={JSON.stringify([counter.name, counter.code])}>
+                      {counter.name}{counter.code ? ` — ${counter.code}` : ""}
+                    </option>
+                  ))}
+                </select>
               ) : (
                 <input
                   value={value}
