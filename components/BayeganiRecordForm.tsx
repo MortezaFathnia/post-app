@@ -126,7 +126,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         : await fetch("/api/bayegani/manual", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rawData: removeUnwantedColumns(fields) }),
+            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "کد بایگانی جدید": buildNewArchiveCode(fields) }) }),
           });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || "ذخیره اطلاعات ناموفق بود.");
