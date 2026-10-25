@@ -188,7 +188,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                   <option value={JSON.stringify(["", ""])}>انتخاب نام و کد باجه</option>
                   {counterOptions.map((counter) => (
                     <option key={`${counter.name}-${counter.code}`} value={JSON.stringify([counter.name, counter.code])}>
-                      {counter.code ? `${counter.code} - ` : ""}{counter.name}
+                      {counter.code}{counter.code && counter.name ? "-" : ""}{counter.name}
                     </option>
                   ))}
                 </select>
