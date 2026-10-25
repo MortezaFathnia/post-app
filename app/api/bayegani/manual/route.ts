@@ -9,6 +9,11 @@ function value(raw: Record<string, unknown>, ...keys: string[]) {
   return "";
 }
 
+function customerNumberFromFacility(facilityNumber: string): string {
+  const parts = facilityNumber.trim().split(".");
+  return parts.length >= 3 ? (parts[2] || "").trim() : "";
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json() as { rawData?: unknown };
@@ -16,11 +21,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "اطلاعات واردشده معتبر نیست." }, { status: 400 });
     }
     const raw = body.rawData as Record<string, unknown>;
+    const facilityNumber = value(raw, "شماره تسهیلات", "شماره تسهيلات");
+    const derivedCustomerNumber = customerNumberFromFacility(facilityNumber);
+    if (derivedCustomerNumber) raw["شماره مشتری"] = derivedCustomerNumber;
+    const customerNumber = derivedCustomerNumber || value(raw, "شماره مشتری", "شماره مشتري");
     const record = await prisma.bayeganiRecord.create({
       data: {
         sourceFile: "ورود دستی", sheetName: "ورود دستی", sourceRow: Date.now(),
-        facilityNumber: value(raw, "شماره تسهیلات", "شماره تسهيلات") || null,
-        customerNumber: value(raw, "شماره مشتری", "شماره مشتري") || null,
+        facilityNumber: facilityNumber || null,
+        customerNumber: customerNumber || null,
         archiveCode: value(raw, "کد بایگانی", "شماره بایگانی", "کد بایگانی جدید") || null,
         facilityTitle: value(raw, "عنوان تسهیلات", "عنوان تسهيلات") || null,
         serial: value(raw, "سریال", "سریال2"), classification: value(raw, "طبقه", "طبقه بایگانی"),
