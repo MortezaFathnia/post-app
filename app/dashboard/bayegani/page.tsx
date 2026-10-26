@@ -19,7 +19,7 @@ export default function BayeganiPage() {
   const [total, setTotal] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [dedupeLoading, setDedupeLoading] = useState(false);
+  const [dedupeLoading, setDedupeLoading] = useState(false);\n  const [exportLoading, setExportLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -101,6 +101,33 @@ export default function BayeganiPage() {
     }
   }
 
+  async function exportExcel() {
+    setError("");
+    setMessage("");
+    setExportLoading(true);
+    try {
+      const response = await fetch("/api/bayegani/export", { cache: "no-store" });
+      if (!response.ok) {
+        const result = await response.json().catch(() => null);
+        throw new Error(result?.error || "خروجی اکسل ناموفق بود.");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "رکوردهای-بایگانی.xlsx";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      setMessage("خروجی اکسل همه رکوردهای پایگاه داده آماده شد.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "خطا در دریافت خروجی اکسل.");
+    } finally {
+      setExportLoading(false);
+    }
+  }
+
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(""); setMessage("");
@@ -136,7 +163,7 @@ export default function BayeganiPage() {
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div><h2 className="font-bold">رکوردهای بایگانی</h2><p className="mt-1 text-xs text-slate-500">تعداد نتایج: {total.toLocaleString("fa-IR")}</p></div>
-        <div className="flex flex-col gap-2 sm:flex-row"><button type="button" onClick={removeDuplicates} disabled={dedupeLoading || loading} className="whitespace-nowrap rounded-xl border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60">{dedupeLoading ? "در حال پاک‌سازی..." : "حذف رکوردهای تکراری"}</button><Link href="/dashboard/bayegani/new" className="whitespace-nowrap rounded-xl bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-700">+ ثبت رکورد جدید</Link><input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="جستجو شماره تسهیلات، شماره مشتری، کد ملی، کد بایگانی..." className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm sm:max-w-md" /><select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} aria-label="تعداد رکورد در هر صفحه" className="rounded-xl border border-slate-300 px-3 py-2 text-sm"><option value={10}>۱۰ در صفحه</option><option value={20}>۲۰ در صفحه</option><option value={50}>۵۰ در صفحه</option><option value={100}>۱۰۰ در صفحه</option></select></div>
+        <div className="flex flex-col gap-2 sm:flex-row"><button type="button" onClick={exportExcel} disabled={exportLoading} className="whitespace-nowrap rounded-xl border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-60">{exportLoading ? "در حال تهیه فایل..." : "خروجی اکسل همه رکوردها"}</button><button type="button" onClick={removeDuplicates} disabled={dedupeLoading || loading} className="whitespace-nowrap rounded-xl border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60">{dedupeLoading ? "در حال پاک‌سازی..." : "حذف رکوردهای تکراری"}</button><Link href="/dashboard/bayegani/new" className="whitespace-nowrap rounded-xl bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-700">+ ثبت رکورد جدید</Link><input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="جستجو شماره تسهیلات، شماره مشتری، کد ملی، کد بایگانی..." className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm sm:max-w-md" /><select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} aria-label="تعداد رکورد در هر صفحه" className="rounded-xl border border-slate-300 px-3 py-2 text-sm"><option value={10}>۱۰ در صفحه</option><option value={20}>۲۰ در صفحه</option><option value={50}>۵۰ در صفحه</option><option value={100}>۱۰۰ در صفحه</option></select></div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1200px] text-right text-sm">
