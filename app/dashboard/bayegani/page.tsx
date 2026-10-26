@@ -30,12 +30,14 @@ export default function BayeganiPage() {
   const firstRecord = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const lastRecord = Math.min(page * pageSize, total);
   const visiblePages = Array.from(
-    { length: Math.min(5, totalPages) },
+    { length: Math.min(3, totalPages) },
     (_, index) => {
-      const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+      const start = Math.max(1, Math.min(page - 1, totalPages - 2));
       return start + index;
     },
   );
+  const showLeadingEllipsis = visiblePages.length > 0 && visiblePages[0] > 2;
+  const showTrailingEllipsis = visiblePages.length > 0 && visiblePages[visiblePages.length - 1] < totalPages - 1;
 
   async function loadRecords() {
     const params = new URLSearchParams({
@@ -130,6 +132,18 @@ export default function BayeganiPage() {
         <nav aria-label="صفحه‌بندی رکوردهای بایگانی" className="flex flex-wrap items-center gap-1.5">
           <button type="button" onClick={() => setPage(1)} disabled={page <= 1} className="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">اولین</button>
           <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page <= 1} className="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">قبلی</button>
+          {totalPages > 3 && visiblePages[0] > 1 && (
+            <button
+              type="button"
+              onClick={() => setPage(1)}
+              aria-label="صفحه اول"
+              aria-current={page === 1 ? "page" : undefined}
+              className={`min-w-10 rounded-lg border px-3 py-2 text-sm ${page === 1 ? "border-blue-600 bg-blue-600 font-semibold text-white" : "border-slate-300 hover:bg-slate-50"}`}
+            >
+              ۱
+            </button>
+          )}
+          {showLeadingEllipsis && <span aria-hidden="true" className="px-1 text-slate-500">…</span>}
           {visiblePages.map((pageNumber) => (
             <button
               key={pageNumber}
@@ -141,6 +155,18 @@ export default function BayeganiPage() {
               {pageNumber.toLocaleString("fa-IR")}
             </button>
           ))}
+          {showTrailingEllipsis && <span aria-hidden="true" className="px-1 text-slate-500">…</span>}
+          {totalPages > 3 && visiblePages[visiblePages.length - 1] < totalPages && (
+            <button
+              type="button"
+              onClick={() => setPage(totalPages)}
+              aria-label="صفحه آخر"
+              aria-current={page === totalPages ? "page" : undefined}
+              className={`min-w-10 rounded-lg border px-3 py-2 text-sm ${page === totalPages ? "border-blue-600 bg-blue-600 font-semibold text-white" : "border-slate-300 hover:bg-slate-50"}`}
+            >
+              {totalPages.toLocaleString("fa-IR")}
+            </button>
+          )}
           <button type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page >= totalPages} className="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">بعدی</button>
           <button type="button" onClick={() => setPage(totalPages)} disabled={page >= totalPages} className="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">آخرین</button>
         </nav>
