@@ -3,33 +3,6 @@ import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
-type ArchiveCodeRow = { id: number; archiveCode: string | null };
-
-function findDuplicateIds(rows: ArchiveCodeRow[]) {
-  const firstIdByCode = new Map<string, number>();
-  const duplicateIds: number[] = [];
-
-  // Empty or whitespace-only archive codes are deliberately excluded.
-  // For each non-empty trimmed code, keep the record with the smallest ID.
-  for (const row of rows) {
-    const code = row.archiveCode?.trim() ?? "";
-    if (!code) continue;
-
-    const firstId = firstIdByCode.get(code);
-    if (firstId === undefined) {
-      firstIdByCode.set(code, row.id);
-    } else {
-      duplicateIds.push(row.id);
-    }
-  }
-
-  return { duplicateIds, duplicateGroups: new Set(
-    rows
-      .filter((row) => (row.archiveCode?.trim() ?? "") !== "")
-      .map((row) => row.archiveCode!.trim()),
-  ).size };
-}
-
 export async function POST() {
   try {
     const deleted = await prisma.$transaction(async (tx) => {
