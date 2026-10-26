@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 
+type SortField = "facilityNumber" | "facilityTitle" | "nationalId" | "counterLabel" | "archiveCode" | "startDate" | "endDate" | "approvedAmount";
+
 type RecordItem = {
   id: number; sheetName: string; sourceRow: number; facilityNumber: string | null;
   customerNumber: string | null; archiveCode: string | null; facilityTitle: string | null;
@@ -20,6 +22,8 @@ export default function BayeganiPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [sortBy, setSortBy] = useState<SortField>("facilityNumber");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -38,6 +42,8 @@ export default function BayeganiPage() {
       page: String(page),
       pageSize: String(pageSize),
       search,
+      sortBy,
+      sortOrder,
     });
     const response = await fetch(`/api/bayegani?${params.toString()}`, { cache: "no-store" });
     const result = await response.json();
@@ -48,7 +54,26 @@ export default function BayeganiPage() {
 
   useEffect(() => {
     loadRecords().catch((e: unknown) => setError(e instanceof Error ? e.message : "خطا"));
-  }, [page, pageSize, search]);
+  }, [page, pageSize, search, sortBy, sortOrder]);
+
+  function toggleSort(field: SortField) {
+    if (sortBy === field) {
+      setSortOrder((current) => current === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortOrder("asc");
+    }
+    setPage(1);
+  }
+
+  function sortableHeader(label: string, field: SortField) {
+    const active = sortBy === field;
+    return <th key={field} className="whitespace-nowrap px-4 py-3 font-semibold">
+      <button type="button" onClick={() => toggleSort(field)} aria-label={`مرتب‌سازی بر اساس ${label}`} className="inline-flex items-center gap-1.5 hover:text-blue-700">
+        {label}<span aria-hidden="true" className={active ? "text-blue-700" : "text-slate-400"}>{active ? (sortOrder === "asc" ? "↑" : "↓") : "↕"}</span>
+      </button>
+    </th>;
+  }
 
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -89,7 +114,7 @@ export default function BayeganiPage() {
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1200px] text-right text-sm">
-          <thead className="bg-slate-50 text-slate-600"><tr>{["ردیف","شماره تسهیلات","عنوان تسهیلات","کد ملی","کدباجه-نام باجه","کد بایگانی","تاریخ شروع","پایان قرارداد","مبلغ مصوب","عملیات"].map((h) => <th key={h} className="whitespace-nowrap px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
+          <thead className="bg-slate-50 text-slate-600"><tr><th className="whitespace-nowrap px-4 py-3 font-semibold">ردیف</th>{sortableHeader("شماره تسهیلات", "facilityNumber")}{sortableHeader("عنوان تسهیلات", "facilityTitle")}{sortableHeader("کد ملی", "nationalId")}{sortableHeader("کدباجه-نام باجه", "counterLabel")}{sortableHeader("کد بایگانی", "archiveCode")}{sortableHeader("تاریخ شروع", "startDate")}{sortableHeader("پایان قرارداد", "endDate")}{sortableHeader("مبلغ مصوب", "approvedAmount")}<th className="whitespace-nowrap px-4 py-3 font-semibold">عملیات</th></tr></thead>
           <tbody className="divide-y divide-slate-100">{records.map((r, index) => <tr key={r.id} className="hover:bg-slate-50">
             <td className="px-4 py-3">{((page - 1) * pageSize + index + 1).toLocaleString("fa-IR")}</td><td className="px-4 py-3" dir="ltr">{r.facilityNumber || "—"}</td><td className="max-w-xs px-4 py-3">{r.facilityTitle || "—"}</td><td className="px-4 py-3" dir="ltr">{r.nationalId || "—"}</td><td className="whitespace-nowrap px-4 py-3">{r.counterLabel || "—"}</td><td className="px-4 py-3">{r.archiveCode || "—"}</td><td className="px-4 py-3">{r.startDate || "—"}</td><td className="px-4 py-3">{r.endDate || "—"}</td><td className="px-4 py-3">{r.approvedAmount || "—"}</td><td className="px-4 py-3"><Link href={`/dashboard/bayegani/${r.id}/edit`} className="rounded-lg bg-blue-50 px-3 py-2 font-semibold text-blue-700 hover:bg-blue-100">ویرایش</Link></td>
           </tr>)}</tbody>
