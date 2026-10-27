@@ -262,9 +262,17 @@ export async function GET(request: NextRequest) {
       select: { code: true, name: true },
     });
 
+    const tableRecords = records.map((record) => {
+      const rawData = record.rawData && typeof record.rawData === "object" && !Array.isArray(record.rawData)
+        ? record.rawData as Record<string, unknown>
+        : {};
+      const rawArchiveCode = findValue(rawData, "کد بایگانی", "کد بایگانی جدید", "شماره بایگانی");
+      return { ...record, archiveCode: record.archiveCode || rawArchiveCode || null };
+    });
+
     return NextResponse.json({
       success: true,
-      records,
+      records: tableRecords,
       counters,
       total,
       page,
