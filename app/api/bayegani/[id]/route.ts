@@ -81,10 +81,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       ? [counter.code, value(raw, "طبقه", "طبقه بایگانی"), value(raw, "سریال", "سریال2")].join("-")
       : "";
     const archiveCode = generatedArchiveCode || value(raw, "کد بایگانی جدید", "کد بایگانی", "شماره بایگانی");
-    if (archiveCode) {
-      raw["کد بایگانی"] = archiveCode;
-      raw["کد بایگانی جدید"] = archiveCode;
-    }
+    delete raw["کد بایگانی جدید"];
+    if (archiveCode) raw["کد بایگانی"] = archiveCode;
     const record = await prisma.bayeganiRecord.update({
       where: { id: recordId },
       data: {
