@@ -83,12 +83,14 @@ function mapRow(rawData: Record<string, unknown>) {
 
   const counter = normalizeCounter(rawData);
   const newArchiveCode = buildNewArchiveCode(rawData);
-  if (newArchiveCode) rawData["کد بایگانی جدید"] = newArchiveCode;
+  const archiveCode = newArchiveCode || findValue(rawData, "کد بایگانی جدید", "کد بایگانی", "شماره بایگانی");
+  delete rawData["کد بایگانی جدید"];
+  if (archiveCode) rawData["کد بایگانی"] = archiveCode;
 
   return {
     facilityNumber,
     customerNumber,
-    archiveCode: newArchiveCode || findValue(rawData, "کد بایگانی جدید", "کد بایگانی", "شماره بایگانی"),
+    archiveCode,
     facilityTitle: findValue(rawData, "عنوان تسهیلات", "عنوان تسهيلات"),
     serial: findValue(rawData, "سریال", "سریال2"),
     classification: findValue(rawData, "طبقه", "طبقه بایگانی"),
@@ -137,9 +139,9 @@ async function normalizeExistingRecords() {
 
     const counter = normalizeCounter(rawData);
     const newArchiveCode = buildNewArchiveCode(rawData);
-    if (newArchiveCode) rawData["کد بایگانی جدید"] = newArchiveCode;
-
-    const nextArchiveCode = newArchiveCode || record.archiveCode || findValue(rawData, "کد بایگانی", "شماره بایگانی");
+    const nextArchiveCode = newArchiveCode || findValue(rawData, "کد بایگانی جدید", "کد بایگانی", "شماره بایگانی") || record.archiveCode || "";
+    delete rawData["کد بایگانی جدید"];
+    if (nextArchiveCode) rawData["کد بایگانی"] = nextArchiveCode;
     const nextSerial = findValue(rawData, "سریال", "سریال2") || record.serial || null;
     const nextClassification = findValue(rawData, "طبقه", "طبقه بایگانی") || record.classification || null;
     const nextCounterName = counter.name || null;

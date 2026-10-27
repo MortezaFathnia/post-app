@@ -77,13 +77,19 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (derivedCustomerNumber) raw["شماره مشتری"] = derivedCustomerNumber;
     const customerNumber = derivedCustomerNumber || value(raw, "شماره مشتری", "شماره مشتري");
     const counter = normalizeCounter(raw);
+    const generatedArchiveCode = [counter.code, value(raw, "طبقه", "طبقه بایگانی"), value(raw, "سریال", "سریال2")].every(Boolean)
+      ? [counter.code, value(raw, "طبقه", "طبقه بایگانی"), value(raw, "سریال", "سریال2")].join("-")
+      : "";
+    const archiveCode = generatedArchiveCode || value(raw, "کد بایگانی جدید", "کد بایگانی", "شماره بایگانی");
+    delete raw["کد بایگانی جدید"];
+    if (archiveCode) raw["کد بایگانی"] = archiveCode;
     const record = await prisma.bayeganiRecord.update({
       where: { id: recordId },
       data: {
         rawData: raw as never,
         facilityNumber: facilityNumber || null,
         customerNumber: customerNumber || null,
-        archiveCode: value(raw, "کد بایگانی", "شماره بایگانی", "کد بایگانی جدید") || null,
+        archiveCode: archiveCode || null,
         facilityTitle: value(raw, "عنوان تسهیلات", "عنوان تسهيلات") || null,
         serial: value(raw, "سریال", "سریال2"),
         classification: value(raw, "طبقه", "طبقه بایگانی"),
