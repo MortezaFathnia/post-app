@@ -19,10 +19,6 @@ export default function BayeganiPage() {
   const [total, setTotal] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-<<<<<<< HEAD
-  const [dedupeLoading, setDedupeLoading] = useState(false);
-=======
->>>>>>> fb1b93e9db8c1710b02b77cc36497e7c4faf3d83
   const [exportLoading, setExportLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
