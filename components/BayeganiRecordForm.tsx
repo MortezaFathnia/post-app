@@ -18,7 +18,6 @@ const initialFields: Record<string, string> = {
   "شماره تسهیلات": "",
   "شماره مشتری": "",
   "کد بایگانی": "",
-  "کد بایگانی جدید": "",
   "عنوان تسهیلات": "",
   "سریال": "",
   "طبقه": "",
@@ -83,6 +82,9 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         if (!res.ok || !result.success) throw new Error(result.error || "دریافت رکورد ناموفق بود.");
         const record = result.record as ApiRecord;
         const raw = record.rawData && typeof record.rawData === "object" ? removeUnwantedColumns(record.rawData) : {};
+        const legacyArchiveCode = String(raw["کد بایگانی جدید"] ?? raw["کد بایگانی"] ?? "").trim();
+        delete raw["کد بایگانی جدید"];
+        if (legacyArchiveCode) raw["کد بایگانی"] = legacyArchiveCode;
         const next: Record<string, string> = { ...initialFields };
         for (const [key, value] of Object.entries(raw)) {
           const fieldName = key.trim() === "تیک" ? "توضیحات" : key;
@@ -91,9 +93,9 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         delete next["تیک"];
         next["نام باجه"] = normalizeCounterName(next["نام باجه"] || "");
         next["کد باجه"] = normalizePersianText(next["کد باجه"] || "");
-        const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || next["کد بایگانی جدید"] || "";
+        const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
         next["کد بایگانی"] = archiveCode;
-        next["کد بایگانی جدید"] = archiveCode;
+        delete next["کد بایگانی جدید"];
         if (active) setFields(next);
       })
       .catch((e: unknown) => { if (active) setError(e instanceof Error ? e.message : "خطا در دریافت اطلاعات."); })
@@ -105,9 +107,9 @@ export default function BayeganiRecordForm({ recordId }: Props) {
     setFields((current) => {
       const next = { ...current, [key]: value };
       if (["کد باجه", "طبقه", "سریال"].includes(key)) {
-        const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || next["کد بایگانی جدید"] || "";
+        const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
         next["کد بایگانی"] = archiveCode;
-        next["کد بایگانی جدید"] = archiveCode;
+        delete next["کد بایگانی جدید"];
       }
       if (key === "نام باجه") {
         const selected = counters.find((counter) => counter.name === value);
@@ -133,12 +135,12 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         ? await fetch(`/api/bayegani/${recordId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "کد بایگانی": buildNewArchiveCode(fields) || fields["کد بایگانی"] || fields["کد بایگانی جدید"], "کد بایگانی جدید": buildNewArchiveCode(fields) || fields["کد بایگانی"] || fields["کد بایگانی جدید"] }) }),
+            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "کد بایگانی": buildNewArchiveCode(fields) || fields["کد بایگانی"] }) }),
           })
         : await fetch("/api/bayegani/manual", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "کد بایگانی جدید": buildNewArchiveCode(fields) }) }),
+            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "کد بایگانی": buildNewArchiveCode(fields) || fields["کد بایگانی"] }) }),
           });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || "ذخیره اطلاعات ناموفق بود.");
@@ -184,17 +186,17 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                       const [name, code] = JSON.parse(event.target.value) as [string, string];
                       setFields((current) => {
                       const next = { ...current, "نام باجه": name, "کد باجه": code };
-                      const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || next["کد بایگانی جدید"] || "";
+                      const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
                       next["کد بایگانی"] = archiveCode;
-                      next["کد بایگانی جدید"] = archiveCode;
+                      delete next["کد بایگانی جدید"];
                       return next;
                     });
                     } catch {
                       setFields((current) => {
                         const next = { ...current, "نام باجه": "", "کد باجه": "" };
-                        const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || next["کد بایگانی جدید"] || "";
+                        const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
                         next["کد بایگانی"] = archiveCode;
-                        next["کد بایگانی جدید"] = archiveCode;
+                        delete next["کد بایگانی جدید"];
                         return next;
                       });
                     }
@@ -211,9 +213,9 @@ export default function BayeganiRecordForm({ recordId }: Props) {
               ) : (
                 <input
                   value={value}
-                  readOnly={key === "کد بایگانی جدید" || key === "کد بایگانی"}
+                  readOnly={key === "کد بایگانی"}
                   onChange={(event) => changeField(key, event.target.value)}
-                  className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "کد بایگانی جدید" || key === "کد بایگانی" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
+                  className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "کد بایگانی" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
                   placeholder={key}
                 />
               )}
