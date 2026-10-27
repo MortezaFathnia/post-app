@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 
-type SortField = "facilityNumber" | "facilityTitle" | "nationalId" | "counterLabel" | "archiveCode" | "startDate" | "endDate" | "approvedAmount";
+type SortField = "facilityNumber" | "facilityTitle" | "nationalId" | "counterLabel" | "archiveCode" | "serial" | "startDate" | "endDate" | "approvedAmount";
 
 type RecordItem = {
   id: number; sheetName: string; sourceRow: number; facilityNumber: string | null;
@@ -144,9 +144,9 @@ export default function BayeganiPage() {
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1200px] text-right text-sm">
-          <thead className="bg-slate-50 text-slate-600"><tr><th className="whitespace-nowrap px-4 py-3 font-semibold">ردیف</th><th className="whitespace-nowrap px-4 py-3 font-semibold">سریال</th>{sortableHeader("شماره تسهیلات", "facilityNumber")}{sortableHeader("عنوان تسهیلات", "facilityTitle")}{sortableHeader("کد ملی", "nationalId")}{sortableHeader("کدباجه-نام باجه", "counterLabel")}{sortableHeader("کد بایگانی", "archiveCode")}{sortableHeader("تاریخ شروع", "startDate")}{sortableHeader("پایان قرارداد", "endDate")}{sortableHeader("مبلغ مصوب", "approvedAmount")}<th className="whitespace-nowrap px-4 py-3 font-semibold">عملیات</th></tr></thead>
+          <thead className="bg-slate-50 text-slate-600"><tr><th className="whitespace-nowrap px-4 py-3 font-semibold">ردیف</th><th className="whitespace-nowrap px-4 py-3 font-semibold">سریال</th>{sortableHeader("شماره تسهیلات", "facilityNumber")}{sortableHeader("عنوان تسهیلات", "facilityTitle")}{sortableHeader("کد ملی", "nationalId")}{sortableHeader("کدباجه-نام باجه", "counterLabel")}{sortableHeader("کد بایگانی", "archiveCode")}{sortableHeader("سریال", "serial")}{sortableHeader("تاریخ شروع", "startDate")}{sortableHeader("پایان قرارداد", "endDate")}{sortableHeader("مبلغ مصوب", "approvedAmount")}<th className="whitespace-nowrap px-4 py-3 font-semibold">عملیات</th></tr></thead>
           <tbody className="divide-y divide-slate-100">{records.map((r, index) => <tr key={r.id} className="hover:bg-slate-50">
-            <td className="px-4 py-3">{r.sourceRow.toLocaleString("fa-IR")}</td><td className="px-4 py-3">{r.serial || "—"}</td><td className="px-4 py-3" dir="ltr">{r.facilityNumber || "—"}</td><td className="max-w-xs px-4 py-3">{r.facilityTitle || "—"}</td><td className="px-4 py-3" dir="ltr">{r.nationalId || "—"}</td><td className="whitespace-nowrap px-4 py-3">{r.counterLabel || "—"}</td><td className="px-4 py-3">{r.archiveCode || "—"}</td><td className="px-4 py-3">{r.startDate || "—"}</td><td className="px-4 py-3">{r.endDate || "—"}</td><td className="px-4 py-3">{r.approvedAmount || "—"}</td><td className="px-4 py-3"><Link href={`/dashboard/bayegani/${r.id}/edit`} className="rounded-lg bg-blue-50 px-3 py-2 font-semibold text-blue-700 hover:bg-blue-100">ویرایش</Link></td>
+            <td className="px-4 py-3">{r.sourceRow.toLocaleString("fa-IR")}</td><td className="px-4 py-3">{r.serial || "—"}</td><td className="px-4 py-3" dir="ltr">{r.facilityNumber || "—"}</td><td className="max-w-xs px-4 py-3">{r.facilityTitle || "—"}</td><td className="px-4 py-3" dir="ltr">{r.nationalId || "—"}</td><td className="whitespace-nowrap px-4 py-3">{r.counterLabel || "—"}</td><td className="px-4 py-3">{r.archiveCode || "—"}</td><td className="px-4 py-3">{r.serial || "—"}</td><td className="px-4 py-3">{r.startDate || "—"}</td><td className="px-4 py-3">{r.endDate || "—"}</td><td className="px-4 py-3">{r.approvedAmount || "—"}</td><td className="px-4 py-3"><Link href={`/dashboard/bayegani/${r.id}/edit`} className="rounded-lg bg-blue-50 px-3 py-2 font-semibold text-blue-700 hover:bg-blue-100">ویرایش</Link></td>
           </tr>)}</tbody>
         </table>
         {records.length === 0 && <p className="p-8 text-center text-sm text-slate-500">رکوردی پیدا نشد. ابتدا فایل Excel را بارگذاری کنید یا عبارت جستجو را تغییر دهید.</p>}
