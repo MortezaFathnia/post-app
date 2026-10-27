@@ -198,7 +198,7 @@ export async function GET(request: NextRequest) {
     const search = (params.get("search") ?? "").trim();
     const sortableFields = ["facilityNumber", "facilityTitle", "nationalId", "counterLabel", "archiveCode", "serial", "startDate", "endDate", "approvedAmount"] as const;
     type SortField = (typeof sortableFields)[number];
-    const requestedSort = params.get("sortBy") ?? "facilityNumber";
+    const requestedSort = params.get("sortBy") ?? "serial";
     const sortBy: SortField = sortableFields.includes(requestedSort as SortField) ? requestedSort as SortField : "facilityNumber";
     const sortOrder = params.get("sortOrder") === "desc" ? "desc" : "asc";
 
@@ -218,7 +218,9 @@ export async function GET(request: NextRequest) {
     const [records, total, recordCounters] = await Promise.all([
       prisma.bayeganiRecord.findMany({
         where,
-        orderBy: [{ [sortBy]: sortOrder }, { id: "asc" }],
+        orderBy: sortBy === "serial"
+          ? [{ serial: sortOrder }, { sourceRow: "asc" }, { id: "asc" }]
+          : [{ [sortBy]: sortOrder }, { id: "asc" }],
         skip: (page - 1) * pageSize,
         take: pageSize,
         select: {
