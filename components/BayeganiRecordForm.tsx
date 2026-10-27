@@ -91,7 +91,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         delete next["تیک"];
         next["نام باجه"] = normalizeCounterName(next["نام باجه"] || "");
         next["کد باجه"] = normalizePersianText(next["کد باجه"] || "");
-        const archiveCode = buildNewArchiveCode(next);
+        const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || next["کد بایگانی جدید"] || "";
         next["کد بایگانی"] = archiveCode;
         next["کد بایگانی جدید"] = archiveCode;
         if (active) setFields(next);
@@ -105,7 +105,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
     setFields((current) => {
       const next = { ...current, [key]: value };
       if (["کد باجه", "طبقه", "سریال"].includes(key)) {
-        const archiveCode = buildNewArchiveCode(next);
+        const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || next["کد بایگانی جدید"] || "";
         next["کد بایگانی"] = archiveCode;
         next["کد بایگانی جدید"] = archiveCode;
       }
@@ -133,7 +133,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         ? await fetch(`/api/bayegani/${recordId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "کد بایگانی": buildNewArchiveCode(fields), "کد بایگانی جدید": buildNewArchiveCode(fields) }) }),
+            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "کد بایگانی": buildNewArchiveCode(fields) || fields["کد بایگانی"] || fields["کد بایگانی جدید"], "کد بایگانی جدید": buildNewArchiveCode(fields) || fields["کد بایگانی"] || fields["کد بایگانی جدید"] }) }),
           })
         : await fetch("/api/bayegani/manual", {
             method: "POST",
@@ -184,7 +184,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                       const [name, code] = JSON.parse(event.target.value) as [string, string];
                       setFields((current) => {
                       const next = { ...current, "نام باجه": name, "کد باجه": code };
-                      const archiveCode = buildNewArchiveCode(next);
+                      const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || next["کد بایگانی جدید"] || "";
                       next["کد بایگانی"] = archiveCode;
                       next["کد بایگانی جدید"] = archiveCode;
                       return next;
@@ -192,7 +192,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                     } catch {
                       setFields((current) => {
                         const next = { ...current, "نام باجه": "", "کد باجه": "" };
-                        const archiveCode = buildNewArchiveCode(next);
+                        const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || next["کد بایگانی جدید"] || "";
                         next["کد بایگانی"] = archiveCode;
                         next["کد بایگانی جدید"] = archiveCode;
                         return next;
@@ -211,9 +211,9 @@ export default function BayeganiRecordForm({ recordId }: Props) {
               ) : (
                 <input
                   value={value}
-                  readOnly={key === "کد بایگانی جدید"}
+                  readOnly={key === "کد بایگانی جدید" || key === "کد بایگانی"}
                   onChange={(event) => changeField(key, event.target.value)}
-                  className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "کد بایگانی جدید" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
+                  className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "کد بایگانی جدید" || key === "کد بایگانی" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
                   placeholder={key}
                 />
               )}
