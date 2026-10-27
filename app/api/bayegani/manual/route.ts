@@ -52,12 +52,20 @@ export async function POST(request: NextRequest) {
     if (derivedCustomerNumber) raw["شماره مشتری"] = derivedCustomerNumber;
     const customerNumber = derivedCustomerNumber || value(raw, "شماره مشتری", "شماره مشتري");
     const counter = normalizeCounter(raw);
+    const generatedArchiveCode = [counter.code, value(raw, "طبقه", "طبقه بایگانی"), value(raw, "سریال", "سریال2")].every(Boolean)
+      ? [counter.code, value(raw, "طبقه", "طبقه بایگانی"), value(raw, "سریال", "سریال2")].join("-")
+      : "";
+    const archiveCode = generatedArchiveCode || value(raw, "کد بایگانی جدید", "کد بایگانی", "شماره بایگانی");
+    if (archiveCode) {
+      raw["کد بایگانی"] = archiveCode;
+      raw["کد بایگانی جدید"] = archiveCode;
+    }
     const record = await prisma.bayeganiRecord.create({
       data: {
         sourceFile: "ورود دستی", sheetName: "ورود دستی", sourceRow: Date.now(),
         facilityNumber: facilityNumber || null,
         customerNumber: customerNumber || null,
-        archiveCode: value(raw, "کد بایگانی", "شماره بایگانی", "کد بایگانی جدید") || null,
+        archiveCode: archiveCode || null,
         facilityTitle: value(raw, "عنوان تسهیلات", "عنوان تسهيلات") || null,
         serial: value(raw, "سریال", "سریال2"), classification: value(raw, "طبقه", "طبقه بایگانی"),
         counterName: counter.name, counterCode: counter.code, counterLabel: counter.label,
