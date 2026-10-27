@@ -196,7 +196,7 @@ export async function GET(request: NextRequest) {
       ? Math.min(100, Math.max(10, requestedPageSize))
       : 20;
     const search = (params.get("search") ?? "").trim();
-    const sortableFields = ["facilityNumber", "facilityTitle", "nationalId", "counterLabel", "archiveCode", "startDate", "endDate", "approvedAmount"] as const;
+    const sortableFields = ["facilityNumber", "facilityTitle", "nationalId", "counterLabel", "archiveCode", "serial", "startDate", "endDate", "approvedAmount"] as const;
     type SortField = (typeof sortableFields)[number];
     const requestedSort = params.get("sortBy") ?? "facilityNumber";
     const sortBy: SortField = sortableFields.includes(requestedSort as SortField) ? requestedSort as SortField : "facilityNumber";
