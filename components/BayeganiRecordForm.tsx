@@ -91,7 +91,9 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         delete next["تیک"];
         next["نام باجه"] = normalizeCounterName(next["نام باجه"] || "");
         next["کد باجه"] = normalizePersianText(next["کد باجه"] || "");
-        next["کد بایگانی جدید"] = buildNewArchiveCode(next);
+        const archiveCode = buildNewArchiveCode(next);
+        next["کد بایگانی"] = archiveCode;
+        next["کد بایگانی جدید"] = archiveCode;
         if (active) setFields(next);
       })
       .catch((e: unknown) => { if (active) setError(e instanceof Error ? e.message : "خطا در دریافت اطلاعات."); })
@@ -103,7 +105,9 @@ export default function BayeganiRecordForm({ recordId }: Props) {
     setFields((current) => {
       const next = { ...current, [key]: value };
       if (["کد باجه", "طبقه", "سریال"].includes(key)) {
-        next["کد بایگانی جدید"] = buildNewArchiveCode(next);
+        const archiveCode = buildNewArchiveCode(next);
+        next["کد بایگانی"] = archiveCode;
+        next["کد بایگانی جدید"] = archiveCode;
       }
       if (key === "نام باجه") {
         const selected = counters.find((counter) => counter.name === value);
@@ -129,7 +133,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         ? await fetch(`/api/bayegani/${recordId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "کد بایگانی جدید": buildNewArchiveCode(fields) }) }),
+            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "کد بایگانی": buildNewArchiveCode(fields), "کد بایگانی جدید": buildNewArchiveCode(fields) }) }),
           })
         : await fetch("/api/bayegani/manual", {
             method: "POST",
@@ -180,13 +184,17 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                       const [name, code] = JSON.parse(event.target.value) as [string, string];
                       setFields((current) => {
                       const next = { ...current, "نام باجه": name, "کد باجه": code };
-                      next["کد بایگانی جدید"] = buildNewArchiveCode(next);
+                      const archiveCode = buildNewArchiveCode(next);
+                      next["کد بایگانی"] = archiveCode;
+                      next["کد بایگانی جدید"] = archiveCode;
                       return next;
                     });
                     } catch {
                       setFields((current) => {
                         const next = { ...current, "نام باجه": "", "کد باجه": "" };
-                        next["کد بایگانی جدید"] = buildNewArchiveCode(next);
+                        const archiveCode = buildNewArchiveCode(next);
+                        next["کد بایگانی"] = archiveCode;
+                        next["کد بایگانی جدید"] = archiveCode;
                         return next;
                       });
                     }
