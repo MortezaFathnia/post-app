@@ -83,7 +83,10 @@ function mapRow(rawData: Record<string, unknown>) {
 
   const counter = normalizeCounter(rawData);
   const newArchiveCode = buildNewArchiveCode(rawData);
-  if (newArchiveCode) rawData["کد بایگانی جدید"] = newArchiveCode;
+  if (newArchiveCode) {
+    rawData["کد بایگانی"] = newArchiveCode;
+    rawData["کد بایگانی جدید"] = newArchiveCode;
+  }
 
   return {
     facilityNumber,
@@ -137,9 +140,12 @@ async function normalizeExistingRecords() {
 
     const counter = normalizeCounter(rawData);
     const newArchiveCode = buildNewArchiveCode(rawData);
-    if (newArchiveCode) rawData["کد بایگانی جدید"] = newArchiveCode;
+    if (newArchiveCode) {
+      rawData["کد بایگانی"] = newArchiveCode;
+      rawData["کد بایگانی جدید"] = newArchiveCode;
+    }
 
-    const nextArchiveCode = newArchiveCode || record.archiveCode || findValue(rawData, "کد بایگانی", "شماره بایگانی");
+    const nextArchiveCode = newArchiveCode || record.archiveCode || findValue(rawData, "کد بایگانی", "کد بایگانی جدید", "شماره بایگانی");
     const nextSerial = findValue(rawData, "سریال", "سریال2") || record.serial || null;
     const nextClassification = findValue(rawData, "طبقه", "طبقه بایگانی") || record.classification || null;
     const nextCounterName = counter.name || null;
