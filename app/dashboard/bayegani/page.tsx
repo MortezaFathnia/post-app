@@ -148,24 +148,33 @@ export default function BayeganiPage() {
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
     </form>
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div><h2 className="font-bold">رکوردهای بایگانی</h2><p className="mt-1 text-xs text-slate-500">تعداد نتایج: {total.toLocaleString("fa-IR")}</p></div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap"><button type="button" onClick={exportExcel} disabled={exportLoading} className="whitespace-nowrap rounded-xl border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-60">{exportLoading ? "در حال تهیه فایل..." : "خروجی اکسل همه رکوردها"}</button><Link href="/dashboard/bayegani/new" className="whitespace-nowrap rounded-xl bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-700">+ ثبت رکورد جدید</Link><input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="جستجوی عمومی..." aria-label="جستجوی عمومی" className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm sm:max-w-md" /></div>
-      <div className="flex flex-col gap-2 border-b border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center">
-        <label htmlFor="archive-filter-type" className="shrink-0 text-sm font-medium text-slate-700">فیلتر بر اساس</label>
-        <select id="archive-filter-type" value={filterType} onChange={(e) => { setFilterType(e.target.value); setPage(1); }} aria-label="نوع فیلتر" className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm">
-          <option value="counter">باجه</option>
-          <option value="startDate">تاریخ شروع</option>
-          <option value="endDate">تاریخ پایان</option>
-          <option value="approvedAmount">مبلغ مصوب</option>
-          <option value="status">وضعیت</option>
-          <option value="nationalId">کد ملی</option>
-        </select>
-        <input value={filterValue} onChange={(e) => { setFilterValue(e.target.value); setPage(1); }} placeholder="مقدار موردنظر برای فیلتر..." aria-label="مقدار فیلتر" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
-        <button type="button" onClick={() => { setFilterValue(""); setPage(1); }} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100">پاک کردن</button>
+      <div className="border-b border-slate-100 p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-bold">رکوردهای بایگانی</h2>
+            <p className="mt-1 text-xs text-slate-500">تعداد نتایج: {total.toLocaleString("fa-IR")}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={exportExcel} disabled={exportLoading} className="whitespace-nowrap rounded-xl border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-60">{exportLoading ? "در حال تهیه فایل..." : "خروجی اکسل همه رکوردها"}</button>
+            <Link href="/dashboard/bayegani/new" className="whitespace-nowrap rounded-xl bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-700">+ ثبت رکورد جدید</Link>
+          </div>
+        </div>
+        <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:flex-wrap sm:items-center">
+          <input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="جستجوی عمومی..." aria-label="جستجوی عمومی" className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm sm:min-w-56 sm:flex-1" />
+          <label htmlFor="archive-filter-type" className="shrink-0 text-sm font-medium text-slate-700">فیلتر بر اساس</label>
+          <select id="archive-filter-type" value={filterType} onChange={(e) => { setFilterType(e.target.value); setPage(1); }} aria-label="نوع فیلتر" className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm">
+            <option value="counter">باجه</option>
+            <option value="startDate">تاریخ شروع</option>
+            <option value="endDate">تاریخ پایان</option>
+            <option value="approvedAmount">مبلغ مصوب</option>
+            <option value="status">وضعیت</option>
+            <option value="nationalId">کد ملی</option>
+          </select>
+          <input value={filterValue} onChange={(e) => { setFilterValue(e.target.value); setPage(1); }} placeholder="مقدار موردنظر برای فیلتر..." aria-label="مقدار فیلتر" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
+          <button type="button" onClick={() => { setFilterValue(""); setPage(1); }} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100">پاک کردن</button>
+        </div>
       </div>
-      </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto">      <div className="overflow-x-auto">
         <table className="w-full min-w-[1200px] text-right text-sm">
           <thead className="bg-slate-50 text-slate-600"><tr>{sortableHeader("سریال", "serial")}{sortableHeader("شماره تسهیلات", "facilityNumber")}{sortableHeader("عنوان تسهیلات", "facilityTitle")}{sortableHeader("کد ملی", "nationalId")}{sortableHeader("کدباجه-نام باجه", "counterLabel")}{sortableHeader("کد بایگانی", "archiveCode")}{sortableHeader("تاریخ شروع", "startDate")}{sortableHeader("پایان قرارداد", "endDate")}{sortableHeader("مبلغ مصوب", "approvedAmount")}<th className="whitespace-nowrap px-4 py-3 font-semibold">عملیات</th></tr></thead>
           <tbody className="divide-y divide-slate-100">{records.map((r, index) => <tr key={r.id} className="hover:bg-slate-50">
