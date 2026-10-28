@@ -21,6 +21,12 @@ export default function BayeganiPage() {
   const [loading, setLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [counterFilter, setCounterFilter] = useState("");
+  const [startDateFilter, setStartDateFilter] = useState("");
+  const [endDateFilter, setEndDateFilter] = useState("");
+  const [approvedAmountFilter, setApprovedAmountFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [nationalIdFilter, setNationalIdFilter] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortBy, setSortBy] = useState<SortField>("serial");
@@ -45,6 +51,12 @@ export default function BayeganiPage() {
       page: String(page),
       pageSize: String(pageSize),
       search,
+      counter: counterFilter,
+      startDate: startDateFilter,
+      endDate: endDateFilter,
+      approvedAmount: approvedAmountFilter,
+      status: statusFilter,
+      nationalId: nationalIdFilter,
       sortBy,
       sortOrder,
     });
@@ -60,7 +72,7 @@ export default function BayeganiPage() {
 
   useEffect(() => {
     loadRecords().catch((e: unknown) => setError(e instanceof Error ? e.message : "خطا"));
-  }, [page, pageSize, search, sortBy, sortOrder]);
+  }, [page, pageSize, search, counterFilter, startDateFilter, endDateFilter, approvedAmountFilter, statusFilter, nationalIdFilter, sortBy, sortOrder]);
 
   function toggleSort(field: SortField) {
     if (sortBy === field) {
@@ -146,7 +158,16 @@ export default function BayeganiPage() {
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div><h2 className="font-bold">رکوردهای بایگانی</h2><p className="mt-1 text-xs text-slate-500">تعداد نتایج: {total.toLocaleString("fa-IR")}</p></div>
-        <div className="flex flex-col gap-2 sm:flex-row"><button type="button" onClick={exportExcel} disabled={exportLoading} className="whitespace-nowrap rounded-xl border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-60">{exportLoading ? "در حال تهیه فایل..." : "خروجی اکسل همه رکوردها"}</button><Link href="/dashboard/bayegani/new" className="whitespace-nowrap rounded-xl bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-700">+ ثبت رکورد جدید</Link><input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="جستجو شماره تسهیلات، شماره مشتری، کد ملی، کد بایگانی..." className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm sm:max-w-md" /><select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} aria-label="تعداد رکورد در هر صفحه" className="rounded-xl border border-slate-300 px-3 py-2 text-sm"><option value={10}>۱۰ در صفحه</option><option value={20}>۲۰ در صفحه</option><option value={50}>۵۰ در صفحه</option><option value={100}>۱۰۰ در صفحه</option></select></div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap"><button type="button" onClick={exportExcel} disabled={exportLoading} className="whitespace-nowrap rounded-xl border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-60">{exportLoading ? "در حال تهیه فایل..." : "خروجی اکسل همه رکوردها"}</button><Link href="/dashboard/bayegani/new" className="whitespace-nowrap rounded-xl bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-700">+ ثبت رکورد جدید</Link><input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="جستجوی عمومی..." aria-label="جستجوی عمومی" className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm sm:max-w-md" /><select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} aria-label="تعداد رکورد در هر صفحه" className="rounded-xl border border-slate-300 px-3 py-2 text-sm"><option value={10}>۱۰ در صفحه</option><option value={20}>۲۰ در صفحه</option><option value={50}>۵۰ در صفحه</option><option value={100}>۱۰۰ در صفحه</option></select></div>
+      <div className="grid grid-cols-1 gap-3 border-b border-slate-100 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-3">
+        <input value={counterFilter} onChange={(e) => { setCounterFilter(e.target.value); setPage(1); }} placeholder="فیلتر باجه (کد یا نام)" aria-label="فیلتر باجه" className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
+        <input value={startDateFilter} onChange={(e) => { setStartDateFilter(e.target.value); setPage(1); }} placeholder="فیلتر تاریخ شروع" aria-label="فیلتر تاریخ شروع" className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
+        <input value={endDateFilter} onChange={(e) => { setEndDateFilter(e.target.value); setPage(1); }} placeholder="فیلتر تاریخ پایان" aria-label="فیلتر تاریخ پایان" className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
+        <input value={approvedAmountFilter} onChange={(e) => { setApprovedAmountFilter(e.target.value); setPage(1); }} placeholder="فیلتر مبلغ مصوب" aria-label="فیلتر مبلغ مصوب" className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
+        <input value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} placeholder="فیلتر وضعیت" aria-label="فیلتر وضعیت" className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
+        <input value={nationalIdFilter} onChange={(e) => { setNationalIdFilter(e.target.value); setPage(1); }} placeholder="فیلتر کد ملی" aria-label="فیلتر کد ملی" className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
+        <button type="button" onClick={() => { setCounterFilter(""); setStartDateFilter(""); setEndDateFilter(""); setApprovedAmountFilter(""); setStatusFilter(""); setNationalIdFilter(""); setPage(1); }} className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-100">پاک کردن فیلترها</button>
+      </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1200px] text-right text-sm">
