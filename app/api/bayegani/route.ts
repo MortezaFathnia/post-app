@@ -220,18 +220,40 @@ export async function GET(request: NextRequest) {
         : "serial";
     const sortOrder = params.get("sortOrder") === "desc" ? "desc" : "asc";
 
-    const where = search
-      ? {
-          OR: [
-            { facilityNumber: { contains: search, mode: "insensitive" as const } },
-            { customerNumber: { contains: search, mode: "insensitive" as const } },
-            { archiveCode: { contains: search, mode: "insensitive" as const } },
-            { facilityTitle: { contains: search, mode: "insensitive" as const } },
-            { nationalId: { contains: search, mode: "insensitive" as const } },
-            { sheetName: { contains: search, mode: "insensitive" as const } },
-          ],
-        }
-      : {};
+    const counter = (params.get("counter") ?? "").trim();
+    const startDate = (params.get("startDate") ?? "").trim();
+    const endDate = (params.get("endDate") ?? "").trim();
+    const approvedAmount = (params.get("approvedAmount") ?? "").trim();
+    const status = (params.get("status") ?? "").trim();
+    const nationalId = (params.get("nationalId") ?? "").trim();
+
+    // Apply filters in PostgreSQL before counting, sorting, and pagination.
+    const conditions: Record<string, unknown>[] = [];
+    if (search) {
+      conditions.push({
+        OR: [
+          { facilityNumber: { contains: search, mode: "insensitive" as const } },
+          { customerNumber: { contains: search, mode: "insensitive" as const } },
+          { archiveCode: { contains: search, mode: "insensitive" as const } },
+          { facilityTitle: { contains: search, mode: "insensitive" as const } },
+          { nationalId: { contains: search, mode: "insensitive" as const } },
+          { sheetName: { contains: search, mode: "insensitive" as const } },
+        ],
+      });
+    }
+    if (counter) conditions.push({
+      OR: [
+        { counterLabel: { contains: counter, mode: "insensitive" as const } },
+        { counterCode: { contains: counter, mode: "insensitive" as const } },
+        { counterName: { contains: counter, mode: "insensitive" as const } },
+      ],
+    });
+    if (startDate) conditions.push({ startDate: { contains: startDate, mode: "insensitive" as const } });
+    if (endDate) conditions.push({ endDate: { contains: endDate, mode: "insensitive" as const } });
+    if (approvedAmount) conditions.push({ approvedAmount: { contains: approvedAmount, mode: "insensitive" as const } });
+    if (status) conditions.push({ status: { contains: status, mode: "insensitive" as const } });
+    if (nationalId) conditions.push({ nationalId: { contains: nationalId, mode: "insensitive" as const } });
+    const where = conditions.length ? { AND: conditions } : {};
 
     const [records, total, recordCounters] = await Promise.all([
       prisma.bayeganiRecord.findMany({
