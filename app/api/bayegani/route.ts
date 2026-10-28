@@ -207,12 +207,12 @@ export async function GET(request: NextRequest) {
     const search = (params.get("search") ?? "").trim();
     const sortableFields = ["facilityNumber", "facilityTitle", "nationalId", "counterLabel", "archiveCode", "serial", "startDate", "endDate", "approvedAmount"] as const;
     type SortField = (typeof sortableFields)[number] | "order";
-    const requestedSort = params.get("sortBy") ?? "order";
+    const requestedSort = params.get("sortBy") ?? "serial";
     const sortBy: SortField = requestedSort === "order"
       ? "order"
       : sortableFields.includes(requestedSort as (typeof sortableFields)[number])
         ? requestedSort as (typeof sortableFields)[number]
-        : "order";
+        : "serial";
     const sortOrder = params.get("sortOrder") === "desc" ? "desc" : "asc";
 
     const where = search
