@@ -91,8 +91,8 @@ function mapRow(rawData: Record<string, unknown>) {
   if (derivedCustomerNumber) rawData["شماره مشتری"] = derivedCustomerNumber;
 
   const counter = normalizeCounter(rawData);
-  const newArchiveCode = buildNewArchiveCode(rawData);
-  const archiveCode = newArchiveCode || findValue(rawData, "کد بایگانی جدید", "کد بایگانی", "شماره بایگانی");
+  const suppliedArchiveCode = findValue(rawData, "کد بایگانی جدید", "کد بایگانی", "شماره بایگانی");
+  const archiveCode = suppliedArchiveCode || buildNewArchiveCode(rawData);
   delete rawData["کد بایگانی جدید"];
   if (archiveCode) rawData["کد بایگانی"] = archiveCode;
 
@@ -147,8 +147,8 @@ async function normalizeExistingRecords() {
     if (!findValue(rawData, "طبقه") && record.classification) rawData["طبقه"] = record.classification;
 
     const counter = normalizeCounter(rawData);
-    const newArchiveCode = buildNewArchiveCode(rawData);
-    const nextArchiveCode = newArchiveCode || findValue(rawData, "کد بایگانی جدید", "کد بایگانی", "شماره بایگانی") || record.archiveCode || "";
+    const suppliedArchiveCode = findValue(rawData, "کد بایگانی جدید", "کد بایگانی", "شماره بایگانی");
+    const nextArchiveCode = suppliedArchiveCode || record.archiveCode || buildNewArchiveCode(rawData) || "";
     delete rawData["کد بایگانی جدید"];
     if (nextArchiveCode) rawData["کد بایگانی"] = nextArchiveCode;
     const nextSerial = findValue(rawData, "سریال", "سریال2") || record.serial || null;
@@ -206,9 +206,13 @@ export async function GET(request: NextRequest) {
       : 20;
     const search = (params.get("search") ?? "").trim();
     const sortableFields = ["facilityNumber", "facilityTitle", "nationalId", "counterLabel", "archiveCode", "serial", "startDate", "endDate", "approvedAmount"] as const;
-    type SortField = (typeof sortableFields)[number];
-    const requestedSort = params.get("sortBy") ?? "serial";
-    const sortBy: SortField = sortableFields.includes(requestedSort as SortField) ? requestedSort as SortField : "facilityNumber";
+    type SortField = (typeof sortableFields)[number] | "order";
+    const requestedSort = params.get("sortBy") ?? "order";
+    const sortBy: SortField = requestedSort === "order"
+      ? "order"
+      : sortableFields.includes(requestedSort as (typeof sortableFields)[number])
+        ? requestedSort as (typeof sortableFields)[number]
+        : "order";
     const sortOrder = params.get("sortOrder") === "desc" ? "desc" : "asc";
 
     const where = search
@@ -229,9 +233,11 @@ export async function GET(request: NextRequest) {
         where,
         orderBy: sortBy === "serial"
           ? [{ serial: sortOrder }, { sourceRow: "asc" }, { id: "asc" }]
-          : [{ [sortBy]: sortOrder }, { id: "asc" }],
+          : sortBy === "order"
+            ? [{ id: "asc" }]
+            : [{ [sortBy]: sortOrder }, { id: "asc" }],
         // Serial values are sorted numerically below so 2 comes before 10.
-        // Fetch all filtered rows only for serial sorting, then paginate after sorting.
+        // Default import order uses increasing IDs, matching workbook sheet/row order.
         skip: sortBy === "serial" ? undefined : (page - 1) * pageSize,
         take: sortBy === "serial" ? undefined : pageSize,
         select: {
@@ -355,12 +361,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "ردیف اطلاعاتی قابل‌واردکردن در فایل پیدا نشد." }, { status: 400 });
     }
 
-    let imported = 0;
+    // Replace the archive dataset only after the workbook has been parsed and validated.
+    // Keep every row, including repeated serial values, for manual correction.
+    const operations = [prisma.bayeganiRecord.deleteMany()];
     for (let offset = 0; offset < records.length; offset += 300) {
       const batch = records.slice(offset, offset + 300);
-      const result = await prisma.bayeganiRecord.createMany({ data: batch as never[], skipDuplicates: true });
-      imported += result.count;
+      operations.push(prisma.bayeganiRecord.createMany({ data: batch as never[], skipDuplicates: false }));
     }
+    const results = await prisma.$transaction(operations);
+    const imported = results.slice(1).reduce((sum, result) => sum + result.count, 0);
 
     const normalized = await normalizeExistingRecords();
 
@@ -370,7 +379,7 @@ export async function POST(request: NextRequest) {
       detected: records.length,
       normalized,
       sheets: workbook.SheetNames,
-      message: "بارگذاری انجام شد و اطلاعات موجود نیز پاک‌سازی و یکسان‌سازی شد.",
+      message: "رکوردهای قبلی بایگانی جایگزین شدند؛ ترتیب ردیف‌ها و کدهای بایگانی حفظ شد و سریال‌های تکراری برای ویرایش دستی باقی ماندند.",
     });
   } catch (error) {
     console.error("Bayegani Excel import error:", error);
