@@ -11,7 +11,8 @@
     "normalize:bajeh-code": "node scripts/normalize-bayegani-counters.cjs",
     "normalize:bayegani-data": "node scripts/normalize-bayegani-counters.cjs",
     "dedupe:bayegani": "node scripts/dedupe-bayegani-by-serial.cjs",
-    "check:bayegani-serials": "node scripts/check-bayegani-serials.cjs"
+    "check:bayegani-serials": "node scripts/check-bayegani-serials.cjs",
+    "import:bajeh-code": "node scripts/import-bajeh-code.cjs"
   },
   "dependencies": {
     "@fontsource/vazirmatn": "^5.3.0",
