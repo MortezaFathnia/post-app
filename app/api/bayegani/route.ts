@@ -7,6 +7,15 @@ export const runtime = "nodejs";
 
 const REMOVED_RAW_FIELDS = new Set(["column1", "column3", "column23", "column24"]);
 
+function serialNumber(value: string | null): bigint | null {
+  if (!value) return null;
+  const normalized = value
+    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069\s,٬]/g, "");
+  return /^\d+$/.test(normalized) ? BigInt(normalized) : null;
+}
+
 function cell(value: unknown): string {
   if (value === null || value === undefined) return "";
   return String(value).trim();
@@ -221,8 +230,10 @@ export async function GET(request: NextRequest) {
         orderBy: sortBy === "serial"
           ? [{ serial: sortOrder }, { sourceRow: "asc" }, { id: "asc" }]
           : [{ [sortBy]: sortOrder }, { id: "asc" }],
-        skip: (page - 1) * pageSize,
-        take: pageSize,
+        // Serial values are sorted numerically below so 2 comes before 10.
+        // Fetch all filtered rows only for serial sorting, then paginate after sorting.
+        skip: sortBy === "serial" ? undefined : (page - 1) * pageSize,
+        take: sortBy === "serial" ? undefined : pageSize,
         select: {
           id: true, sheetName: true, sourceRow: true, facilityNumber: true,
           customerNumber: true, archiveCode: true, rawData: true, facilityTitle: true, serial: true,
@@ -264,7 +275,22 @@ export async function GET(request: NextRequest) {
       select: { code: true, name: true },
     });
 
-    const tableRecords = records.map((record) => {
+    const sortedRecords = sortBy === "serial"
+      ? [...records].sort((a, b) => {
+          const aSerial = serialNumber(a.serial);
+          const bSerial = serialNumber(b.serial);
+          if (aSerial === null && bSerial !== null) return 1;
+          if (aSerial !== null && bSerial === null) return -1;
+          if (aSerial !== null && bSerial !== null && aSerial !== bSerial) {
+            const comparison = aSerial < bSerial ? -1 : 1;
+            return sortOrder === "asc" ? comparison : -comparison;
+          }
+          const tieBreak = a.sourceRow - b.sourceRow || a.id - b.id;
+          return sortOrder === "asc" ? tieBreak : -tieBreak;
+        }).slice((page - 1) * pageSize, page * pageSize)
+      : records;
+
+    const tableRecords = sortedRecords.map((record) => {
       const rawData = record.rawData && typeof record.rawData === "object" && !Array.isArray(record.rawData)
         ? record.rawData as Record<string, unknown>
         : {};
