@@ -174,7 +174,7 @@ export default function BayeganiPage() {
           <button type="button" onClick={() => { setFilterValue(""); setPage(1); }} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100">پاک کردن</button>
         </div>
       </div>
-      <div className="overflow-x-auto">      <div className="overflow-x-auto">
+      <div className="overflow-x-auto">
         <table className="w-full min-w-[1200px] text-right text-sm">
           <thead className="bg-slate-50 text-slate-600"><tr>{sortableHeader("سریال", "serial")}{sortableHeader("شماره تسهیلات", "facilityNumber")}{sortableHeader("عنوان تسهیلات", "facilityTitle")}{sortableHeader("کد ملی", "nationalId")}{sortableHeader("کدباجه-نام باجه", "counterLabel")}{sortableHeader("کد بایگانی", "archiveCode")}{sortableHeader("تاریخ شروع", "startDate")}{sortableHeader("پایان قرارداد", "endDate")}{sortableHeader("مبلغ مصوب", "approvedAmount")}<th className="whitespace-nowrap px-4 py-3 font-semibold">عملیات</th></tr></thead>
           <tbody className="divide-y divide-slate-100">{records.map((r, index) => <tr key={r.id} className="hover:bg-slate-50">
