@@ -49,7 +49,10 @@ export default function BayeganiPage() {
       sortOrder,
     });
     const response = await fetch(`/api/bayegani?${params.toString()}`, { cache: "no-store" });
-    const result = await response.json();
+    const result = await response.json().catch(() => null);
+    if (!result) {
+      throw new Error(`API returned HTML or invalid JSON (HTTP ${response.status}). Check the terminal for the server error, then restart Next.js after applying Prisma migrations.`);
+    }
     if (!response.ok || !result.success) throw new Error(result.error || "دریافت اطلاعات ناموفق بود.");
     setRecords(result.records);
     setTotal(result.total);
@@ -113,7 +116,10 @@ export default function BayeganiPage() {
     try {
       const form = new FormData(); form.append("file", file);
       const response = await fetch("/api/bayegani", { method: "POST", body: form });
-      const result = await response.json();
+      const result = await response.json().catch(() => null);
+      if (!result) {
+        throw new Error(`Upload API returned HTML or invalid JSON (HTTP ${response.status}). Check the terminal for the server error and verify the Prisma migration.`);
+      }
       if (!response.ok || !result.success) throw new Error(result.error || "ورود اطلاعات ناموفق بود.");
       setMessage(`${result.imported} رکورد از فایل جایگزین شد. تعداد ردیف‌های شناسایی‌شده: ${result.detected}. ${result.normalized ?? 0} رکورد پاک‌سازی شد. سریال‌های تکراری حذف نشده‌اند.`);
       setPage(1);
