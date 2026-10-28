@@ -226,6 +226,7 @@ model BayeganiRecord {
   archiveCode       String?
   facilityTitle     String?
   serial            String?
+  serialSort        BigInt?
   classification    String?
   counterName       String?
   counterCode       String?
@@ -245,6 +246,7 @@ model BayeganiRecord {
   @@index([facilityNumber])
   @@index([customerNumber])
   @@index([archiveCode])
+  @@index([serialSort])
 }
 
 model BajehCode {
