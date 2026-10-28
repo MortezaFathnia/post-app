@@ -7,23 +7,14 @@ export const runtime = "nodejs";
 
 const REMOVED_RAW_FIELDS = new Set(["column1", "column3", "column23", "column24"]);
 
-function serialNumber(value: string | null): bigint | null {
-  if (!value) return null;
-  const normalized = value
-    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
-    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
-    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069\s,٬]/g, "");
-  return /^\d+$/.test(normalized) ? BigInt(normalized) : null;
-}
-
 function serialSortValue(value: string | null | undefined): bigint | null {
   if (!value) return null;
   const normalized = value
     .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
     .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
-    .replace(/[\\u200e\\u200f\\u202a-\\u202e\\u2066-\\u2069\\s,٬]/g, "");
+    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069\s,٬]/g, "");
   // Keep values within PostgreSQL BIGINT's positive range.
-  if (!/^\\d{1,18}$/.test(normalized)) return null;
+  if (!/^\d{1,18}$/.test(normalized)) return null;
   return BigInt(normalized);
 }
 
@@ -113,6 +104,7 @@ function mapRow(rawData: Record<string, unknown>) {
     archiveCode,
     facilityTitle: findValue(rawData, "عنوان تسهیلات", "عنوان تسهيلات"),
     serial: findValue(rawData, "سریال", "سریال2"),
+    serialSort: serialSortValue(findValue(rawData, "سریال", "سریال2")),
     classification: findValue(rawData, "طبقه", "طبقه بایگانی"),
     counterName: counter.name,
     counterCode: counter.code,
@@ -174,6 +166,7 @@ async function normalizeExistingRecords() {
       nextCustomerNumber !== record.customerNumber ||
       nextArchiveCode !== record.archiveCode ||
       nextSerial !== record.serial ||
+      serialSortValue(nextSerial) !== record.serialSort ||
       nextClassification !== record.classification ||
       nextCounterName !== record.counterName ||
       nextCounterCode !== record.counterCode ||
