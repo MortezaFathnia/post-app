@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import * as XLSX from "xlsx";
 import { prisma } from "@/lib/prisma";
 import { normalizeCounterName, normalizePersianText } from "@/lib/normalize-persian";
@@ -228,7 +229,7 @@ export async function GET(request: NextRequest) {
     const nationalId = (params.get("nationalId") ?? "").trim();
 
     // Apply filters in PostgreSQL before counting, sorting, and pagination.
-    const conditions: Record<string, unknown>[] = [];
+    const conditions: Prisma.BayeganiRecordWhereInput[] = [];
     if (search) {
       conditions.push({
         OR: [
