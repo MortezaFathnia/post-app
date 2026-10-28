@@ -221,14 +221,10 @@ export async function GET(request: NextRequest) {
         : "serial";
     const sortOrder = params.get("sortOrder") === "desc" ? "desc" : "asc";
 
-    const counter = (params.get("counter") ?? "").trim();
-    const startDate = (params.get("startDate") ?? "").trim();
-    const endDate = (params.get("endDate") ?? "").trim();
-    const approvedAmount = (params.get("approvedAmount") ?? "").trim();
-    const status = (params.get("status") ?? "").trim();
-    const nationalId = (params.get("nationalId") ?? "").trim();
+    const filterType = (params.get("filterType") ?? "").trim();
+    const filterValue = (params.get("filterValue") ?? "").trim();
 
-    // Apply filters in PostgreSQL before counting, sorting, and pagination.
+    // Apply the selected filter in PostgreSQL before counting, sorting, and pagination.
     const conditions: Prisma.BayeganiRecordWhereInput[] = [];
     if (search) {
       conditions.push({
@@ -242,18 +238,34 @@ export async function GET(request: NextRequest) {
         ],
       });
     }
-    if (counter) conditions.push({
-      OR: [
-        { counterLabel: { contains: counter, mode: "insensitive" as const } },
-        { counterCode: { contains: counter, mode: "insensitive" as const } },
-        { counterName: { contains: counter, mode: "insensitive" as const } },
-      ],
-    });
-    if (startDate) conditions.push({ startDate: { contains: startDate, mode: "insensitive" as const } });
-    if (endDate) conditions.push({ endDate: { contains: endDate, mode: "insensitive" as const } });
-    if (approvedAmount) conditions.push({ approvedAmount: { contains: approvedAmount, mode: "insensitive" as const } });
-    if (status) conditions.push({ status: { contains: status, mode: "insensitive" as const } });
-    if (nationalId) conditions.push({ nationalId: { contains: nationalId, mode: "insensitive" as const } });
+    if (filterValue) {
+      switch (filterType) {
+        case "counter":
+          conditions.push({
+            OR: [
+              { counterLabel: { contains: filterValue, mode: "insensitive" as const } },
+              { counterCode: { contains: filterValue, mode: "insensitive" as const } },
+              { counterName: { contains: filterValue, mode: "insensitive" as const } },
+            ],
+          });
+          break;
+        case "startDate":
+          conditions.push({ startDate: { contains: filterValue, mode: "insensitive" as const } });
+          break;
+        case "endDate":
+          conditions.push({ endDate: { contains: filterValue, mode: "insensitive" as const } });
+          break;
+        case "approvedAmount":
+          conditions.push({ approvedAmount: { contains: filterValue, mode: "insensitive" as const } });
+          break;
+        case "status":
+          conditions.push({ status: { contains: filterValue, mode: "insensitive" as const } });
+          break;
+        case "nationalId":
+          conditions.push({ nationalId: { contains: filterValue, mode: "insensitive" as const } });
+          break;
+      }
+    }
     const where = conditions.length ? { AND: conditions } : {};
 
     const [records, total, recordCounters] = await Promise.all([
