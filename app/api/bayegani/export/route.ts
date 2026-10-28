@@ -2,6 +2,24 @@ import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { prisma } from "@/lib/prisma";
 
+function serialNumber(value: string | null): bigint | null {
+  if (!value) return null;
+  const normalized = value
+    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+    .replace(/[\\u200e\\u200f\\u202a-\\u202e\\u2066-\\u2069\\s,٬]/g, "");
+  return /^\\d+$/.test(normalized) ? BigInt(normalized) : null;
+}
+
+function compareSerial(a: string | null, b: string | null): number {
+  const aValue = serialNumber(a);
+  const bValue = serialNumber(b);
+  if (aValue === null && bValue !== null) return 1;
+  if (aValue !== null && bValue === null) return -1;
+  if (aValue !== null && bValue !== null && aValue !== bValue) return aValue < bValue ? -1 : 1;
+  return 0;
+}
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -16,7 +34,7 @@ export async function GET() {
   try {
     // Read every row; this endpoint does not write to or delete database records.
     const records = await prisma.bayeganiRecord.findMany({
-      orderBy: { id: "asc" },
+      orderBy: [{ serial: "asc" }, { sourceRow: "asc" }, { id: "asc" }],
       select: {
         id: true,
         sourceFile: true,
@@ -41,6 +59,9 @@ export async function GET() {
         rawData: true,
       },
     });
+
+    // Ensure serials are ordered numerically (e.g. 2 before 10), including Persian/Arabic digits.
+    records.sort((a, b) => compareSerial(a.serial, b.serial) || a.sourceRow - b.sourceRow || a.id - b.id);
 
     const metadataHeaders = [
       "شناسه رکورد",
