@@ -175,11 +175,6 @@ export default function BayeganiPage() {
         {records.length === 0 && <p className="p-8 text-center text-sm text-slate-500">رکوردی پیدا نشد. ابتدا فایل Excel را بارگذاری کنید یا عبارت جستجو را تغییر دهید.</p>}
       </div>
       <div className="flex flex-col gap-3 border-t border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-600">
-          صفحه {page.toLocaleString("fa-IR")} از {totalPages.toLocaleString("fa-IR")}
-          {" · "}نمایش {firstRecord.toLocaleString("fa-IR")} تا {lastRecord.toLocaleString("fa-IR")} از {total.toLocaleString("fa-IR")} رکورد
-          {" · "}{records.length.toLocaleString("fa-IR")} رکورد در این صفحه
-        </p>
         <nav aria-label="صفحه‌بندی رکوردهای بایگانی" className="flex flex-wrap items-center gap-1.5">
           <button type="button" onClick={() => setPage(1)} disabled={page <= 1} className="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">اولین</button>
           <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page <= 1} className="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">قبلی</button>
@@ -221,6 +216,11 @@ export default function BayeganiPage() {
           <button type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page >= totalPages} className="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">بعدی</button>
           <button type="button" onClick={() => setPage(totalPages)} disabled={page >= totalPages} className="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">آخرین</button>
         </nav>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 sm:justify-end">
+          <span>تعداد کل: <strong className="text-slate-900">{total.toLocaleString("fa-IR")}</strong></span>
+          <span>رکوردهای این صفحه: <strong className="text-slate-900">{records.length.toLocaleString("fa-IR")}</strong></span>
+          <span>نمایش {firstRecord.toLocaleString("fa-IR")} تا {lastRecord.toLocaleString("fa-IR")}</span>
+        </div>
       </div>
     </section>
   </div>;
