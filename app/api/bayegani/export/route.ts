@@ -34,7 +34,7 @@ export async function GET() {
   try {
     // Read every row; this endpoint does not write to or delete database records.
     const records = await prisma.bayeganiRecord.findMany({
-      orderBy: [{ serial: "asc" }, { sourceRow: "asc" }, { id: "asc" }],
+      orderBy: [{ serialSort: { sort: "asc", nulls: "last" } }, { sourceRow: "asc" }, { id: "asc" }],
       select: {
         id: true,
         sourceFile: true,
@@ -59,9 +59,6 @@ export async function GET() {
         rawData: true,
       },
     });
-
-    // Ensure serials are ordered numerically (e.g. 2 before 10), including Persian/Arabic digits.
-    records.sort((a, b) => compareSerial(a.serial, b.serial) || a.sourceRow - b.sourceRow || a.id - b.id);
 
     const metadataHeaders = [
       "شناسه رکورد",
