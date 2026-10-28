@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 
-type SortField = "facilityNumber" | "facilityTitle" | "nationalId" | "counterLabel" | "archiveCode" | "serial" | "startDate" | "endDate" | "approvedAmount";
+type SortField = "order" | "facilityNumber" | "facilityTitle" | "nationalId" | "counterLabel" | "archiveCode" | "serial" | "startDate" | "endDate" | "approvedAmount";
 
 type RecordItem = {
   id: number; sheetName: string; sourceRow: number; facilityNumber: string | null;
@@ -23,7 +23,7 @@ export default function BayeganiPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [sortBy, setSortBy] = useState<SortField>("serial");
+  const [sortBy, setSortBy] = useState<SortField>("order");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -115,7 +115,7 @@ export default function BayeganiPage() {
       const response = await fetch("/api/bayegani", { method: "POST", body: form });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || "ورود اطلاعات ناموفق بود.");
-      setMessage(`${result.imported} رکورد جدید ذخیره شد. تعداد ردیف‌های شناسایی‌شده: ${result.detected}. ${result.normalized ?? 0} رکورد موجود نیز پاک‌سازی و یکسان‌سازی شد.`);
+      setMessage(`${result.imported} رکورد از فایل جایگزین شد. تعداد ردیف‌های شناسایی‌شده: ${result.detected}. ${result.normalized ?? 0} رکورد پاک‌سازی شد. سریال‌های تکراری حذف نشده‌اند.`);
       setPage(1);
       await loadRecords();
     } catch (e) { setError(e instanceof Error ? e.message : "خطا در بارگذاری فایل."); }
@@ -129,7 +129,7 @@ export default function BayeganiPage() {
     </header>
     <form onSubmit={upload} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <h2 className="mb-3 font-bold">ورود اطلاعات از Excel</h2>
-      <p className="mb-4 text-sm leading-6 text-slate-600">تمام Sheetهای فایل پردازش می‌شوند. عنوان ستون‌ها و مقادیر اصلی هر ردیف برای ویرایش‌های بعدی حفظ می‌شوند. بارگذاری دوباره همان نام فایل، ردیف‌های تکراری را دوباره ثبت نمی‌کند.</p>
+      <p className="mb-4 text-sm leading-6 text-slate-600">تمام Sheetهای فایل پردازش می‌شوند. با بارگذاری فایل، رکوردهای قبلی بایگانی جایگزین می‌شوند. ترتیب ردیف‌ها و کدهای بایگانی حفظ می‌شوند و سریال‌های تکراری حذف نمی‌شوند تا بتوانید آن‌ها را دستی ویرایش کنید.</p>
       <div className="flex flex-col gap-3 sm:flex-row">
         <input type="file" accept=".xlsx,.xls" onChange={(e) => setFile(e.target.files?.[0] || null)} disabled={loading} className="min-w-0 flex-1 rounded-xl border border-slate-300 p-3 text-sm" />
         <button disabled={loading} className="rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white disabled:opacity-60">{loading ? "در حال ذخیره..." : "بارگذاری و ذخیره در DB"}</button>
