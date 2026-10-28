@@ -268,7 +268,7 @@ export async function GET(request: NextRequest) {
     }
     const where = conditions.length ? { AND: conditions } : {};
 
-    const [records, total, recordCounters] = await Promise.all([
+    const [records, total] = await Promise.all([
       prisma.bayeganiRecord.findMany({
         where,
         orderBy: sortBy === "serial"
@@ -287,34 +287,9 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.bayeganiRecord.count({ where }),
-      prisma.bayeganiRecord.findMany({
-        where: { counterCode: { not: null }, counterName: { not: null } },
-        select: { counterCode: true, counterName: true },
-        distinct: ["counterCode", "counterName"],
-        orderBy: [{ counterCode: "asc" }, { counterName: "asc" }],
-      }),
     ]);
 
-    // Backfill the dedicated counter table from existing archive rows.
-    const validCounters = recordCounters
-      .map((counter) => ({
-        code: counter.counterCode?.trim() ?? "",
-        name: counter.counterName?.trim() ?? "",
-      }))
-      .filter((counter) => counter.code && counter.name);
-
-    if (validCounters.length) {
-      await prisma.$transaction(
-        validCounters.map((counter) =>
-          prisma.bajehCode.upsert({
-            where: { code_name: { code: counter.code, name: counter.name } },
-            create: counter,
-            update: {},
-          }),
-        ),
-      );
-    }
-
+    // The reference table is maintained from the official counter list, not old archive rows.
     const counters = await prisma.bajehCode.findMany({
       orderBy: [{ code: "asc" }, { name: "asc" }],
       select: { code: true, name: true },
