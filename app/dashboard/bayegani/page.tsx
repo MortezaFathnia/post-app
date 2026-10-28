@@ -23,7 +23,7 @@ export default function BayeganiPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [sortBy, setSortBy] = useState<SortField>("order");
+  const [sortBy, setSortBy] = useState<SortField>("serial");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
