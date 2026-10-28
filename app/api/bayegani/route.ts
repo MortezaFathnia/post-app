@@ -16,6 +16,17 @@ function serialNumber(value: string | null): bigint | null {
   return /^\d+$/.test(normalized) ? BigInt(normalized) : null;
 }
 
+function serialSortValue(value: string | null | undefined): bigint | null {
+  if (!value) return null;
+  const normalized = value
+    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+    .replace(/[\\u200e\\u200f\\u202a-\\u202e\\u2066-\\u2069\\s,٬]/g, "");
+  // Keep values within PostgreSQL BIGINT's positive range.
+  if (!/^\\d{1,18}$/.test(normalized)) return null;
+  return BigInt(normalized);
+}
+
 function cell(value: unknown): string {
   if (value === null || value === undefined) return "";
   return String(value).trim();
@@ -120,7 +131,7 @@ async function normalizeExistingRecords() {
   const existing = await prisma.bayeganiRecord.findMany({
     select: {
       id: true, rawData: true, facilityNumber: true, customerNumber: true,
-      archiveCode: true, serial: true, classification: true, counterName: true, counterCode: true, counterLabel: true,
+      archiveCode: true, serial: true, serialSort: true, classification: true, counterName: true, counterCode: true, counterLabel: true,
     },
   });
 
@@ -177,6 +188,7 @@ async function normalizeExistingRecords() {
         customerNumber: nextCustomerNumber,
         archiveCode: nextArchiveCode,
         serial: nextSerial,
+        serialSort: serialSortValue(nextSerial),
         classification: nextClassification,
         counterName: nextCounterName,
         counterCode: nextCounterCode,
@@ -232,17 +244,16 @@ export async function GET(request: NextRequest) {
       prisma.bayeganiRecord.findMany({
         where,
         orderBy: sortBy === "serial"
-          ? [{ serial: sortOrder }, { sourceRow: "asc" }, { id: "asc" }]
+          ? [{ serialSort: { sort: sortOrder, nulls: "last" } }, { sourceRow: "asc" }, { id: "asc" }]
           : sortBy === "order"
             ? [{ id: "asc" }]
             : [{ [sortBy]: sortOrder }, { id: "asc" }],
-        // Serial values are sorted numerically below so 2 comes before 10.
-        // Default import order uses increasing IDs, matching workbook sheet/row order.
-        skip: sortBy === "serial" ? undefined : (page - 1) * pageSize,
-        take: sortBy === "serial" ? undefined : pageSize,
+        // PostgreSQL orders by the persisted numeric serialSort field before pagination.
+        skip: (page - 1) * pageSize,
+        take: pageSize,
         select: {
           id: true, sheetName: true, sourceRow: true, facilityNumber: true,
-          customerNumber: true, archiveCode: true, rawData: true, facilityTitle: true, serial: true,
+          customerNumber: true, archiveCode: true, rawData: true, facilityTitle: true, serial: true, serialSort: true,
           classification: true, counterLabel: true, status: true, startDate: true, endDate: true,
           approvedAmount: true, remainingAmount: true, nationalId: true,
         },
@@ -281,20 +292,7 @@ export async function GET(request: NextRequest) {
       select: { code: true, name: true },
     });
 
-    const sortedRecords = sortBy === "serial"
-      ? [...records].sort((a, b) => {
-          const aSerial = serialNumber(a.serial);
-          const bSerial = serialNumber(b.serial);
-          if (aSerial === null && bSerial !== null) return 1;
-          if (aSerial !== null && bSerial === null) return -1;
-          if (aSerial !== null && bSerial !== null && aSerial !== bSerial) {
-            const comparison = aSerial < bSerial ? -1 : 1;
-            return sortOrder === "asc" ? comparison : -comparison;
-          }
-          const tieBreak = a.sourceRow - b.sourceRow || a.id - b.id;
-          return sortOrder === "asc" ? tieBreak : -tieBreak;
-        }).slice((page - 1) * pageSize, page * pageSize)
-      : records;
+    const sortedRecords = records;
 
     const tableRecords = sortedRecords.map((record) => {
       const rawData = record.rawData && typeof record.rawData === "object" && !Array.isArray(record.rawData)
