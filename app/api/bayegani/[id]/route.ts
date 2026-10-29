@@ -43,22 +43,34 @@ function customerNumberFromFacility(facilityNumber: string): string {
 }
 
 export async function GET(_request: NextRequest, context: RouteContext) {
-  const { id } = await context.params;
-  const recordId = Number(id);
-  if (!Number.isInteger(recordId) || recordId < 1) return NextResponse.json({ error: "شناسه نامعتبر است." }, { status: 400 });
-  const record = await prisma.bayeganiRecord.findUnique({ where: { id: recordId } });
-  if (!record) return NextResponse.json({ error: "رکورد پیدا نشد." }, { status: 404 });
-  const raw = record.rawData && typeof record.rawData === "object" && !Array.isArray(record.rawData)
-    ? { ...(record.rawData as Record<string, unknown>) }
-    : {};
-  let changed = false;
-  for (const key of ["column1", "column3", "column23", "column24"]) {
-    if (Object.prototype.hasOwnProperty.call(raw, key)) { delete raw[key]; changed = true; }
+  try {
+    const { id } = await context.params;
+    const recordId = Number(id);
+    if (!Number.isInteger(recordId) || recordId < 1) {
+      return NextResponse.json({ success: false, error: "شناسه نامعتبر است." }, { status: 400 });
+    }
+    const record = await prisma.bayeganiRecord.findUnique({ where: { id: recordId } });
+    if (!record) {
+      return NextResponse.json({ success: false, error: "رکورد پیدا نشد." }, { status: 404 });
+    }
+    const raw = record.rawData && typeof record.rawData === "object" && !Array.isArray(record.rawData)
+      ? { ...(record.rawData as Record<string, unknown>) }
+      : {};
+    let changed = false;
+    for (const key of ["column1", "column3", "column23", "column24"]) {
+      if (Object.prototype.hasOwnProperty.call(raw, key)) { delete raw[key]; changed = true; }
+    }
+    const cleanedRecord = changed
+      ? await prisma.bayeganiRecord.update({ where: { id: recordId }, data: { rawData: raw as never } })
+      : record;
+    return NextResponse.json({ success: true, record: cleanedRecord });
+  } catch (error) {
+    console.error("Load archive record error:", error);
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : "دریافت رکورد ناموفق بود.",
+    }, { status: 500 });
   }
-  const cleanedRecord = changed
-    ? await prisma.bayeganiRecord.update({ where: { id: recordId }, data: { rawData: raw as never } })
-    : record;
-  return NextResponse.json({ success: true, record: cleanedRecord });
 }
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
