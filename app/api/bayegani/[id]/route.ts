@@ -8,9 +8,20 @@ function cell(value: unknown): string {
   if (value === null || value === undefined) return "";
   return String(value).trim();
 }
+
 function value(raw: Record<string, unknown>, ...keys: string[]) {
   for (const key of keys) if (raw[key] !== undefined && cell(raw[key])) return cell(raw[key]);
   return "";
+}
+
+// Prisma returns PostgreSQL BIGINT fields as JavaScript bigint values.
+// JSON.stringify/NextResponse.json cannot serialize bigint, so expose it as a
+// string to preserve precision and keep the API response JSON-safe.
+function serializeRecord<T extends { serialSort: bigint | null }>(record: T) {
+  return {
+    ...record,
+    serialSort: record.serialSort === null ? null : record.serialSort.toString(),
+  };
 }
 
 function splitCounter(input: string): { code: string; name: string } | null {
@@ -49,21 +60,15 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     if (!Number.isInteger(recordId) || recordId < 1) {
       return NextResponse.json({ success: false, error: "شناسه نامعتبر است." }, { status: 400 });
     }
+
     const record = await prisma.bayeganiRecord.findUnique({ where: { id: recordId } });
     if (!record) {
       return NextResponse.json({ success: false, error: "رکورد پیدا نشد." }, { status: 404 });
     }
-    const raw = record.rawData && typeof record.rawData === "object" && !Array.isArray(record.rawData)
-      ? { ...(record.rawData as Record<string, unknown>) }
-      : {};
-    let changed = false;
-    for (const key of ["column1", "column3", "column23", "column24"]) {
-      if (Object.prototype.hasOwnProperty.call(raw, key)) { delete raw[key]; changed = true; }
-    }
-    const cleanedRecord = changed
-      ? await prisma.bayeganiRecord.update({ where: { id: recordId }, data: { rawData: raw as never } })
-      : record;
-    return NextResponse.json({ success: true, record: cleanedRecord });
+
+    // GET must only read data. Legacy rawData cleanup belongs in a separate,
+    // explicit maintenance operation rather than running when an edit page opens.
+    return NextResponse.json({ success: true, record: serializeRecord(record) });
   } catch (error) {
     console.error("Load archive record error:", error);
     return NextResponse.json({
@@ -77,17 +82,23 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
     const recordId = Number(id);
-    if (!Number.isInteger(recordId) || recordId < 1) return NextResponse.json({ success: false, error: "شناسه نامعتبر است." }, { status: 400 });
+    if (!Number.isInteger(recordId) || recordId < 1) {
+      return NextResponse.json({ success: false, error: "شناسه نامعتبر است." }, { status: 400 });
+    }
+
     const body = await request.json() as { rawData?: unknown };
     if (!body.rawData || typeof body.rawData !== "object" || Array.isArray(body.rawData)) {
       return NextResponse.json({ success: false, error: "اطلاعات ویرایش‌شده معتبر نیست." }, { status: 400 });
     }
+
     const raw = { ...(body.rawData as Record<string, unknown>) };
     for (const key of ["column1", "column3", "column23", "column24"]) delete raw[key];
+
     const facilityNumber = value(raw, "شماره تسهيلات", "شماره تسهیلات");
     const derivedCustomerNumber = customerNumberFromFacility(facilityNumber);
     if (derivedCustomerNumber) raw["شماره مشتری"] = derivedCustomerNumber;
     const customerNumber = derivedCustomerNumber || value(raw, "شماره مشتری", "شماره مشتري");
+
     const counter = normalizeCounter(raw);
     const generatedArchiveCode = [counter.code, value(raw, "طبقه", "طبقه بایگانی"), value(raw, "سریال", "سریال2")].every(Boolean)
       ? [counter.code, value(raw, "طبقه", "طبقه بایگانی"), value(raw, "سریال", "سریال2")].join("-")
@@ -95,6 +106,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const archiveCode = generatedArchiveCode || value(raw, "کد بایگانی جدید", "کد بایگانی", "شماره بایگانی");
     delete raw["کد بایگانی جدید"];
     if (archiveCode) raw["کد بایگانی"] = archiveCode;
+
     const record = await prisma.bayeganiRecord.update({
       where: { id: recordId },
       data: {
@@ -117,8 +129,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         nationalId: value(raw, "کد ملي ", "کد ملي مشتري", "کد ملی"),
       },
     });
-    return NextResponse.json({ success: true, record });
+
+    return NextResponse.json({ success: true, record: serializeRecord(record) });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "ذخیره تغییرات ناموفق بود." }, { status: 500 });
+    console.error("Save archive record error:", error);
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : "ذخیره تغییرات ناموفق بود.",
+    }, { status: 500 });
   }
 }
