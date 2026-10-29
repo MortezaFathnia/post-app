@@ -52,6 +52,19 @@ function removeUnwantedColumns(raw: Record<string, unknown>) {
   return cleaned;
 }
 
+async function readApiResponse(response: Response) {
+  const text = await response.text();
+  if (!text.trim()) {
+    throw new Error(`پاسخ سرور خالی است (HTTP ${response.status}). خطای سرور را در ترمینال Next.js بررسی کنید.`);
+  }
+  try {
+    return JSON.parse(text) as { success?: boolean; error?: string; record?: ApiRecord; counters?: CounterOption[] };
+  } catch {
+    const detail = text.trim().slice(0, 180).replace(/\\s+/g, " ");
+    throw new Error(`پاسخ API معتبر نیست (HTTP ${response.status}). ${detail}`);
+  }
+}
+
 export default function BayeganiRecordForm({ recordId }: Props) {
   const router = useRouter();
   const [fields, setFields] = useState<Record<string, string>>(initialFields);
@@ -65,7 +78,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
     let active = true;
     fetch("/api/bayegani/counters", { cache: "no-store" })
       .then(async (res) => {
-        const result = await res.json();
+        const result = await readApiResponse(res);
         if (!res.ok || !result.success) throw new Error(result.error || "دریافت فهرست باجه‌ها ناموفق بود.");
         if (active) setCounters(Array.isArray(result.counters) ? result.counters : []);
       })
@@ -142,7 +155,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "کد بایگانی": buildNewArchiveCode(fields) || fields["کد بایگانی"] }) }),
           });
-      const result = await response.json();
+      const result = await readApiResponse(response);
       if (!response.ok || !result.success) throw new Error(result.error || "ذخیره اطلاعات ناموفق بود.");
       setSuccess("اطلاعات با موفقیت ذخیره شد.");
       if (!recordId && result.record?.id) router.push(`/dashboard/bayegani/${result.record.id}/edit`);
