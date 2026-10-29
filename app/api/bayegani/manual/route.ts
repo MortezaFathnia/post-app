@@ -58,9 +58,16 @@ export async function POST(request: NextRequest) {
     const archiveCode = generatedArchiveCode || value(raw, "کد بایگانی جدید", "کد بایگانی", "شماره بایگانی");
     delete raw["کد بایگانی جدید"];
     if (archiveCode) raw["کد بایگانی"] = archiveCode;
+    const lastManualRecord = await prisma.bayeganiRecord.findFirst({
+      where: { sourceFile: "ورود دستی", sheetName: "ورود دستی" },
+      orderBy: { sourceRow: "desc" },
+      select: { sourceRow: true },
+    });
+    const nextSourceRow = (lastManualRecord?.sourceRow ?? 0) + 1;
+
     const record = await prisma.bayeganiRecord.create({
       data: {
-        sourceFile: "ورود دستی", sheetName: "ورود دستی", sourceRow: Date.now(),
+        sourceFile: "ورود دستی", sheetName: "ورود دستی", sourceRow: nextSourceRow,
         facilityNumber: facilityNumber || null,
         customerNumber: customerNumber || null,
         archiveCode: archiveCode || null,
