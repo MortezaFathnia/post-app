@@ -58,31 +58,61 @@ export async function POST(request: NextRequest) {
     const archiveCode = generatedArchiveCode || value(raw, "کد بایگانی جدید", "کد بایگانی", "شماره بایگانی");
     delete raw["کد بایگانی جدید"];
     if (archiveCode) raw["کد بایگانی"] = archiveCode;
-    const lastManualRecord = await prisma.bayeganiRecord.findFirst({
-      where: { sourceFile: "ورود دستی", sheetName: "ورود دستی" },
-      orderBy: { sourceRow: "desc" },
-      select: { sourceRow: true },
-    });
-    const nextSourceRow = (lastManualRecord?.sourceRow ?? 0) + 1;
+    // Serial is assigned by the server from the highest numeric serial already stored.
+    // Serializable isolation prevents two simultaneous manual inserts from taking the same number.
+    const record = await prisma.$transaction(async (tx) => {
+      const existing = await tx.bayeganiRecord.findMany({
+        select: { serial: true, serialSort: true },
+      });
+      let highestSerial = 0n;
+      for (const item of existing) {
+        if (item.serialSort !== null && item.serialSort > highestSerial) {
+          highestSerial = item.serialSort;
+          continue;
+        }
+        if (item.serial) {
+          const digits = item.serial
+            .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+            .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+            .replace(/[^0-9]/g, "");
+          if (/^\d{1,18}$/.test(digits)) {
+            const numeric = BigInt(digits);
+            if (numeric > highestSerial) highestSerial = numeric;
+          }
+        }
+      }
+      const nextSerial = (highestSerial + 1n).toString();
+      raw["سریال"] = nextSerial;
+      delete raw["سریال2"];
 
-    const record = await prisma.bayeganiRecord.create({
-      data: {
-        sourceFile: "ورود دستی", sheetName: "ورود دستی", sourceRow: nextSourceRow,
-        facilityNumber: facilityNumber || null,
-        customerNumber: customerNumber || null,
-        archiveCode: archiveCode || null,
-        facilityTitle: value(raw, "عنوان تسهیلات", "عنوان تسهيلات") || null,
-        serial: value(raw, "سریال", "سریال2"), classification: value(raw, "طبقه", "طبقه بایگانی"),
-        counterName: counter.name, counterCode: counter.code, counterLabel: counter.label,
-        status: value(raw, "وضعیت کنونی", "وضعيت کنونی"),
-        startDate: value(raw, "تاریخ شروع", "تاريخ شروع"),
-        endDate: value(raw, "پایان قرارداد", " پایان قرارداد", "تاریخ پایان قرارداد"),
-        duration: value(raw, "مدت"), approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
-        remainingAmount: value(raw, "مانده تسهیلات", "مانده تسهيلات"),
-        nationalId: value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري") || null,
-        rawData: raw as never,
-      },
-    });
+      const lastManualRecord = await tx.bayeganiRecord.findFirst({
+        where: { sourceFile: "ورود دستی", sheetName: "ورود دستی" },
+        orderBy: { sourceRow: "desc" },
+        select: { sourceRow: true },
+      });
+      const nextSourceRow = (lastManualRecord?.sourceRow ?? 0) + 1;
+
+      return tx.bayeganiRecord.create({
+        data: {
+          sourceFile: "ورود دستی", sheetName: "ورود دستی", sourceRow: nextSourceRow,
+          facilityNumber: facilityNumber || null,
+          customerNumber: customerNumber || null,
+          archiveCode: archiveCode || null,
+          facilityTitle: value(raw, "عنوان تسهیلات", "عنوان تسهيلات") || null,
+          serial: nextSerial,
+          serialSort: highestSerial + 1n,
+          classification: value(raw, "طبقه", "طبقه بایگانی"),
+          counterName: counter.name, counterCode: counter.code, counterLabel: counter.label,
+          status: value(raw, "وضعیت کنونی", "وضعيت کنونی"),
+          startDate: value(raw, "تاریخ شروع", "تاريخ شروع"),
+          endDate: value(raw, "پایان قرارداد", " پایان قرارداد", "تاریخ پایان قرارداد"),
+          duration: value(raw, "مدت"), approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
+          remainingAmount: value(raw, "مانده تسهیلات", "مانده تسهيلات"),
+          nationalId: value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري") || null,
+          rawData: raw as never,
+        },
+      });
+    }, { isolationLevel: "Serializable" });
     return NextResponse.json({ success: true, record }, { status: 201 });
   } catch (error) {
     console.error("Manual Bayegani record creation failed:", error);
