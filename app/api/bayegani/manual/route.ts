@@ -52,12 +52,7 @@ export async function POST(request: NextRequest) {
     if (derivedCustomerNumber) raw["شماره مشتری"] = derivedCustomerNumber;
     const customerNumber = derivedCustomerNumber || value(raw, "شماره مشتری", "شماره مشتري");
     const counter = normalizeCounter(raw);
-    const generatedArchiveCode = [counter.code, value(raw, "طبقه", "طبقه بایگانی"), value(raw, "سریال", "سریال2")].every(Boolean)
-      ? [counter.code, value(raw, "طبقه", "طبقه بایگانی"), value(raw, "سریال", "سریال2")].join("-")
-      : "";
-    const archiveCode = generatedArchiveCode || value(raw, "کد بایگانی جدید", "کد بایگانی", "شماره بایگانی");
     delete raw["کد بایگانی جدید"];
-    if (archiveCode) raw["کد بایگانی"] = archiveCode;
     // Serial is assigned by the server from the highest numeric serial already stored.
     // Serializable isolation prevents two simultaneous manual inserts from taking the same number.
     const record = await prisma.$transaction(async (tx) => {
@@ -84,6 +79,12 @@ export async function POST(request: NextRequest) {
       const nextSerial = (highestSerial + 1n).toString();
       raw["سریال"] = nextSerial;
       delete raw["سریال2"];
+
+      const generatedArchiveCode = [counter.code, value(raw, "طبقه", "طبقه بایگانی"), nextSerial].every(Boolean)
+        ? [counter.code, value(raw, "طبقه", "طبقه بایگانی"), nextSerial].join("-")
+        : "";
+      const archiveCode = generatedArchiveCode || value(raw, "کد بایگانی", "شماره بایگانی");
+      if (archiveCode) raw["کد بایگانی"] = archiveCode;
 
       const lastManualRecord = await tx.bayeganiRecord.findFirst({
         where: { sourceFile: "ورود دستی", sheetName: "ورود دستی" },
