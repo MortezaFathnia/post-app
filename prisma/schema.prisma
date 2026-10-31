@@ -225,7 +225,7 @@ model BayeganiRecord {
   customerNumber    String?
   archiveCode       String?
   facilityTitle     String?
-  serial            String?
+  serial            String?  @unique
   serialSort        BigInt?
   classification    String?
   counterName       String?
@@ -243,7 +243,6 @@ model BayeganiRecord {
   updatedAt         DateTime @updatedAt
 
   @@unique([sourceFile, sheetName, sourceRow])
-  @@unique([facilityNumber, serial])
   @@index([facilityNumber])
   @@index([customerNumber])
   @@index([archiveCode])
