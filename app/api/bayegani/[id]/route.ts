@@ -94,6 +94,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const raw = { ...(body.rawData as Record<string, unknown>) };
     for (const key of ["column1", "column3", "column23", "column24"]) delete raw[key];
 
+    const existingRecord = await prisma.bayeganiRecord.findUnique({
+      where: { id: recordId },
+      select: { id: true, serial: true },
+    });
+    if (!existingRecord) {
+      return NextResponse.json({ success: false, error: "رکورد پیدا نشد." }, { status: 404 });
+    }
+
+    // Serial is immutable after creation; ignore any value submitted by the browser.
+    if (existingRecord.serial) raw["سریال"] = existingRecord.serial;
+    delete raw["سریال2"];
+
     const facilityNumber = value(raw, "شماره تسهيلات", "شماره تسهیلات");
     const derivedCustomerNumber = customerNumberFromFacility(facilityNumber);
     if (derivedCustomerNumber) raw["شماره مشتری"] = derivedCustomerNumber;
@@ -115,7 +127,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         customerNumber: customerNumber || null,
         archiveCode: archiveCode || null,
         facilityTitle: value(raw, "عنوان تسهیلات", "عنوان تسهيلات") || null,
-        serial: value(raw, "سریال", "سریال2"),
         classification: value(raw, "طبقه", "طبقه بایگانی"),
         counterName: counter.name,
         counterCode: counter.code,
