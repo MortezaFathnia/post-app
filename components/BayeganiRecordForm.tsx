@@ -225,10 +225,10 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                 </select>
               ) : (
                 <input
-                  value={value}
-                  readOnly={key === "کد بایگانی"}
+                  value={key === "سریال" && !recordId ? "پس از ثبت به‌صورت خودکار ایجاد می‌شود" : value}
+                  readOnly={key === "کد بایگانی" || key === "سریال"}
                   onChange={(event) => changeField(key, event.target.value)}
-                  className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "کد بایگانی" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
+                  className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "کد بایگانی" || key === "سریال" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
                   placeholder={key}
                 />
               )}
