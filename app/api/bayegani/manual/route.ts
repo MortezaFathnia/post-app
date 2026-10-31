@@ -52,6 +52,8 @@ export async function POST(request: NextRequest) {
     if (derivedCustomerNumber) raw["شماره مشتری"] = derivedCustomerNumber;
     const customerNumber = derivedCustomerNumber || value(raw, "شماره مشتری", "شماره مشتري");
     const counter = normalizeCounter(raw);
+    raw["مبلغ مصوب"] = value(raw, "مبلغ مصوب", "مبلغ");
+    delete raw["مبلغ"];
     delete raw["کد بایگانی جدید"];
     // Serial is assigned by the server from the highest numeric serial already stored.
     // Serializable isolation prevents two simultaneous manual inserts from taking the same number.
