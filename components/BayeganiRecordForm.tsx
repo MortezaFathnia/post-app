@@ -99,6 +99,8 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         delete raw["کد بایگانی جدید"];
         if (legacyArchiveCode) raw["کد بایگانی"] = legacyArchiveCode;
         const next: Record<string, string> = { ...initialFields };
+        next["مبلغ مصوب"] = String(raw["مبلغ مصوب"] ?? raw["مبلغ"] ?? "");
+        delete raw["مبلغ"];
         for (const [key, value] of Object.entries(raw)) {
           const fieldName = key.trim() === "تیک" ? "توضیحات" : key;
           next[fieldName] = value == null ? "" : String(value);
@@ -176,7 +178,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
     || !currentCounterIsComplete
     ? completeCounters
     : [...completeCounters, currentCounter];
-  const entries = Object.entries(fields).filter(([key]) => !isHiddenField(key));
+  const entries = Object.entries(fields).filter(([key]) => key !== "مبلغ" && !isHiddenField(key));
   return (
     <div dir="rtl" className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
