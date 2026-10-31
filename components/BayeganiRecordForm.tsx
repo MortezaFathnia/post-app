@@ -46,6 +46,19 @@ function buildNewArchiveCode(raw: Record<string, unknown>) {
   return [counterCode, floor, serial].every(Boolean) ? [counterCode, floor, serial].join("-") : "";
 }
 
+function normalizeAmount(value: string) {
+  return value
+    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+    .replace(/[,٬،\\s]/g, "")
+    .replace(/[^0-9]/g, "");
+}
+
+function formatAmount(value: string) {
+  const digits = normalizeAmount(value);
+  return digits.replace(/\\B(?=(\\d{3})+(?!\\d))/g, ",");
+}
+
 function removeUnwantedColumns(raw: Record<string, unknown>) {
   const cleaned = { ...raw };
   for (const key of ["column1", "column3", "column23", "column24"]) delete cleaned[key];
@@ -99,7 +112,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         delete raw["کد بایگانی جدید"];
         if (legacyArchiveCode) raw["کد بایگانی"] = legacyArchiveCode;
         const next: Record<string, string> = { ...initialFields };
-        next["مبلغ مصوب"] = String(raw["مبلغ مصوب"] ?? raw["مبلغ"] ?? "");
+        next["مبلغ مصوب"] = normalizeAmount(String(raw["مبلغ مصوب"] ?? raw["مبلغ"] ?? ""));
         delete raw["مبلغ"];
         for (const [key, value] of Object.entries(raw)) {
           const fieldName = key.trim() === "تیک" ? "توضیحات" : key;
@@ -227,7 +240,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                 </select>
               ) : (
                 <input
-                  value={key === "سریال" && !recordId ? "پس از ثبت به‌صورت خودکار ایجاد می‌شود" : value}
+                  value={key === "سریال" && !recordId ? "پس از ثبت به‌صورت خودکار ایجاد می‌شود" : key === "مبلغ مصوب" ? formatAmount(value) : value}
                   readOnly={key === "کد بایگانی" || key === "سریال"}
                   onChange={(event) => changeField(key, event.target.value)}
                   className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "کد بایگانی" || key === "سریال" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
