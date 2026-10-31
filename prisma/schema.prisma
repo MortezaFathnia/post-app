@@ -7,31 +7,240 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum CustomerType {
+  INDIVIDUAL
+  COMPANY
+}
+
+enum ContractType {
+  MORABAHA
+  CREDIT_CARD
+  DEBT_DISCOUNTING
+}
+
+enum LoanType {
+  MATURITY
+  INSTALLMENT
+}
+
+model Customer {
+  id           Int          @id @default(autoincrement())
+  type         CustomerType @default(INDIVIDUAL)
+  contractType ContractType @default(MORABAHA)
+  loanType     LoanType?
+
+  // INDIVIDUAL — shown as «اطلاعات مدیون»
+  name                       String?
+  fatherName                 String?
+  birthDate                  String?
+  birthCertificateNumber     String?
+  birthPlace                 String?
+  birthCertificateSerial     String?
+  nationalCode               String?
+  passportNumber             String?
+  occupation                 String?
+  installmentAmount          String?
+
+  // COMPANY
+  companyName                String?
+  registrationNumber         String?
+  registrationDate           String?
+  registrationOffice         String?
+  companyEconomicCode        String?
+  companyNationalId          String?
+
+  // CONTACT / DEBTOR
+  postalCode                 String?
+  address                    String?
+  workAddress                String?
+  landline                   String?
+  workPhone                  String?
+  mobile                     String?
+  email                      String?
+
+  // DEBTOR BANK DETAILS
+  debtorAccountNumber        String?
+  debtorAccountOpeningDate   String?
+  debtorLongTermDepositNumber String?
+  debtorLongTermDepositAmount String?
+  debtorCustomerNumber       String?
+
+  // CONTRACT / REQUEST
+  contractNumber             String?
+  contractDate               String?
+  contractCode               String?
+  requestNumber              String?
+  requestDate                String?
+  approvalNumber             String?
+  approvalDate               String?
+  maturityDate               String?
+
+  // BANK / BRANCH
+  bankName                   String?
+  branchName                 String?
+  branchCode                 String?
+  branchPostalCode           String?
+  branchPhone                String?
+  branchAddress              String?
+  branchManager              String?
+  counterName                String?
+  counterCode                String?
+  brokerName                 String?
+  brokerCustomerCode         String?
+  bankRepresentative         String?
+
+  // FACILITY / FINANCIAL
+  facilityDescription        String?
+  economicSector             String?
+  useOfFunds                 String?
+  transactionDescription     String?
+  salePrice                  String?
+  salePriceWords             String?
+  purchasePrice              String?
+  profitAmount               String?
+  interestRate               String?
+  latePaymentBaseRate        String?
+  latePaymentRate            String?
+  prepayment                 String?
+  payableAmount              String?
+  facilityAmount             String?
+  contractDuration           String?
+  repaymentMethod            String?
+  gracePeriod                String?
+  installmentCount           String?
+  installmentInterval        String?
+  firstInstallmentDate       String?
+  firstQardInstallmentDate   String?
+  bankParticipationPercent   String?
+  proposedPartnershipProfit  String?
+  proposedMudarabahProfit    String?
+
+  // COLLATERAL
+  collateralType             String?
+  collateralDescription      String?
+  collateralValue            String?
+
+  // GUARANTOR 1 — no separate representative fields
+  guarantor1Name                    String?
+  guarantor1NationalCode            String?
+  guarantor1PostalCode              String?
+  guarantor1BirthCertificate        String?
+  guarantor1BirthCertificateSerial  String?
+  guarantor1BirthDate               String?
+  guarantor1FatherName              String?
+  guarantor1BirthPlace               String?
+  guarantor1Residence               String?
+  guarantor1Address                 String?
+  guarantor1WorkAddress             String?
+  guarantor1Landline                String?
+  guarantor1WorkPhone               String?
+  guarantor1Mobile                  String?
+  guarantor1Occupation              String?
+  guarantor1AccountNumber           String?
+  guarantor1AccountOpeningDate      String?
+  guarantor1LongTermDepositNumber   String?
+  guarantor1LongTermDepositAmount   String?
+  guarantor1CustomerNumber          String?
+
+  // GUARANTOR 2
+  guarantor2Name                    String?
+  guarantor2NationalCode            String?
+  guarantor2PostalCode              String?
+  guarantor2BirthCertificate        String?
+  guarantor2BirthCertificateSerial  String?
+  guarantor2BirthDate               String?
+  guarantor2FatherName              String?
+  guarantor2BirthPlace               String?
+  guarantor2Residence               String?
+  guarantor2Address                 String?
+  guarantor2WorkAddress             String?
+  guarantor2Landline                String?
+  guarantor2WorkPhone               String?
+  guarantor2Mobile                  String?
+  guarantor2Occupation              String?
+  guarantor2AccountNumber           String?
+  guarantor2AccountOpeningDate      String?
+  guarantor2LongTermDepositNumber   String?
+  guarantor2LongTermDepositAmount   String?
+  guarantor2CustomerNumber          String?
+
+  // GUARANTOR 3
+  guarantor3Name                    String?
+  guarantor3NationalCode            String?
+  guarantor3PostalCode              String?
+  guarantor3BirthCertificate        String?
+  guarantor3BirthCertificateSerial  String?
+  guarantor3BirthDate               String?
+  guarantor3FatherName              String?
+  guarantor3BirthPlace               String?
+  guarantor3Residence               String?
+  guarantor3Address                 String?
+  guarantor3WorkAddress             String?
+  guarantor3Landline                String?
+  guarantor3WorkPhone               String?
+  guarantor3Mobile                  String?
+  guarantor3Occupation              String?
+  guarantor3AccountNumber           String?
+  guarantor3AccountOpeningDate      String?
+  guarantor3LongTermDepositNumber   String?
+  guarantor3LongTermDepositAmount   String?
+  guarantor3CustomerNumber          String?
+
+  // Original Excel data: all source headers and values are preserved here.
+  dbExcelData       Json?
+  dbExcelSourceFile String?
+  dbExcelSourceRow  Int?
+
+  articleCount String?
+  tabagheCount String?
+  copyCount    String?
+
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  debtDocuments DebtDocument[]
+}
+
+model DebtDocument {
+  id                    Int      @id @default(autoincrement())
+  customerId            Int
+  customer              Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  documentType          String?
+  dueDate               String?
+  serialNumber          String?
+  nominalAmount         String?
+  nominalAmountWords    String?
+  paidAmount            String?
+  paidAmountWords       String?
+  obligorName           String?
+  description           String?
+  createdAt             DateTime @default(now())
+}
+
 model BayeganiRecord {
-  id              Int      @id @default(autoincrement())
-  sourceFile      String
-  sheetName       String
-  sourceRow       Int
-  facilityNumber  String?
-  customerNumber  String?
-  archiveCode     String?
-  facilityTitle   String?
-  serial          String?  @unique
-  serialSort      BigInt?
-  classification  String?
-  counterName     String?
-  counterCode     String?
-  counterLabel    String?
-  status          String?
-  startDate       String?
-  endDate         String?
-  duration        String?
-  approvedAmount  String?
-  remainingAmount String?
-  nationalId      String?
-  rawData         Json
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                Int      @id @default(autoincrement())
+  sourceFile        String
+  sheetName         String
+  sourceRow         Int
+  facilityNumber    String?
+  customerNumber    String?
+  archiveCode       String?
+  facilityTitle     String?
+  serial            String?  @unique
+  serialSort        BigInt?
+  classification    String?
+  counterName       String?
+  counterCode       String?
+  counterLabel      String?
+  status            String?
+  startDate         String?
+  endDate           String?
+  duration          String?
+  approvedAmount    String?
+  remainingAmount   String?
+  nationalId        String?
+  rawData           Json
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@unique([sourceFile, sheetName, sourceRow])
   @@index([facilityNumber])
