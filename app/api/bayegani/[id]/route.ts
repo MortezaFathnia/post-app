@@ -112,6 +112,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const customerNumber = derivedCustomerNumber || value(raw, "شماره مشتری", "شماره مشتري");
 
     const counter = normalizeCounter(raw);
+    raw["مبلغ مصوب"] = value(raw, "مبلغ مصوب", "مبلغ");
+    delete raw["مبلغ"];
     const generatedArchiveCode = [counter.code, value(raw, "طبقه", "طبقه بایگانی"), value(raw, "سریال", "سریال2")].every(Boolean)
       ? [counter.code, value(raw, "طبقه", "طبقه بایگانی"), value(raw, "سریال", "سریال2")].join("-")
       : "";
