@@ -50,13 +50,13 @@ function normalizeAmount(value: string) {
   return value
     .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
     .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
-    .replace(/[,٬،\\s]/g, "")
+    .replace(/[,٬،\s]/g, "")
     .replace(/[^0-9]/g, "");
 }
 
 function formatAmount(value: string) {
   const digits = normalizeAmount(value);
-  return digits.replace(/\\B(?=(\\d{3})+(?!\\d))/g, ",");
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 function removeUnwantedColumns(raw: Record<string, unknown>) {
