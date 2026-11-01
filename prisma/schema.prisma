@@ -231,7 +231,7 @@ model BayeganiRecord {
   counterName       String?
   counterCode       String?
   counterLabel      String?
-  status            String?
+  status            String?  @default("فعال")
   startDate         String?
   endDate           String?
   duration          String?
