@@ -250,7 +250,7 @@ export default function DebtDocumentsUploadPage() {
                         >
                           {counter.code}-{counter.name}
                         </button>
-                      ))}
+                      )))}
                     {counters.length > 0 && counters.filter((counter) => {
                       const query = counterLabel.trim().toLocaleLowerCase();
                       return !query || `${counter.code} ${counter.name}`.toLocaleLowerCase().includes(query)
