@@ -24,7 +24,7 @@ const initialFields: Record<string, string> = {
   "طبقه": "",
   "نام باجه": "",
   "کد باجه": "",
-  "وضعیت کنونی": "",
+  "وضعیت کنونی": "فعال",
   "تاریخ شروع": "",
   "پایان قرارداد": "",
   "مدت": "",
@@ -122,6 +122,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         }
         delete next["تیک"];
         next["پایان قرارداد"] = addMonthsToDate(next["تاریخ شروع"] || "", next["مدت"] || "") || next["پایان قرارداد"];
+        next["وضعیت کنونی"] = next["وضعیت کنونی"] || "فعال";
         next["نام باجه"] = normalizeCounterName(next["نام باجه"] || "");
         next["کد باجه"] = normalizePersianText(next["کد باجه"] || "");
         const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
@@ -215,7 +216,16 @@ export default function BayeganiRecordForm({ recordId }: Props) {
           {entries.map(([key, value]) => (
             <label key={key} className="block">
               <span className="mb-1.5 block text-sm font-medium text-slate-700">{key === "نام باجه" ? "کد باجه-نام باجه" : key}</span>
-              {key === "نام باجه" ? (
+              {key === "وضعیت کنونی" ? (
+                <select
+                  value={value || "فعال"}
+                  onChange={(event) => changeField(key, event.target.value)}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="فعال">فعال</option>
+                  <option value="تسویه شده">تسویه شده</option>
+                </select>
+              ) : key === "نام باجه" ? (
                 <div className="relative">
                   <input
                     role="combobox"
