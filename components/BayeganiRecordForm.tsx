@@ -121,6 +121,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
           next[fieldName] = value == null ? "" : String(value);
         }
         delete next["تیک"];
+        next["پایان قرارداد"] = addMonthsToDate(next["تاریخ شروع"] || "", next["مدت"] || "") || next["پایان قرارداد"];
         next["نام باجه"] = normalizeCounterName(next["نام باجه"] || "");
         next["کد باجه"] = normalizePersianText(next["کد باجه"] || "");
         const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
