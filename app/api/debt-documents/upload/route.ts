@@ -11,13 +11,59 @@ function value(row: Record<string, unknown>, key: string): string | null {
   return String(raw).trim();
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const records = await prisma.debtDiscountingRecord.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 1000,
-    });
-    return NextResponse.json({ success: true, records });
+    const params = request.nextUrl.searchParams;
+    const page = Math.max(1, Number(params.get("page") || 1));
+    const pageSize = Math.min(100, Math.max(10, Number(params.get("pageSize") || 20)));
+    const search = (params.get("search") || "").trim();
+    const filterType = params.get("filterType") || "";
+    const filterValue = (params.get("filterValue") || "").trim();
+    const allowedSortFields = [
+      "createdAt", "counterLabel", "facilityNumber", "serial", "checkNumber",
+      "checkStatus", "dueDate", "paidAmount", "unpaidAmount", "bankAgent",
+    ] as const;
+    type SortField = (typeof allowedSortFields)[number];
+    const requestedSort = params.get("sortBy") || "createdAt";
+    const sortBy: SortField = allowedSortFields.includes(requestedSort as SortField)
+      ? requestedSort as SortField
+      : "createdAt";
+    const sortOrder = params.get("sortOrder") === "desc" ? "desc" : "asc";
+    const searchableFields = [
+      "counterLabel", "facilityNumber", "serial", "checkNumber", "checkStatus",
+      "dueDate", "paidAmount", "unpaidAmount", "embeddedProfit", "delayDays",
+      "delayPenalty", "bankAgent", "administrativeNumber",
+    ] as const;
+    const where: Prisma.DebtDiscountingRecordWhereInput = {};
+    if (search) {
+      where.OR = searchableFields.map((field) => ({
+        [field]: { contains: search, mode: "insensitive" },
+      }));
+    }
+    const filterFields: Record<string, string> = {
+      counter: "counterLabel",
+      facilityNumber: "facilityNumber",
+      checkStatus: "checkStatus",
+      dueDate: "dueDate",
+      bankAgent: "bankAgent",
+    };
+    const filterField = filterFields[filterType];
+    if (filterValue && filterField) {
+      where[filterField as keyof Prisma.DebtDiscountingRecordWhereInput] = {
+        contains: filterValue,
+        mode: "insensitive",
+      } as never;
+    }
+    const [records, total] = await Promise.all([
+      prisma.debtDiscountingRecord.findMany({
+        where,
+        orderBy: { [sortBy]: sortOrder },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.debtDiscountingRecord.count({ where }),
+    ]);
+    return NextResponse.json({ success: true, records, total, page, pageSize });
   } catch (error) {
     console.error("Debt discounting records list error:", error);
     return NextResponse.json(
