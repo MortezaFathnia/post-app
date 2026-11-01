@@ -9,8 +9,7 @@ const menuItems = [
   { title: "داشبورد", href: "/dashboard", icon: "▦", description: "نمای کلی سامانه" },
   { title: "قراردادها", href: "/dashboard/contracts", icon: "▤", description: "مشاهده قراردادهای ثبت‌شده" },
   { title: "ثبت قرارداد", href: "/dashboard/upload", icon: "+", description: "ثبت از طریق فایل Excel" },
-  { title: "بایگانی اسناد خرید دین", href: "/dashboard/debt-documents", icon: "▣", description: "مشاهده و جستجوی اسناد ثبت‌شده" },
-  { title: "بارگذاری اسناد جدید خرید دین", href: "/dashboard/debt-documents/upload", icon: "⇧", description: "ثبت فایل جدید خرید دین" },
+  { title: "بایگانی اسناد خرید دین", href: "/dashboard/debt-documents", icon: "▣", description: "مشاهده و جستجوی اسناد ثبت‌شده", children: [{ title: "بارگذاری اسناد جدید خرید دین", href: "/dashboard/debt-documents/upload", icon: "⇧", description: "ثبت فایل جدید خرید دین" }] },
   { title: "بایگانی تسهیلات", href: "/dashboard/bayegani", icon: "▣", description: "ورود و ویرایش فایل بایگانی" },
   { title: "تنظیمات", href: "/dashboard/settings", icon: "⚙", description: "فهرست و کد باجه‌ها" },
 ];
@@ -89,7 +88,7 @@ export default function Sidebar() {
                     <Link
                       href={item.href}
                       onClick={() => setMobileOpen(false)}
-                      aria-current={active ? "page" : undefined}
+                      aria-current={pathname === item.href ? "page" : undefined}
                       className={`group flex items-center gap-3 rounded-xl px-3 py-3 text-right transition ${
                         active
                           ? "bg-blue-600 text-white shadow-md shadow-blue-600/15"
@@ -106,6 +105,30 @@ export default function Sidebar() {
                         </span>
                       </span>
                     </Link>
+                    {"children" in item && active && item.children && (
+                      <ul className="mr-6 mt-1 space-y-1 border-r border-slate-200 pr-3">
+                        {item.children.map((child) => {
+                          const childActive = pathname === child.href;
+                          return (
+                            <li key={child.href}>
+                              <Link
+                                href={child.href}
+                                onClick={() => setMobileOpen(false)}
+                                aria-current={childActive ? "page" : undefined}
+                                className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-right text-sm transition ${
+                                  childActive
+                                    ? "bg-blue-50 font-semibold text-blue-700"
+                                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                                }`}
+                              >
+                                <span aria-hidden="true">{child.icon}</span>
+                                <span>{child.title}</span>
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
                   </li>
                 );
               })}
