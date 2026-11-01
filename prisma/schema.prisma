@@ -261,3 +261,30 @@ model BajehCode {
   @@index([name])
   @@map("bajehCode")
 }
+
+model DebtDiscountingRecord {
+  id                   Int      @id @default(autoincrement())
+  sourceFile           String
+  sheetName            String
+  sourceRow            Int
+  counterLabel         String
+  facilityNumber       String
+  serial               String?
+  checkNumber          String?
+  checkStatus          String?
+  dueDate              String?
+  paidAmount           String?
+  unpaidAmount         String?
+  embeddedProfit       String?
+  delayDays            String?
+  delayPenalty         String?
+  bankAgent            String?
+  administrativeNumber String?
+  rawData              Json
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([facilityNumber])
+  @@index([counterLabel])
+  @@index([sourceFile, sheetName])
+}
