@@ -22,6 +22,8 @@ type DebtDiscountingRecord = {
   createdAt: string;
 };
 
+type CounterOption = { id: number; code: string; name: string };
+
 type ApiResult = {
   success: boolean;
   error?: string;
@@ -45,6 +47,8 @@ const columns: { key: keyof DebtDiscountingRecord; label: string }[] = [
 
 export default function DebtDocumentsUploadPage() {
   const [counterLabel, setCounterLabel] = useState("");
+  const [counters, setCounters] = useState<CounterOption[]>([]);
+  const [counterOpen, setCounterOpen] = useState(false);
   const [facilityNumber, setFacilityNumber] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [records, setRecords] = useState<DebtDiscountingRecord[]>([]);
@@ -69,6 +73,15 @@ export default function DebtDocumentsUploadPage() {
 
   useEffect(() => {
     void loadRecords();
+    let active = true;
+    fetch("/api/bayegani/counters", { cache: "no-store" })
+      .then(async (response) => {
+        const result = (await response.json()) as { success?: boolean; counters?: CounterOption[] };
+        if (!response.ok || !result.success) throw new Error("دریافت فهرست باجه‌ها ناموفق بود.");
+        if (active) setCounters(Array.isArray(result.counters) ? result.counters : []);
+      })
+      .catch(() => { /* Keep manual input available if the counter list cannot be loaded. */ });
+    return () => { active = false; };
   }, []);
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -140,14 +153,80 @@ export default function DebtDocumentsUploadPage() {
               <label htmlFor="counterLabel" className="mb-2 block text-sm font-semibold text-slate-700">
                 کدباجه - نام باجه
               </label>
-              <input
-                id="counterLabel"
-                value={counterLabel}
-                onChange={(event) => setCounterLabel(event.target.value)}
-                disabled={loading}
-                placeholder="مثلاً 64508-دلوئی"
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              />
+              <div className="relative">
+                <input
+                  id="counterLabel"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded={counterOpen}
+                  aria-controls="debt-counter-options"
+                  value={counterLabel}
+                  onFocus={() => setCounterOpen(true)}
+                  onChange={(event) => {
+                    setCounterLabel(event.target.value);
+                    setCounterOpen(true);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") setCounterOpen(false);
+                    if (event.key === "Enter" && counterOpen) {
+                      const query = counterLabel.trim().toLocaleLowerCase();
+                      const first = counters.find((counter) =>
+                        `${counter.code} ${counter.name}`.toLocaleLowerCase().includes(query)
+                        || `${counter.code}-${counter.name}`.toLocaleLowerCase().includes(query)
+                      );
+                      if (first) {
+                        event.preventDefault();
+                        setCounterLabel(`${first.code}-${first.name}`);
+                        setCounterOpen(false);
+                      }
+                    }
+                  }}
+                  disabled={loading}
+                  placeholder="کد یا نام باجه را جستجو کنید..."
+                  autoComplete="off"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+                {counterOpen && !loading && (
+                  <div
+                    id="debt-counter-options"
+                    role="listbox"
+                    className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+                  >
+                    {counters
+                      .filter((counter) => {
+                        const query = counterLabel.trim().toLocaleLowerCase();
+                        return !query || `${counter.code} ${counter.name}`.toLocaleLowerCase().includes(query)
+                          || `${counter.code}-${counter.name}`.toLocaleLowerCase().includes(query);
+                      })
+                      .slice(0, 50)
+                      .map((counter) => (
+                        <button
+                          key={counter.id}
+                          type="button"
+                          role="option"
+                          aria-selected={counterLabel === `${counter.code}-${counter.name}`}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => {
+                            setCounterLabel(`${counter.code}-${counter.name}`);
+                            setCounterOpen(false);
+                          }}
+                          className="w-full rounded-lg px-3 py-2.5 text-right text-sm text-slate-700 transition hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                        >
+                          {counter.code}-{counter.name}
+                        </button>
+                      ))}
+                    {counters.filter((counter) => {
+                      const query = counterLabel.trim().toLocaleLowerCase();
+                      return !query || `${counter.code} ${counter.name}`.toLocaleLowerCase().includes(query)
+                        || `${counter.code}-${counter.name}`.toLocaleLowerCase().includes(query);
+                    }).length === 0 && (
+                      <p className="px-3 py-4 text-center text-sm text-slate-500">
+                        {counters.length ? "موردی پیدا نشد." : "فهرست باجه‌ها در دسترس نیست؛ مقدار را دستی وارد کنید."}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <div>
               <label htmlFor="facilityNumber" className="mb-2 block text-sm font-semibold text-slate-700">
