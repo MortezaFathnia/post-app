@@ -305,7 +305,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                     </div>
                   )}
                 </div>
-
+              ) : (
                 <input
                   value={key === "سریال" && !recordId ? "پس از ثبت به‌صورت خودکار ایجاد می‌شود" : key === "مبلغ مصوب" ? formatAmount(value) : value}
                   readOnly={key === "کد بایگانی" || key === "سریال"}
