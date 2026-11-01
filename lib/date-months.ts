@@ -19,12 +19,10 @@ function isJalaliLeapYear(year: number) {
   let n = year - jp;
   leapJ += Math.floor(n / 33) * 8 + Math.floor(((n % 33) + 3) / 4);
   if (jump % 33 === 4 && jump - n === 4) leapJ += 1;
-  const gy = year + 621;
-  const leapG = Math.floor(gy / 4) - Math.floor((Math.floor(gy / 100) + 1) * 3 / 4) - 150;
   if (jump - n < 6) n = n - jump + Math.floor((jump + 4) / 33) * 33;
   let leap = ((n + 1) % 33 - 1) % 4;
   if (leap === -1) leap = 4;
-  return leap === 0 && leapJ > 0 && leapG > 0;
+  return leap === 0;
 }
 
 function daysInMonth(year: number, month: number, jalali: boolean) {
