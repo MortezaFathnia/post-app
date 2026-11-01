@@ -86,6 +86,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   const [success, setSuccess] = useState("");
   const [counters, setCounters] = useState<CounterOption[]>([]);
   const [counterQuery, setCounterQuery] = useState("");
+  const [counterOpen, setCounterOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -210,43 +211,101 @@ export default function BayeganiRecordForm({ recordId }: Props) {
             <label key={key} className="block">
               <span className="mb-1.5 block text-sm font-medium text-slate-700">{key === "نام باجه" ? "کد باجه-نام باجه" : key}</span>
               {key === "نام باجه" ? (
-                <>
+                <div className="relative">
                   <input
-                    list="bayegani-counter-options"
+                    role="combobox"
+                    aria-autocomplete="list"
+                    aria-expanded={counterOpen}
+                    aria-controls="bayegani-counter-options"
                     value={counterQuery}
+                    onFocus={() => setCounterOpen(true)}
                     onChange={(event) => {
                       const query = event.target.value;
                       setCounterQuery(query);
-                      if (!query.trim()) {
-                        setFields((current) => {
-                          const next = { ...current, "نام باجه": "", "کد باجه": "" };
-                          next["کد بایگانی"] = buildNewArchiveCode(next) || "";
-                          return next;
-                        });
-                        return;
-                      }
-                      const selected = counterOptions.find((counter) =>
+                      setCounterOpen(true);
+                      const exact = counterOptions.find((counter) =>
                         `${counter.code}-${counter.name}`.toLocaleLowerCase() === query.trim().toLocaleLowerCase()
                       );
-                      if (selected) {
+                      if (exact) {
                         setFields((current) => {
-                          const next = { ...current, "نام باجه": selected.name, "کد باجه": selected.code };
+                          const next = { ...current, "نام باجه": exact.name, "کد باجه": exact.code };
                           next["کد بایگانی"] = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
                           return next;
                         });
+                      } else {
+                        setFields((current) => ({ ...current, "نام باجه": "", "کد باجه": "" }));
                       }
                     }}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    placeholder="جستجو بر اساس کد باجه یا نام باجه..."
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") setCounterOpen(false);
+                      if (event.key === "Enter" && counterOpen) {
+                        const first = counterOptions.filter((counter) =>
+                          `${counter.code} ${counter.name}`.toLocaleLowerCase().includes(counterQuery.trim().toLocaleLowerCase())
+                        )[0];
+                        if (first) {
+                          event.preventDefault();
+                          setCounterQuery(`${first.code}-${first.name}`);
+                          setFields((current) => {
+                            const next = { ...current, "نام باجه": first.name, "کد باجه": first.code };
+                            next["کد بایگانی"] = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
+                            return next;
+                          });
+                          setCounterOpen(false);
+                        }
+                      }
+                    }}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    placeholder="کد یا نام باجه را جستجو کنید..."
                     autoComplete="off"
                   />
-                  <datalist id="bayegani-counter-options">
-                    {counterOptions.map((counter) => (
-                      <option key={`${counter.code}-${counter.name}`} value={`${counter.code}-${counter.name}`} />
-                    ))}
-                  </datalist>
-                </>
-              ) : (
+                  {counterOpen && (
+                    <div
+                      id="bayegani-counter-options"
+                      role="listbox"
+                      className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+                    >
+                      {counterOptions
+                        .filter((counter) => {
+                          const query = counterQuery.trim().toLocaleLowerCase();
+                          return !query || `${counter.code} ${counter.name}`.toLocaleLowerCase().includes(query)
+                            || `${counter.code}-${counter.name}`.toLocaleLowerCase().includes(query);
+                        })
+                        .slice(0, 50)
+                        .map((counter) => (
+                          <button
+                            key={`${counter.code}-${counter.name}`}
+                            type="button"
+                            role="option"
+                            aria-selected={fields["کد باجه"] === counter.code && fields["نام باجه"] === counter.name}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              setCounterQuery(`${counter.code}-${counter.name}`);
+                              setFields((current) => {
+                                const next = { ...current, "نام باجه": counter.name, "کد باجه": counter.code };
+                                next["کد بایگانی"] = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
+                                return next;
+                              });
+                              setCounterOpen(false);
+                            }}
+                            className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-right text-sm text-slate-700 transition hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                          >
+                            <span className="font-medium">{counter.code}-{counter.name}</span>
+                            {fields["کد باجه"] === counter.code && fields["نام باجه"] === counter.name && (
+                              <span className="text-xs text-blue-600">انتخاب‌شده</span>
+                            )}
+                          </button>
+                        ))}
+                      {counterOptions.filter((counter) => {
+                        const query = counterQuery.trim().toLocaleLowerCase();
+                        return !query || `${counter.code} ${counter.name}`.toLocaleLowerCase().includes(query)
+                          || `${counter.code}-${counter.name}`.toLocaleLowerCase().includes(query);
+                      }).length === 0 && (
+                        <p className="px-3 py-4 text-center text-sm text-slate-500">موردی پیدا نشد.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <input
                   value={key === "سریال" && !recordId ? "پس از ثبت به‌صورت خودکار ایجاد می‌شود" : key === "مبلغ مصوب" ? formatAmount(value) : value}
                   readOnly={key === "کد بایگانی" || key === "سریال"}
