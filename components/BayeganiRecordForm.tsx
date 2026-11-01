@@ -85,6 +85,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [counters, setCounters] = useState<CounterOption[]>([]);
+  const [counterQuery, setCounterQuery] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -123,7 +124,10 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
         next["کد بایگانی"] = archiveCode;
         delete next["کد بایگانی جدید"];
-        if (active) setFields(next);
+        if (active) {
+          setFields(next);
+          setCounterQuery([next["کد باجه"], next["نام باجه"]].filter(Boolean).join("-"));
+        }
       })
       .catch((e: unknown) => { if (active) setError(e instanceof Error ? e.message : "خطا در دریافت اطلاعات."); })
       .finally(() => { if (active) setLoading(false); });
@@ -206,37 +210,42 @@ export default function BayeganiRecordForm({ recordId }: Props) {
             <label key={key} className="block">
               <span className="mb-1.5 block text-sm font-medium text-slate-700">{key === "نام باجه" ? "کد باجه-نام باجه" : key}</span>
               {key === "نام باجه" ? (
-                <select
-                  value={JSON.stringify([fields["نام باجه"] || "", fields["کد باجه"] || ""])}
-                  onChange={(event) => {
-                    try {
-                      const [name, code] = JSON.parse(event.target.value) as [string, string];
-                      setFields((current) => {
-                      const next = { ...current, "نام باجه": name, "کد باجه": code };
-                      const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
-                      next["کد بایگانی"] = archiveCode;
-                      delete next["کد بایگانی جدید"];
-                      return next;
-                    });
-                    } catch {
-                      setFields((current) => {
-                        const next = { ...current, "نام باجه": "", "کد باجه": "" };
-                        const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
-                        next["کد بایگانی"] = archiveCode;
-                        delete next["کد بایگانی جدید"];
-                        return next;
-                      });
-                    }
-                  }}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                >
-                  <option value={JSON.stringify(["", ""])}>انتخاب کد باجه-نام باجه</option>
-                  {counterOptions.map((counter) => (
-                    <option key={`${counter.name}-${counter.code}`} value={JSON.stringify([counter.name, counter.code])}>
-                      {counter.code}{counter.code && counter.name ? "-" : ""}{counter.name}
-                    </option>
-                  ))}
-                </select>
+                <>
+                  <input
+                    list="bayegani-counter-options"
+                    value={counterQuery}
+                    onChange={(event) => {
+                      const query = event.target.value;
+                      setCounterQuery(query);
+                      if (!query.trim()) {
+                        setFields((current) => {
+                          const next = { ...current, "نام باجه": "", "کد باجه": "" };
+                          next["کد بایگانی"] = buildNewArchiveCode(next) || "";
+                          return next;
+                        });
+                        return;
+                      }
+                      const selected = counterOptions.find((counter) =>
+                        `${counter.code}-${counter.name}`.toLocaleLowerCase() === query.trim().toLocaleLowerCase()
+                      );
+                      if (selected) {
+                        setFields((current) => {
+                          const next = { ...current, "نام باجه": selected.name, "کد باجه": selected.code };
+                          next["کد بایگانی"] = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
+                          return next;
+                        });
+                      }
+                    }}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    placeholder="جستجو بر اساس کد باجه یا نام باجه..."
+                    autoComplete="off"
+                  />
+                  <datalist id="bayegani-counter-options">
+                    {counterOptions.map((counter) => (
+                      <option key={`${counter.code}-${counter.name}`} value={`${counter.code}-${counter.name}`} />
+                    ))}
+                  </datalist>
+                </>
               ) : (
                 <input
                   value={key === "سریال" && !recordId ? "پس از ثبت به‌صورت خودکار ایجاد می‌شود" : key === "مبلغ مصوب" ? formatAmount(value) : value}
