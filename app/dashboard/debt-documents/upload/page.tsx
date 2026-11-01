@@ -1,82 +1,119 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import UploadLoadingOverlay from "@/components/UploadLoadingOverlay";
 
+type DebtDiscountingRecord = {
+  id: number;
+  counterLabel: string;
+  facilityNumber: string;
+  serial: string | null;
+  checkNumber: string | null;
+  checkStatus: string | null;
+  dueDate: string | null;
+  paidAmount: string | null;
+  unpaidAmount: string | null;
+  embeddedProfit: string | null;
+  delayDays: string | null;
+  delayPenalty: string | null;
+  bankAgent: string | null;
+  administrativeNumber: string | null;
+  sourceFile: string;
+  createdAt: string;
+};
+
+type ApiResult = {
+  success: boolean;
+  error?: string;
+  count?: number;
+  records?: DebtDiscountingRecord[];
+};
+
+const columns: { key: keyof DebtDiscountingRecord; label: string }[] = [
+  { key: "serial", label: "سریال سفته / چک" },
+  { key: "checkNumber", label: "شماره سفته / چک" },
+  { key: "checkStatus", label: "وضعیت سفته / چک" },
+  { key: "dueDate", label: "تاریخ سررسید" },
+  { key: "paidAmount", label: "پرداخت شده" },
+  { key: "unpaidAmount", label: "پرداخت نشده" },
+  { key: "embeddedProfit", label: "سود / کارمزد مستتر" },
+  { key: "delayDays", label: "مدت تأخیر (روز)" },
+  { key: "delayPenalty", label: "جریمه تأخیر" },
+  { key: "bankAgent", label: "بانک عامل" },
+  { key: "administrativeNumber", label: "شماره انتظامی" },
+];
+
 export default function DebtDocumentsUploadPage() {
-  const router = useRouter();
-
-  const [customerId, setCustomerId] = useState("");
+  const [counterLabel, setCounterLabel] = useState("");
+  const [facilityNumber, setFacilityNumber] = useState("");
   const [file, setFile] = useState<File | null>(null);
-
+  const [records, setRecords] = useState<DebtDiscountingRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [listLoading, setListLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  function handleFileChange(
-    event: ChangeEvent<HTMLInputElement>,
-  ) {
+  async function loadRecords() {
+    setListLoading(true);
+    try {
+      const response = await fetch("/api/debt-documents/upload", { cache: "no-store" });
+      const result = (await response.json()) as ApiResult;
+      if (!response.ok || !result.success) throw new Error(result.error ?? "خطا در دریافت اطلاعات");
+      setRecords(result.records ?? []);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "خطا در دریافت اطلاعات");
+    } finally {
+      setListLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadRecords();
+  }, []);
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     setFile(event.target.files?.[0] ?? null);
     setError("");
     setSuccess("");
   }
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
-  ) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
     setError("");
     setSuccess("");
 
-    if (!customerId.trim()) {
-      setError("شناسه قرارداد را وارد کنید.");
+    if (!counterLabel.trim() || !facilityNumber.trim()) {
+      setError("کدباجه - نام باجه و کد تسهیلات خرید دین را وارد کنید.");
       return;
     }
-
     if (!file) {
       setError("فایل Excel را انتخاب کنید.");
       return;
     }
 
     setLoading(true);
-
     try {
       const formData = new FormData();
-
-      formData.append("customerId", customerId);
+      formData.append("counterLabel", counterLabel.trim());
+      formData.append("facilityNumber", facilityNumber.trim());
       formData.append("file", file);
 
-      const response = await fetch(
-        "/api/debt-documents/upload",
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
-
-      const result = await response.json();
-
+      const response = await fetch("/api/debt-documents/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const result = (await response.json()) as ApiResult;
       if (!response.ok || !result.success) {
-        throw new Error(
-          result.error ?? "خطا در بارگذاری فایل",
-        );
+        throw new Error(result.error ?? "خطا در بارگذاری فایل");
       }
 
-      setSuccess(
-        `${result.count} سند با موفقیت ثبت شد.`,
-      );
-
-      setTimeout(() => {
-        router.push(`/template/${result.customerId}`);
-      }, 1000);
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "خطا در بارگذاری فایل",
-      );
+      setSuccess(`${result.count ?? 0} ردیف با موفقیت در جدول اسناد خرید دین ثبت شد.`);
+      setFile(null);
+      const fileInput = document.getElementById("debtExcelFile") as HTMLInputElement | null;
+      if (fileInput) fileInput.value = "";
+      await loadRecords();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "خطا در بارگذاری فایل");
     } finally {
       setLoading(false);
     }
@@ -86,181 +123,120 @@ export default function DebtDocumentsUploadPage() {
     <>
       <UploadLoadingOverlay
         open={loading}
-        title="در حال بارگذاری اسناد..."
-        description="فایل Excel در حال پردازش و اسناد در حال ثبت هستند. لطفاً منتظر بمانید."
+        title="در حال بارگذاری اسناد خرید دین..."
+        description="فایل Excel در حال پردازش و ردیف‌ها در پایگاه داده ثبت می‌شوند."
       />
-      <div dir="rtl" className="mx-auto max-w-3xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">
-          بارگذاری اسناد خرید دین
-        </h1>
-
-        <p className="mt-2 text-gray-600">
-          فایل Excel شامل چک‌ها و اسناد تجاری قرارداد خرید دین
-          را بارگذاری کنید.
-        </p>
-      </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="rounded-xl border bg-white p-6 shadow-sm"
-      >
-        {/* Customer ID */}
-
-        <div className="mb-6">
-          <label
-            htmlFor="customerId"
-            className="mb-2 block text-sm font-medium text-gray-700"
-          >
-            شناسه قرارداد
-          </label>
-
-          <input
-            id="customerId"
-            type="number"
-            value={customerId}
-            onChange={(event) =>
-              setCustomerId(event.target.value)
-            }
-            disabled={loading}
-            placeholder="مثلاً 39"
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-right outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          />
-
-          <p className="mt-2 text-xs text-gray-500">
-            شناسه همان عددی است که در URL قرارداد مشاهده
-            می‌کنید؛ مثلاً /template/39
+      <div dir="rtl" className="space-y-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">اسناد خرید دین</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            فایل اکسل را همراه با کد باجه و کد تسهیلات خرید دین ثبت کنید.
           </p>
         </div>
 
-        {/* Excel */}
+        <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="grid gap-5 md:grid-cols-2">
+            <div>
+              <label htmlFor="counterLabel" className="mb-2 block text-sm font-semibold text-slate-700">
+                کدباجه - نام باجه
+              </label>
+              <input
+                id="counterLabel"
+                value={counterLabel}
+                onChange={(event) => setCounterLabel(event.target.value)}
+                disabled={loading}
+                placeholder="مثلاً 64508-دلوئی"
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+            <div>
+              <label htmlFor="facilityNumber" className="mb-2 block text-sm font-semibold text-slate-700">
+                کد تسهیلات خرید دین
+              </label>
+              <input
+                id="facilityNumber"
+                value={facilityNumber}
+                onChange={(event) => setFacilityNumber(event.target.value)}
+                disabled={loading}
+                placeholder="کد تسهیلات را وارد کنید"
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label htmlFor="debtExcelFile" className="mb-2 block text-sm font-semibold text-slate-700">
+                فایل Excel خرید دین
+              </label>
+              <input
+                id="debtExcelFile"
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileChange}
+                disabled={loading}
+                className="block w-full rounded-xl border border-slate-300 bg-white p-3 text-sm"
+              />
+              {file && <p className="mt-2 text-xs text-slate-500">فایل انتخاب‌شده: {file.name}</p>}
+            </div>
+          </div>
 
-        <div className="mb-6">
-          <label
-            htmlFor="file"
-            className="mb-2 block text-sm font-medium text-gray-700"
-          >
-            فایل Excel اسناد
-          </label>
+          {error && <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {success && <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">{success}</div>}
 
-          <input
-            id="file"
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={handleFileChange}
-            disabled={loading}
-            className="block w-full rounded-lg border border-gray-300 bg-white p-3 text-sm"
-          />
+          <div className="mt-5 flex flex-wrap gap-3">
+            <button type="submit" disabled={loading} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+              {loading ? "در حال ثبت..." : "بارگذاری و ثبت در جدول"}
+            </button>
+            <button type="button" onClick={() => void loadRecords()} disabled={listLoading || loading} className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+              به‌روزرسانی جدول
+            </button>
+          </div>
+        </form>
 
-          {file && (
-            <p className="mt-2 text-sm text-gray-600">
-              فایل انتخاب‌شده:
-              <span className="mr-1 font-medium">
-                {file.name}
-              </span>
-            </p>
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+            <div>
+              <h2 className="font-bold text-slate-900">جدول اسناد خرید دین</h2>
+              <p className="mt-1 text-xs text-slate-500">اطلاعات بارگذاری‌شده به همراه کد باجه و کد تسهیلات</p>
+            </div>
+            <span className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700">
+              {records.length.toLocaleString("fa-IR")} ردیف
+            </span>
+          </div>
+
+          {listLoading ? (
+            <div className="p-10 text-center text-sm text-slate-500">در حال دریافت اطلاعات...</div>
+          ) : records.length === 0 ? (
+            <div className="p-10 text-center text-sm text-slate-500">هنوز سندی بارگذاری نشده است.</div>
+          ) : (
+            <div className="max-h-[70vh] overflow-auto">
+              <table className="min-w-[1700px] w-full border-collapse text-right text-xs">
+                <thead className="sticky top-0 z-10 bg-slate-100 text-slate-700">
+                  <tr>
+                    <th className="whitespace-nowrap border-b border-l border-slate-200 px-3 py-3">ردیف</th>
+                    <th className="whitespace-nowrap border-b border-l border-slate-200 px-3 py-3">کدباجه - نام باجه</th>
+                    <th className="whitespace-nowrap border-b border-l border-slate-200 px-3 py-3">کد تسهیلات خرید دین</th>
+                    {columns.map((column) => (
+                      <th key={column.key} className="whitespace-nowrap border-b border-l border-slate-200 px-3 py-3">{column.label}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {records.map((record, index) => (
+                    <tr key={record.id} className="odd:bg-white even:bg-slate-50 hover:bg-blue-50/50">
+                      <td className="border-b border-l border-slate-100 px-3 py-3">{(index + 1).toLocaleString("fa-IR")}</td>
+                      <td className="whitespace-nowrap border-b border-l border-slate-100 px-3 py-3 font-medium">{record.counterLabel}</td>
+                      <td className="whitespace-nowrap border-b border-l border-slate-100 px-3 py-3 font-medium">{record.facilityNumber}</td>
+                      {columns.map((column) => (
+                        <td key={column.key} className="whitespace-nowrap border-b border-l border-slate-100 px-3 py-3">
+                          {String(record[column.key] ?? "—")}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
-        </div>
-
-        {/* Excel format */}
-
-        <div className="mb-6 rounded-lg bg-gray-50 p-4">
-          <h2 className="mb-3 font-bold">
-            ساختار Excel
-          </h2>
-
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr>
-                  <th className="border p-2">
-                    نوع سند
-                  </th>
-
-                  <th className="border p-2">
-                    تاریخ سررسید
-                  </th>
-
-                  <th className="border p-2">
-                    شماره سریال
-                  </th>
-
-                  <th className="border p-2">
-                    مبلغ اسمی سند
-                  </th>
-
-                  <th className="border p-2">
-                    متعهد
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr>
-                  <td className="border p-2">
-                    چک
-                  </td>
-
-                  <td className="border p-2">
-                    ۱۴۰۵/۰۸/۲۰
-                  </td>
-
-                  <td className="border p-2">
-                    123456
-                  </td>
-
-                  <td className="border p-2">
-                    1,000,000,000
-                  </td>
-
-                  <td className="border p-2">
-                    نام متعهد
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Error */}
-
-        {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        {/* Success */}
-
-        {success && (
-          <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-            {success}
-          </div>
-        )}
-
-        {/* Buttons */}
-
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading
-              ? "در حال بارگذاری..."
-              : "بارگذاری اسناد"}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => router.push("/dashboard")}
-            disabled={loading}
-            className="rounded-lg border border-gray-300 px-6 py-3 font-medium text-gray-700 hover:bg-gray-50"
-          >
-            انصراف
-          </button>
-        </div>
-      </form>
+        </section>
       </div>
     </>
   );
