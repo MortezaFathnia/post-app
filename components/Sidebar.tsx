@@ -9,7 +9,17 @@ const menuItems = [
   { title: "داشبورد", href: "/dashboard", icon: "▦", description: "نمای کلی سامانه" },
   { title: "قراردادها", href: "/dashboard/contracts", icon: "▤", description: "مشاهده قراردادهای ثبت‌شده" },
   { title: "ثبت قرارداد", href: "/dashboard/upload", icon: "+", description: "ثبت از طریق فایل Excel" },
-  { title: "بایگانی اسناد خرید دین", href: "/dashboard/debt-documents", icon: "▣", description: "مشاهده و جستجوی اسناد ثبت‌شده", children: [{ title: "بارگذاری اسناد جدید خرید دین", href: "/dashboard/debt-documents/upload", icon: "⇧", description: "ثبت فایل جدید خرید دین" }] },
+  {
+    title: "خرید دین",
+    href: "/dashboard/debt-documents",
+    icon: "▣",
+    description: "مدیریت اسناد خرید دین",
+    children: [
+      { title: "بایگانی اسناد خرید دین", href: "/dashboard/debt-documents", icon: "▤", description: "مشاهده و جستجوی اسناد ثبت‌شده" },
+      { title: "بارگذاری اسناد جدید خرید دین", href: "/dashboard/debt-documents/upload", icon: "⇧", description: "ثبت فایل جدید خرید دین" },
+      { title: "گزارش گیری اسناد خرید دین", href: "/dashboard/debt-documents/reports", icon: "▥", description: "گزارش‌گیری از اسناد خرید دین" },
+    ],
+  },
   { title: "بایگانی تسهیلات", href: "/dashboard/bayegani", icon: "▣", description: "ورود و ویرایش فایل بایگانی" },
   { title: "تنظیمات", href: "/dashboard/settings", icon: "⚙", description: "فهرست و کد باجه‌ها" },
 ];
