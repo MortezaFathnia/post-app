@@ -42,10 +42,10 @@ function daysInMonth(year: number, month: number, jalali: boolean) {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
-function addMonthsToDate(startDate: string, duration: string) {
-  const dateMatch = normalizeDateDigits(startDate).trim().match(/^(\\d{4})([\\/-])(\\d{1,2})\\2(\\d{1,2})$/);
-  const monthsText = normalizeDateDigits(duration).replace(/[,٬،\\s]/g, "").trim();
-  if (!dateMatch || !/^\\d+$/.test(monthsText)) return "";
+export function addMonthsToDate(startDate: string, duration: string) {
+  const dateMatch = normalizeDateDigits(startDate).trim().match(/^(\d{4})([\/-])(\d{1,2})\2(\d{1,2})$/);
+  const monthsText = normalizeDateDigits(duration).replace(/[,٬،\s]/g, "").trim();
+  if (!dateMatch || !/^\d+$/.test(monthsText)) return "";
   const year = Number(dateMatch[1]);
   const month = Number(dateMatch[3]);
   const day = Number(dateMatch[4]);
