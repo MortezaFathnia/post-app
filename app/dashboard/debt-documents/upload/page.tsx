@@ -49,6 +49,8 @@ export default function DebtDocumentsUploadPage() {
   const [counterLabel, setCounterLabel] = useState("");
   const [counters, setCounters] = useState<CounterOption[]>([]);
   const [counterOpen, setCounterOpen] = useState(false);
+  const [counterLoading, setCounterLoading] = useState(false);
+  const [counterError, setCounterError] = useState("");
   const [facilityNumber, setFacilityNumber] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [records, setRecords] = useState<DebtDiscountingRecord[]>([]);
@@ -71,17 +73,30 @@ export default function DebtDocumentsUploadPage() {
     }
   }
 
+  async function loadCounters() {
+    setCounterLoading(true);
+    setCounterError("");
+    try {
+      const response = await fetch("/api/bayegani/counters", { cache: "no-store" });
+      const result = (await response.json()) as {
+        success?: boolean;
+        counters?: CounterOption[];
+        error?: string;
+      };
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? "دریافت فهرست باجه‌ها ناموفق بود.");
+      }
+      setCounters(Array.isArray(result.counters) ? result.counters : []);
+    } catch (loadError) {
+      setCounterError(loadError instanceof Error ? loadError.message : "دریافت فهرست باجه‌ها ناموفق بود.");
+    } finally {
+      setCounterLoading(false);
+    }
+  }
+
   useEffect(() => {
     void loadRecords();
-    let active = true;
-    fetch("/api/bayegani/counters", { cache: "no-store" })
-      .then(async (response) => {
-        const result = (await response.json()) as { success?: boolean; counters?: CounterOption[] };
-        if (!response.ok || !result.success) throw new Error("دریافت فهرست باجه‌ها ناموفق بود.");
-        if (active) setCounters(Array.isArray(result.counters) ? result.counters : []);
-      })
-      .catch(() => { /* Keep manual input available if the counter list cannot be loaded. */ });
-    return () => { active = false; };
+    void loadCounters();
   }, []);
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -161,7 +176,10 @@ export default function DebtDocumentsUploadPage() {
                   aria-expanded={counterOpen}
                   aria-controls="debt-counter-options"
                   value={counterLabel}
-                  onFocus={() => setCounterOpen(true)}
+                  onFocus={() => {
+                    setCounterOpen(true);
+                    if (counters.length === 0 && !counterLoading) void loadCounters();
+                  }}
                   onChange={(event) => {
                     setCounterLabel(event.target.value);
                     setCounterOpen(true);
@@ -192,7 +210,25 @@ export default function DebtDocumentsUploadPage() {
                     role="listbox"
                     className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
                   >
-                    {counters
+                    {counterLoading ? (
+                      <p className="px-3 py-4 text-center text-sm text-slate-500">در حال دریافت فهرست باجه‌ها...</p>
+                    ) : counterError ? (
+                      <div className="px-3 py-3 text-sm text-red-600">
+                        <p>{counterError}</p>
+                        <button
+                          type="button"
+                          onClick={() => void loadCounters()}
+                          className="mt-2 font-semibold text-blue-600 hover:underline"
+                        >
+                          تلاش مجدد
+                        </button>
+                      </div>
+                    ) : counters.length === 0 ? (
+                      <p className="px-3 py-4 text-center text-sm text-slate-500">
+                        هیچ باجه‌ای در فهرست ثبت نشده است.
+                      </p>
+                    ) : (
+                      counters
                       .filter((counter) => {
                         const query = counterLabel.trim().toLocaleLowerCase();
                         return !query || `${counter.code} ${counter.name}`.toLocaleLowerCase().includes(query)
@@ -215,14 +251,12 @@ export default function DebtDocumentsUploadPage() {
                           {counter.code}-{counter.name}
                         </button>
                       ))}
-                    {counters.filter((counter) => {
+                    {counters.length > 0 && counters.filter((counter) => {
                       const query = counterLabel.trim().toLocaleLowerCase();
                       return !query || `${counter.code} ${counter.name}`.toLocaleLowerCase().includes(query)
                         || `${counter.code}-${counter.name}`.toLocaleLowerCase().includes(query);
                     }).length === 0 && (
-                      <p className="px-3 py-4 text-center text-sm text-slate-500">
-                        {counters.length ? "موردی پیدا نشد." : "فهرست باجه‌ها در دسترس نیست؛ مقدار را دستی وارد کنید."}
-                      </p>
+                      <p className="px-3 py-4 text-center text-sm text-slate-500">موردی پیدا نشد.</p>
                     )}
                   </div>
                 )}
