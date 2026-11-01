@@ -8,29 +8,23 @@ function isJalaliLeapYear(year: number) {
   const breaks = [-61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181, 1210, 1635, 2060, 2097, 2192, 2262, 2324, 2394, 2456, 3178];
   let jp = breaks[0];
   let jump = 0;
+  let leapJ = -14;
   for (let i = 1; i < breaks.length; i += 1) {
     const jm = breaks[i];
     jump = jm - jp;
     if (year < jm) break;
+    leapJ += Math.floor(jump / 33) * 8 + Math.floor((jump % 33) / 4);
     jp = jm;
   }
   let n = year - jp;
-  let leapJ = -14;
-  for (let i = 1; i < breaks.length && jp < year; i += 1) {
-    const jm = breaks[i];
-    const span = jm - jp;
-    leapJ += Math.floor(span / 33) * 8 + Math.floor((span % 33) / 4);
-    jp = jm;
-  }
   leapJ += Math.floor(n / 33) * 8 + Math.floor(((n % 33) + 3) / 4);
   if (jump % 33 === 4 && jump - n === 4) leapJ += 1;
   const gy = year + 621;
   const leapG = Math.floor(gy / 4) - Math.floor((Math.floor(gy / 100) + 1) * 3 / 4) - 150;
-  const march = 20 + leapJ - leapG;
   if (jump - n < 6) n = n - jump + Math.floor((jump + 4) / 33) * 33;
   let leap = ((n + 1) % 33 - 1) % 4;
   if (leap === -1) leap = 4;
-  return leap === 0 && march > 0;
+  return leap === 0 && leapJ > 0 && leapG > 0;
 }
 
 function daysInMonth(year: number, month: number, jalali: boolean) {
