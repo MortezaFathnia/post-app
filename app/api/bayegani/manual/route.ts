@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
     if (derivedCustomerNumber) raw["شماره مشتری"] = derivedCustomerNumber;
     const customerNumber = derivedCustomerNumber || value(raw, "شماره مشتری", "شماره مشتري");
     const counter = normalizeCounter(raw);
+    raw["وضعیت کنونی"] = value(raw, "وضعیت کنونی", "وضعيت کنونی") || "فعال";
     raw["مبلغ مصوب"] = value(raw, "مبلغ مصوب", "مبلغ");
     delete raw["مبلغ"];
     delete raw["کد بایگانی جدید"];
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
           serialSort: highestSerial + 1n,
           classification: value(raw, "طبقه", "طبقه بایگانی"),
           counterName: counter.name, counterCode: counter.code, counterLabel: counter.label,
-          status: value(raw, "وضعیت کنونی", "وضعيت کنونی"),
+          status: value(raw, "وضعیت کنونی", "وضعيت کنونی") || "فعال",
           startDate: value(raw, "تاریخ شروع", "تاريخ شروع"),
           endDate: value(raw, "پایان قرارداد", " پایان قرارداد", "تاریخ پایان قرارداد"),
           duration: value(raw, "مدت"), approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
