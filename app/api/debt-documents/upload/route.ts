@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -53,6 +54,28 @@ export async function POST(request: NextRequest) {
     }
 
     const worksheet = workbook.Sheets[sheetName];
+    const headerRows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1, defval: "" });
+    const headers = new Set((headerRows[0] ?? []).map((header) => String(header).trim()));
+    const requiredHeaders = [
+      "سریال سفته/ چک",
+      "شماره سفته / چک",
+      "وضعیت سفته / چک",
+      "تاريخ سررسيد",
+      "پرداخت شده",
+      "پرداخت نشده",
+      "سود/کارمزد مستتر",
+      "مدت تاخير به روز",
+      "جريمه تاخير",
+      "بانک عامل",
+      "شماره انتظامی",
+    ];
+    const missingHeaders = requiredHeaders.filter((header) => !headers.has(header));
+    if (missingHeaders.length) {
+      return NextResponse.json(
+        { success: false, error: `ستون‌های موردنیاز در فایل وجود ندارند: ${missingHeaders.join("، ")}` },
+        { status: 400 },
+      );
+    }
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, {
       defval: "",
       raw: false,
@@ -78,7 +101,7 @@ export async function POST(request: NextRequest) {
       delayPenalty: value(row, "جريمه تاخير"),
       bankAgent: value(row, "بانک عامل"),
       administrativeNumber: value(row, "شماره انتظامی"),
-      rawData: row,
+      rawData: row as Prisma.InputJsonObject,
     }));
 
     await prisma.debtDiscountingRecord.createMany({ data: records });
