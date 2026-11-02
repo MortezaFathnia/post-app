@@ -270,7 +270,7 @@ model DebtDiscountingRecord {
   counterLabel         String
   facilityNumber       String
   serial               String?
-  checkNumber          String?
+  checkNumber          String?  @unique
   checkStatus          String?
   dueDate              String?
   paidAmount           String?
@@ -279,7 +279,7 @@ model DebtDiscountingRecord {
   delayDays            String?
   delayPenalty         String?
   bankAgent            String?
-  administrativeNumber String?
+  administrativeNumber String?  @unique
   rawData              Json
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
