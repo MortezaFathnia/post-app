@@ -7,6 +7,7 @@ type DebtRecord = {
   id: number;
   counterLabel: string;
   facilityNumber: string;
+  customerNumber: string | null;
   serial: string | null;
   checkNumber: string | null;
   checkStatus: string | null;
@@ -30,6 +31,7 @@ type ApiResult = {
 const columns: { key: keyof DebtRecord; label: string }[] = [
   { key: "counterLabel", label: "کدباجه - نام باجه" },
   { key: "facilityNumber", label: "کد تسهیلات خرید دین" },
+  { key: "customerNumber", label: "شماره مشتری" },
   { key: "serial", label: "سریال سفته / چک" },
   { key: "checkStatus", label: "وضعیت سفته / چک" },
   { key: "dueDate", label: "تاریخ سررسید" },
