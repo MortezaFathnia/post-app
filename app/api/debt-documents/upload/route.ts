@@ -16,6 +16,39 @@ function value(row: Record<string, unknown>, key: string): string | null {
   return String(raw).trim();
 }
 
+function normalizeHeader(header: unknown): string {
+  return String(header ?? "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function textCell(row: Record<string, unknown>, key: string): string {
+  const raw = row[key];
+  if (raw === undefined || raw === null) return "";
+  const cell = String(raw).trim();
+  // Excel may display numeric amounts with thousands separators; the TXT format uses plain digits.
+  return /^[-+]?\d{1,3}(,\d{3})+(\.\d+)?$/.test(cell) ? cell.replace(/,/g, "") : cell;
+}
+
+function csvCell(input: string): string {
+  return /[",\r\n]/.test(input) ? `"${input.replace(/"/g, '""')}"` : input;
+}
+
+const textHeaders = [
+  "شماره چک",
+  "مبلغ چک",
+  "شماره انتظامی",
+  "تاریخ سررسید",
+  "نوع چک",
+  "هزینه ارسال",
+  "تاریخ واخواست",
+  "هزینه واخواست",
+  "نوع دین",
+  "بانک عامل",
+  "شعبه چک",
+  "چک داخلی یا خارجی",
+  "حساب جاری چک",
+  "کد رهگیری",
+] as const;
+
 export async function GET(request: NextRequest) {
   try {
     const params = request.nextUrl.searchParams;
@@ -130,8 +163,10 @@ export async function POST(request: NextRequest) {
 
     const worksheet = workbook.Sheets[sheetName];
     const headerRows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1, defval: "" });
-    const headers = new Set((headerRows[0] ?? []).map((header) => String(header).trim()));
-    const requiredHeaders = [
+    const normalizedHeaders = (headerRows[0] ?? []).map(normalizeHeader);
+    const headers = new Set(normalizedHeaders);
+    const newFormat = textHeaders.every((header) => headers.has(header));
+    const legacyHeaders = [
       "سریال سفته/ چک",
       "شماره سفته / چک",
       "وضعیت سفته / چک",
@@ -144,41 +179,75 @@ export async function POST(request: NextRequest) {
       "بانک عامل",
       "شماره انتظامی",
     ];
-    const missingHeaders = requiredHeaders.filter((header) => !headers.has(header));
+    const missingHeaders = (newFormat ? [] : legacyHeaders.filter((header) => !headers.has(header)));
     if (missingHeaders.length) {
       return NextResponse.json(
-        { success: false, error: `ستون‌های موردنیاز در فایل وجود ندارند: ${missingHeaders.join("، ")}` },
+        {
+          success: false,
+          error: `ستون‌های موردنیاز در فایل وجود ندارند. فایل باید دارای قالب ۱۴ ستونی جدید یا قالب قبلی خرید دین باشد. ستون‌های مفقود: ${missingHeaders.join("، ")}`,
+        },
         { status: 400 },
       );
     }
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, {
+
+    const sourceRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, {
       defval: "",
       raw: false,
+    });
+    const rows = sourceRows.map((sourceRow) => {
+      const normalized: Record<string, unknown> = {};
+      for (const [key, cell] of Object.entries(sourceRow)) normalized[normalizeHeader(key)] = cell;
+      return normalized;
     });
     if (!rows.length) {
       return NextResponse.json({ success: false, error: "فایل Excel فاقد ردیف اطلاعاتی است." }, { status: 400 });
     }
 
-    const records = rows.map((row, index) => ({
-      sourceFile: file.name,
-      sheetName,
-      sourceRow: index + 2,
-      counterLabel,
-      facilityNumber,
-      customerNumber: customerNumberFromFacility(facilityNumber),
-      serial: value(row, "سریال سفته/ چک"),
-      checkNumber: value(row, "شماره سفته / چک"),
-      checkStatus: value(row, "وضعیت سفته / چک"),
-      dueDate: value(row, "تاريخ سررسيد"),
-      paidAmount: value(row, "پرداخت شده"),
-      unpaidAmount: value(row, "پرداخت نشده"),
-      embeddedProfit: value(row, "سود/کارمزد مستتر"),
-      delayDays: value(row, "مدت تاخير به روز"),
-      delayPenalty: value(row, "جريمه تاخير"),
-      bankAgent: value(row, "بانک عامل"),
-      administrativeNumber: value(row, "شماره انتظامی"),
-      rawData: row as Prisma.InputJsonObject,
-    }));
+    const records = rows.map((row, index) => {
+      if (newFormat) {
+        return {
+          sourceFile: file.name,
+          sheetName,
+          sourceRow: index + 2,
+          counterLabel,
+          facilityNumber,
+          customerNumber: customerNumberFromFacility(facilityNumber),
+          // The tracking code is the serial identifier for the existing uniqueness rule.
+          serial: value(row, "کد رهگیری"),
+          checkNumber: value(row, "شماره چک"),
+          checkStatus: value(row, "نوع چک"),
+          dueDate: value(row, "تاریخ سررسید"),
+          paidAmount: value(row, "مبلغ چک"),
+          unpaidAmount: null,
+          embeddedProfit: null,
+          delayDays: null,
+          delayPenalty: null,
+          bankAgent: value(row, "بانک عامل"),
+          administrativeNumber: value(row, "شماره انتظامی"),
+          rawData: row as Prisma.InputJsonObject,
+        };
+      }
+      return {
+        sourceFile: file.name,
+        sheetName,
+        sourceRow: index + 2,
+        counterLabel,
+        facilityNumber,
+        customerNumber: customerNumberFromFacility(facilityNumber),
+        serial: value(row, "سریال سفته/ چک"),
+        checkNumber: value(row, "شماره سفته / چک"),
+        checkStatus: value(row, "وضعیت سفته / چک"),
+        dueDate: value(row, "تاريخ سررسيد"),
+        paidAmount: value(row, "پرداخت شده"),
+        unpaidAmount: value(row, "پرداخت نشده"),
+        embeddedProfit: value(row, "سود/کارمزد مستتر"),
+        delayDays: value(row, "مدت تاخير به روز"),
+        delayPenalty: value(row, "جريمه تاخير"),
+        bankAgent: value(row, "بانک عامل"),
+        administrativeNumber: value(row, "شماره انتظامی"),
+        rawData: row as Prisma.InputJsonObject,
+      };
+    });
 
     const pairRows = new Map<
       string,
@@ -244,11 +313,22 @@ export async function POST(request: NextRequest) {
 
     await prisma.debtDiscountingRecord.createMany({ data: records });
 
+    const textContent = newFormat
+      ? [
+          textHeaders.join(","),
+          ...rows.map((row) => textHeaders.map((header) => csvCell(textCell(row, header))).join(",")),
+        ].join("\r\n") + "\r\n"
+      : undefined;
+
     return NextResponse.json({
       success: true,
       count: records.length,
       counterLabel,
       facilityNumber,
+      ...(textContent === undefined ? {} : {
+        textContent,
+        textFileName: `${file.name.replace(/\.(xlsx|xls)$/i, "")}.txt`,
+      }),
     });
   } catch (error) {
     console.error("Debt discounting Excel upload error:", error);
