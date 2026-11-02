@@ -34,31 +34,54 @@ export async function GET(request: NextRequest) {
     const sortBy: SortField = allowedSortFields.includes(requestedSort as SortField)
       ? requestedSort as SortField
       : "createdAt";
-    const sortOrder = params.get("sortOrder") === "desc" ? "desc" : "asc";
+    const sortOrder = params.get("sortOrder") === "asc" ? "asc" : "desc";
+
     const searchableFields = [
       "counterLabel", "facilityNumber", "customerNumber", "serial", "checkNumber", "checkStatus",
       "dueDate", "paidAmount", "unpaidAmount", "embeddedProfit", "delayDays",
       "delayPenalty", "bankAgent", "administrativeNumber",
     ] as const;
+
+    const normalizeDigits = (input: string) =>
+      input.replace(/[۰-۹٠-٩]/g, (digit) => {
+        const persian = "۰۱۲۳۴۵۶۷۸۹";
+        const arabic = "٠١٢٣٤٥٦٧٨٩";
+        const persianIndex = persian.indexOf(digit);
+        return String(persianIndex >= 0 ? persianIndex : arabic.indexOf(digit));
+      });
+
+    const searchTerms = [...new Set([search, normalizeDigits(search)].filter(Boolean))];
     const where: Prisma.DebtDiscountingRecordWhereInput = {};
-    if (search) {
-      where.OR = searchableFields.map((field) => ({
-        [field]: { contains: search, mode: "insensitive" },
-      }));
+    if (searchTerms.length) {
+      where.OR = searchTerms.flatMap((term) =>
+        searchableFields.map((field) => ({
+          [field]: { contains: term, mode: "insensitive" as const },
+        })),
+      );
     }
-    const filterFields: Record<string, string> = {
+
+    const filterFields: Record<string, keyof Prisma.DebtDiscountingRecordWhereInput> = {
       counter: "counterLabel",
       facilityNumber: "facilityNumber",
+      customerNumber: "customerNumber",
+      serial: "serial",
       checkStatus: "checkStatus",
       dueDate: "dueDate",
       bankAgent: "bankAgent",
+      administrativeNumber: "administrativeNumber",
     };
     const filterField = filterFields[filterType];
     if (filterValue && filterField) {
-      where[filterField as keyof Prisma.DebtDiscountingRecordWhereInput] = {
-        contains: filterValue,
-        mode: "insensitive",
-      } as never;
+      const filterTerms = [...new Set([filterValue, normalizeDigits(filterValue)])];
+      const filterConditions = filterTerms.map((term) => ({
+        [filterField]: { contains: term, mode: "insensitive" as const },
+      }));
+      if (where.OR) {
+        where.AND = [{ OR: where.OR }, { OR: filterConditions }];
+        delete where.OR;
+      } else {
+        where.OR = filterConditions;
+      }
     }
     const [records, total] = await Promise.all([
       prisma.debtDiscountingRecord.findMany({
