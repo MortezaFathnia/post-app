@@ -37,9 +37,6 @@ const columns: { key: keyof DebtRecord; label: string }[] = [
   { key: "paidAmount", label: "پرداخت شده" },
   { key: "unpaidAmount", label: "پرداخت نشده" },
   { key: "embeddedProfit", label: "سود / کارمزد مستتر" },
-  { key: "delayDays", label: "مدت تأخیر (روز)" },
-  { key: "delayPenalty", label: "جریمه تأخیر" },
-  { key: "bankAgent", label: "بانک عامل" },
   { key: "administrativeNumber", label: "شماره انتظامی" },
 ];
 
@@ -163,7 +160,7 @@ export default function DebtDocumentsArchivePage() {
           <div className="p-10 text-center text-sm text-slate-500">رکوردی پیدا نشد. ابتدا اسناد را بارگذاری کنید یا فیلترها را تغییر دهید.</div>
         ) : (
           <div className="max-h-[70vh] overflow-auto">
-            <table className="w-full min-w-[1700px] text-right text-sm">
+            <table className="w-full min-w-[1300px] text-right text-sm">
               <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600">
                 <tr>
                   <th className="whitespace-nowrap px-4 py-3 font-semibold">ردیف</th>
