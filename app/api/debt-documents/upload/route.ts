@@ -151,47 +151,55 @@ export async function POST(request: NextRequest) {
       rawData: row as Prisma.InputJsonObject,
     }));
 
-    const identifierFields = [
-      { field: "checkNumber" as const, label: "شماره سفته" },
-      { field: "administrativeNumber" as const, label: "شماره انتظامی" },
-    ];
+    const pairsByKey = new Map<
+      string,
+      { administrativeNumber: string; checkNumber: string; sourceRows: number[] }
+    >();
+
+    for (const record of records) {
+      if (!record.administrativeNumber || !record.checkNumber) continue;
+      const key = JSON.stringify([record.administrativeNumber, record.checkNumber]);
+      const pair = pairsByKey.get(key) ?? {
+        administrativeNumber: record.administrativeNumber,
+        checkNumber: record.checkNumber,
+        sourceRows: [],
+      };
+      pair.sourceRows.push(record.sourceRow);
+      pairsByKey.set(key, pair);
+    }
+
     const conflicts: string[] = [];
-
-    for (const identifier of identifierFields) {
-      const rowsByValue = new Map<string, number[]>();
-      for (const record of records) {
-        const identifierValue = record[identifier.field];
-        if (!identifierValue) continue;
-        const rowNumbers = rowsByValue.get(identifierValue) ?? [];
-        rowNumbers.push(record.sourceRow);
-        rowsByValue.set(identifierValue, rowNumbers);
-      }
-
-      for (const [identifierValue, rowNumbers] of rowsByValue) {
-        if (rowNumbers.length > 1) {
-          conflicts.push(
-            `${identifier.label} «${identifierValue}» در ردیف‌های فایل ${rowNumbers.join("، ")} تکراری است.`,
-          );
-        }
-      }
-
-      const uniqueValues = [...rowsByValue.keys()];
-      if (uniqueValues.length) {
-        const existing = await prisma.debtDiscountingRecord.findMany({
-          where: { [identifier.field]: { in: uniqueValues } },
-          select: { [identifier.field]: true },
-        });
-        const existingValues = new Set(
-          existing.map((record) => record[identifier.field]).filter(
-            (identifierValue): identifierValue is string => Boolean(identifierValue),
-          ),
+    for (const pair of pairsByKey.values()) {
+      if (pair.sourceRows.length > 1) {
+        conflicts.push(
+          `ترکیب شماره انتظامی «${pair.administrativeNumber}» و شماره سفته «${pair.checkNumber}» در ردیف‌های فایل ${pair.sourceRows.join("، ")} تکراری است.`,
         );
-        for (const identifierValue of uniqueValues) {
-          if (existingValues.has(identifierValue)) {
-            conflicts.push(
-              `${identifier.label} «${identifierValue}» از قبل در جدول اسناد خرید دین ثبت شده است.`,
-            );
-          }
+      }
+    }
+
+    const pairs = [...pairsByKey.values()];
+    if (pairs.length) {
+      const existing = await prisma.debtDiscountingRecord.findMany({
+        where: {
+          OR: pairs.map((pair) => ({
+            administrativeNumber: pair.administrativeNumber,
+            checkNumber: pair.checkNumber,
+          })),
+        },
+        select: { administrativeNumber: true, checkNumber: true },
+      });
+      const existingKeys = new Set(
+        existing.map((record) =>
+          JSON.stringify([record.administrativeNumber, record.checkNumber]),
+        ),
+      );
+
+      for (const pair of pairs) {
+        const key = JSON.stringify([pair.administrativeNumber, pair.checkNumber]);
+        if (existingKeys.has(key)) {
+          conflicts.push(
+            `ترکیب شماره انتظامی «${pair.administrativeNumber}» و شماره سفته «${pair.checkNumber}» از قبل در جدول اسناد خرید دین ثبت شده است.`,
+          );
         }
       }
     }
@@ -200,7 +208,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "بارگذاری انجام نشد؛ شماره سفته و شماره انتظامی باید در کل جدول یکتا باشند.",
+          error: "بارگذاری انجام نشد؛ ترکیب شماره انتظامی و شماره سفته باید در کل جدول یکتا باشد.",
           conflicts,
         },
         { status: 409 },
@@ -224,7 +232,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "شماره سفته یا شماره انتظامی تکراری است؛ هر دو مقدار باید در کل جدول یکتا باشند.",
+          error: "ترکیب شماره انتظامی و شماره سفته تکراری است؛ این ترکیب باید در کل جدول یکتا باشد.",
         },
         { status: 409 },
       );
