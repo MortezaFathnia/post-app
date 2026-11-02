@@ -31,7 +31,6 @@ const columns: { key: keyof DebtRecord; label: string }[] = [
   { key: "counterLabel", label: "کدباجه - نام باجه" },
   { key: "facilityNumber", label: "کد تسهیلات خرید دین" },
   { key: "serial", label: "سریال سفته / چک" },
-  { key: "checkNumber", label: "شماره سفته / چک" },
   { key: "checkStatus", label: "وضعیت سفته / چک" },
   { key: "dueDate", label: "تاریخ سررسید" },
   { key: "paidAmount", label: "پرداخت شده" },
