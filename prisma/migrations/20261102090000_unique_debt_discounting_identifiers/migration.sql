@@ -1,7 +1,7 @@
--- Enforce global uniqueness for non-null check and administrative numbers.
--- PostgreSQL allows multiple NULL values in a unique index.
-CREATE UNIQUE INDEX "DebtDiscountingRecord_checkNumber_key"
-ON "DebtDiscountingRecord"("checkNumber");
+-- Uniqueness applies to the combination of administrative and check numbers.
+-- Remove the earlier individual unique indexes if a failed attempt created either one.
+DROP INDEX IF EXISTS "DebtDiscountingRecord_checkNumber_key";
+DROP INDEX IF EXISTS "DebtDiscountingRecord_administrativeNumber_key";
 
-CREATE UNIQUE INDEX "DebtDiscountingRecord_administrativeNumber_key"
-ON "DebtDiscountingRecord"("administrativeNumber");
+CREATE UNIQUE INDEX "DebtDiscountingRecord_administrativeNumber_checkNumber_key"
+ON "DebtDiscountingRecord"("administrativeNumber", "checkNumber");
