@@ -5,6 +5,11 @@ import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
+function customerNumberFromFacility(facilityNumber: string): string | null {
+  const customerNumber = facilityNumber.trim().split(".")[2]?.trim();
+  return customerNumber || null;
+}
+
 function value(row: Record<string, unknown>, key: string): string | null {
   const raw = row[key];
   if (raw === undefined || raw === null || String(raw).trim() === "") return null;
@@ -31,7 +36,7 @@ export async function GET(request: NextRequest) {
       : "createdAt";
     const sortOrder = params.get("sortOrder") === "desc" ? "desc" : "asc";
     const searchableFields = [
-      "counterLabel", "facilityNumber", "serial", "checkNumber", "checkStatus",
+      "counterLabel", "facilityNumber", "customerNumber", "serial", "checkNumber", "checkStatus",
       "dueDate", "paidAmount", "unpaidAmount", "embeddedProfit", "delayDays",
       "delayPenalty", "bankAgent", "administrativeNumber",
     ] as const;
@@ -137,6 +142,7 @@ export async function POST(request: NextRequest) {
       sourceRow: index + 2,
       counterLabel,
       facilityNumber,
+      customerNumber: customerNumberFromFacility(facilityNumber),
       serial: value(row, "سریال سفته/ چک"),
       checkNumber: value(row, "شماره سفته / چک"),
       checkStatus: value(row, "وضعیت سفته / چک"),
