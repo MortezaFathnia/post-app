@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import DebtDocumentsUploadForm from "@/components/DebtDocumentsUploadForm";
 
 type DebtRecord = {
   id: number;
@@ -125,10 +125,10 @@ export default function DebtDocumentsArchivePage() {
           <h1 className="text-2xl font-bold text-slate-900">بایگانی اسناد خرید دین</h1>
           <p className="mt-2 text-sm text-slate-500">مشاهده، جستجو، فیلتر و مرتب‌سازی اسناد ثبت‌شده</p>
         </div>
-        <Link href="/dashboard/debt-documents/upload" className="rounded-xl bg-blue-600 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-blue-700">
-          + بارگذاری اسناد جدید خرید دین
-        </Link>
+
       </header>
+
+      <DebtDocumentsUploadForm onUploaded={() => void loadRecords()} />
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 p-5">
