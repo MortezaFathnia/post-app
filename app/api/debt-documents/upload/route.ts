@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const filterType = params.get("filterType") || "";
     const filterValue = (params.get("filterValue") || "").trim();
     const allowedSortFields = [
-      "createdAt", "counterLabel", "facilityNumber", "serial", "checkNumber",
+      "createdAt", "counterLabel", "facilityNumber", "customerNumber", "serial", "checkNumber",
       "checkStatus", "dueDate", "paidAmount", "unpaidAmount", "embeddedProfit",
       "delayDays", "delayPenalty", "bankAgent", "administrativeNumber",
     ] as const;
