@@ -269,7 +269,7 @@ model DebtDiscountingRecord {
   sourceRow            Int
   counterLabel         String
   facilityNumber       String
-  serial               String?   @unique
+  serial               String?
   checkNumber          String?
   checkStatus          String?
   dueDate              String?
@@ -279,12 +279,13 @@ model DebtDiscountingRecord {
   delayDays            String?
   delayPenalty         String?
   bankAgent            String?
-  administrativeNumber String?   @unique
+  administrativeNumber String?
   rawData              Json
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
   @@index([facilityNumber])
   @@index([counterLabel])
+  @@unique([serial, administrativeNumber])
   @@index([sourceFile, sheetName])
 }
