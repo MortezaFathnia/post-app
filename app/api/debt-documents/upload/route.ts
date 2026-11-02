@@ -151,68 +151,53 @@ export async function POST(request: NextRequest) {
       rawData: row as Prisma.InputJsonObject,
     }));
 
-    const serialRows = new Map<string, number[]>();
-    const administrativeRows = new Map<string, number[]>();
+    const pairRows = new Map<
+      string,
+      { serial: string; administrativeNumber: string; sourceRows: number[] }
+    >();
 
     for (const record of records) {
-      if (record.serial) {
-        const sourceRows = serialRows.get(record.serial) ?? [];
-        sourceRows.push(record.sourceRow);
-        serialRows.set(record.serial, sourceRows);
-      }
-      if (record.administrativeNumber) {
-        const sourceRows = administrativeRows.get(record.administrativeNumber) ?? [];
-        sourceRows.push(record.sourceRow);
-        administrativeRows.set(record.administrativeNumber, sourceRows);
-      }
+      if (!record.serial || !record.administrativeNumber) continue;
+      const key = JSON.stringify([record.serial, record.administrativeNumber]);
+      const pair = pairRows.get(key) ?? {
+        serial: record.serial,
+        administrativeNumber: record.administrativeNumber,
+        sourceRows: [],
+      };
+      pair.sourceRows.push(record.sourceRow);
+      pairRows.set(key, pair);
     }
 
     const conflicts: string[] = [];
-    for (const [serial, sourceRows] of serialRows) {
-      if (sourceRows.length > 1) {
+    for (const pair of pairRows.values()) {
+      if (pair.sourceRows.length > 1) {
         conflicts.push(
-          `سریال سفته / چک «${serial}» در ردیف‌های فایل ${sourceRows.join("، ")} تکراری است.`,
-        );
-      }
-    }
-    for (const [administrativeNumber, sourceRows] of administrativeRows) {
-      if (sourceRows.length > 1) {
-        conflicts.push(
-          `شماره انتظامی «${administrativeNumber}» در ردیف‌های فایل ${sourceRows.join("، ")} تکراری است.`,
+          `ترکیب سریال «${pair.serial}» و شماره انتظامی «${pair.administrativeNumber}» در ردیف‌های فایل ${pair.sourceRows.join("، ")} تکراری است.`,
         );
       }
     }
 
-    const serials = [...serialRows.keys()];
-    const administrativeNumbers = [...administrativeRows.keys()];
-    const existingConditions: Prisma.DebtDiscountingRecordWhereInput[] = [];
-    if (serials.length) existingConditions.push({ serial: { in: serials } });
-    if (administrativeNumbers.length) {
-      existingConditions.push({ administrativeNumber: { in: administrativeNumbers } });
-    }
-
-    if (existingConditions.length) {
+    const pairs = [...pairRows.values()];
+    if (pairs.length) {
       const existing = await prisma.debtDiscountingRecord.findMany({
-        where: { OR: existingConditions },
+        where: {
+          OR: pairs.map((pair) => ({
+            serial: pair.serial,
+            administrativeNumber: pair.administrativeNumber,
+          })),
+        },
         select: { serial: true, administrativeNumber: true },
       });
-      const existingSerials = new Set(
-        existing.map((record) => record.serial).filter((serial): serial is string => Boolean(serial)),
-      );
-      const existingAdministrativeNumbers = new Set(
-        existing
-          .map((record) => record.administrativeNumber)
-          .filter((number): number is string => Boolean(number)),
+      const existingKeys = new Set(
+        existing.map((record) => JSON.stringify([record.serial, record.administrativeNumber])),
       );
 
-      for (const serial of serials) {
-        if (existingSerials.has(serial)) {
-          conflicts.push(`سریال سفته / چک «${serial}» از قبل در جدول اسناد خرید دین ثبت شده است.`);
-        }
-      }
-      for (const administrativeNumber of administrativeNumbers) {
-        if (existingAdministrativeNumbers.has(administrativeNumber)) {
-          conflicts.push(`شماره انتظامی «${administrativeNumber}» از قبل در جدول اسناد خرید دین ثبت شده است.`);
+      for (const pair of pairs) {
+        const key = JSON.stringify([pair.serial, pair.administrativeNumber]);
+        if (existingKeys.has(key)) {
+          conflicts.push(
+            `ترکیب سریال «${pair.serial}» و شماره انتظامی «${pair.administrativeNumber}» از قبل در جدول اسناد خرید دین ثبت شده است.`,
+          );
         }
       }
     }
@@ -221,7 +206,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "بارگذاری انجام نشد؛ سریال سفته / چک و شماره انتظامی باید هرکدام به‌صورت جداگانه در کل جدول یکتا باشند.",
+          error: "بارگذاری انجام نشد؛ ترکیب سریال سفته / چک و شماره انتظامی باید در کل جدول یکتا باشد.",
           conflicts,
         },
         { status: 409 },
@@ -245,7 +230,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "سریال سفته / چک یا شماره انتظامی تکراری است؛ هرکدام باید به‌صورت جداگانه در کل جدول یکتا باشند.",
+          error: "ترکیب سریال سفته / چک و شماره انتظامی تکراری است؛ این ترکیب باید در کل جدول یکتا باشد.",
         },
         { status: 409 },
       );
