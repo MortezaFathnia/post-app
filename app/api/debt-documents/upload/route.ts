@@ -151,6 +151,62 @@ export async function POST(request: NextRequest) {
       rawData: row as Prisma.InputJsonObject,
     }));
 
+    const identifierFields = [
+      { field: "checkNumber" as const, label: "شماره سفته" },
+      { field: "administrativeNumber" as const, label: "شماره انتظامی" },
+    ];
+    const conflicts: string[] = [];
+
+    for (const identifier of identifierFields) {
+      const rowsByValue = new Map<string, number[]>();
+      for (const record of records) {
+        const identifierValue = record[identifier.field];
+        if (!identifierValue) continue;
+        const rowNumbers = rowsByValue.get(identifierValue) ?? [];
+        rowNumbers.push(record.sourceRow);
+        rowsByValue.set(identifierValue, rowNumbers);
+      }
+
+      for (const [identifierValue, rowNumbers] of rowsByValue) {
+        if (rowNumbers.length > 1) {
+          conflicts.push(
+            `${identifier.label} «${identifierValue}» در ردیف‌های فایل ${rowNumbers.join("، ")} تکراری است.`,
+          );
+        }
+      }
+
+      const uniqueValues = [...rowsByValue.keys()];
+      if (uniqueValues.length) {
+        const existing = await prisma.debtDiscountingRecord.findMany({
+          where: { [identifier.field]: { in: uniqueValues } },
+          select: { [identifier.field]: true },
+        });
+        const existingValues = new Set(
+          existing.map((record) => record[identifier.field]).filter(
+            (identifierValue): identifierValue is string => Boolean(identifierValue),
+          ),
+        );
+        for (const identifierValue of uniqueValues) {
+          if (existingValues.has(identifierValue)) {
+            conflicts.push(
+              `${identifier.label} «${identifierValue}» از قبل در جدول اسناد خرید دین ثبت شده است.`,
+            );
+          }
+        }
+      }
+    }
+
+    if (conflicts.length) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "بارگذاری انجام نشد؛ شماره سفته و شماره انتظامی باید در کل جدول یکتا باشند.",
+          conflicts,
+        },
+        { status: 409 },
+      );
+    }
+
     await prisma.debtDiscountingRecord.createMany({ data: records });
 
     return NextResponse.json({
