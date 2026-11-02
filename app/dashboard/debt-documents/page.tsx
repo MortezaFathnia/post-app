@@ -64,7 +64,7 @@ export default function DebtDocumentsArchivePage() {
   const showLeadingEllipsis = visiblePages.length > 0 && visiblePages[0] > 2;
   const showTrailingEllipsis = visiblePages.length > 0 && visiblePages[visiblePages.length - 1] < totalPages - 1;
 
-  async function loadRecords() {
+  async function loadRecords(signal?: AbortSignal) {
     setLoading(true);
     setError("");
     try {
@@ -77,12 +77,13 @@ export default function DebtDocumentsArchivePage() {
         sortBy,
         sortOrder,
       });
-      const response = await fetch(`/api/debt-documents/upload?${params.toString()}`, { cache: "no-store" });
+      const response = await fetch(`/api/debt-documents/upload?${params.toString()}`, { cache: "no-store", signal });
       const result = (await response.json()) as ApiResult;
       if (!response.ok || !result.success) throw new Error(result.error ?? "خطا در دریافت اطلاعات");
       setRecords(result.records ?? []);
       setTotal(result.total ?? 0);
     } catch (loadError) {
+      if (loadError instanceof Error && loadError.name === "AbortError") return;
       setError(loadError instanceof Error ? loadError.message : "خطا در دریافت اطلاعات");
     } finally {
       setLoading(false);
@@ -90,7 +91,14 @@ export default function DebtDocumentsArchivePage() {
   }
 
   useEffect(() => {
-    void loadRecords();
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      void loadRecords(controller.signal);
+    }, 250);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
   }, [page, pageSize, search, filterType, filterValue, sortBy, sortOrder]);
 
   async function exportExcel() {
