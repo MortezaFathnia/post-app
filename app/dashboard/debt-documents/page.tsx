@@ -49,6 +49,7 @@ export default function DebtDocumentsArchivePage() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [loading, setLoading] = useState(true);
+  const [exportLoading, setExportLoading] = useState(false);
   const [error, setError] = useState("");
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -89,6 +90,31 @@ export default function DebtDocumentsArchivePage() {
   useEffect(() => {
     void loadRecords();
   }, [page, pageSize, search, filterType, filterValue, sortBy, sortOrder]);
+
+  async function exportExcel() {
+    setError("");
+    setExportLoading(true);
+    try {
+      const response = await fetch("/api/debt-documents/export", { cache: "no-store" });
+      if (!response.ok) {
+        const result = await response.json().catch(() => null);
+        throw new Error(result?.error || "خروجی اکسل ناموفق بود.");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "اسناد-خرید-دین.xlsx";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (exportError) {
+      setError(exportError instanceof Error ? exportError.message : "خطا در دریافت خروجی اکسل.");
+    } finally {
+      setExportLoading(false);
+    }
+  }
 
   function toggleSort(field: string) {
     if (sortBy === field) setSortOrder((current) => current === "asc" ? "desc" : "asc");
@@ -132,9 +158,14 @@ export default function DebtDocumentsArchivePage() {
               <h2 className="font-bold text-slate-900">رکوردهای اسناد خرید دین</h2>
               <p className="mt-1 text-xs text-slate-500">تعداد نتایج: {total.toLocaleString("fa-IR")}</p>
             </div>
-            <button type="button" onClick={() => void loadRecords()} disabled={loading} className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
-              به‌روزرسانی جدول
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={exportExcel} disabled={exportLoading} className="rounded-xl border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">
+                {exportLoading ? "در حال تهیه فایل..." : "خروجی اکسل همه رکوردها"}
+              </button>
+              <button type="button" onClick={() => void loadRecords()} disabled={loading} className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+                به‌روزرسانی جدول
+              </button>
+            </div>
           </div>
           <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:flex-wrap sm:items-center">
             <input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="جستجوی عمومی..." aria-label="جستجوی عمومی" className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm sm:min-w-56 sm:flex-1" />
