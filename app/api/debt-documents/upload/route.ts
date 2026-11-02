@@ -217,6 +217,18 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Debt discounting Excel upload error:", error);
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "شماره سفته یا شماره انتظامی تکراری است؛ هر دو مقدار باید در کل جدول یکتا باشند.",
+        },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : "خطا در پردازش فایل Excel" },
       { status: 500 },
