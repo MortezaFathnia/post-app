@@ -4,7 +4,7 @@ import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import UploadLoadingOverlay from "@/components/UploadLoadingOverlay";
 
 type CounterOption = { id: number; code: string; name: string };
-type ApiResult = { success: boolean; error?: string; count?: number };
+type ApiResult = { success: boolean; error?: string; count?: number; textContent?: string; textFileName?: string };
 
 type Props = { onUploaded?: () => void };
 
@@ -51,6 +51,18 @@ export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
     setSuccess("");
   }
 
+  function downloadTextFile(textContent: string, fileName: string) {
+    const blob = new Blob(["\uFEFF", textContent], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -81,7 +93,12 @@ export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
         throw new Error(result.error ?? "خطا در بارگذاری فایل");
       }
 
-      setSuccess(`${result.count ?? 0} ردیف با موفقیت در جدول اسناد خرید دین ثبت شد.`);
+      if (result.textContent !== undefined) {
+        downloadTextFile(result.textContent, result.textFileName || "اسناد-خرید-دین.txt");
+        setSuccess(`${result.count ?? 0} ردیف ثبت شد و فایل متنی با موفقیت دریافت شد.`);
+      } else {
+        setSuccess(`${result.count ?? 0} ردیف با موفقیت در جدول اسناد خرید دین ثبت شد.`);
+      }
       setFile(null);
       const fileInput = document.getElementById("debtArchiveExcelFile") as HTMLInputElement | null;
       if (fileInput) fileInput.value = "";
@@ -109,7 +126,7 @@ export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
       <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-4">
           <h2 className="font-bold text-slate-900">بارگذاری اسناد جدید خرید دین</h2>
-          <p className="mt-1 text-xs text-slate-500">فایل اکسل را همراه با کد باجه و کد تسهیلات خرید دین ثبت کنید.</p>
+          <p className="mt-1 text-xs text-slate-500">فایل اکسل را همراه با کد باجه و کد تسهیلات خرید دین ثبت کنید. در قالب ۱۴ ستونی، فایل TXT نیز به‌صورت خودکار دریافت می‌شود.</p>
         </div>
         <div className="grid gap-5 md:grid-cols-2">
           <div>
