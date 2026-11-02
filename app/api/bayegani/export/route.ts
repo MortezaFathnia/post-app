@@ -20,6 +20,11 @@ function compareSerial(a: string | null, b: string | null): number {
   return 0;
 }
 
+function customerNumberFromFacility(facilityNumber: string | null): string {
+  if (!facilityNumber) return "";
+  return facilityNumber.trim().split(".")[2]?.trim() ?? "";
+}
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -103,7 +108,7 @@ export async function GET() {
         "نام برگه": record.sheetName,
         "شماره ردیف در فایل": record.sourceRow,
         "شماره تسهیلات": record.facilityNumber ?? "",
-        "شماره مشتری": record.customerNumber ?? "",
+        "شماره مشتری": customerNumberFromFacility(record.facilityNumber) || record.customerNumber || "",
         "کد بایگانی": record.archiveCode ?? "",
         "عنوان تسهیلات": record.facilityTitle ?? "",
         "سریال": record.serial ?? (raw["سریال"] == null ? "" : asCell(raw["سریال"])),
