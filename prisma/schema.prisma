@@ -269,6 +269,7 @@ model DebtDiscountingRecord {
   sourceRow            Int
   counterLabel         String
   facilityNumber       String
+  customerNumber       String?
   serial               String?
   checkNumber          String?
   checkStatus          String?
