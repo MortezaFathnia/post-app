@@ -36,7 +36,6 @@ const columns: { key: keyof DebtRecord; label: string }[] = [
   { key: "dueDate", label: "تاریخ سررسید" },
   { key: "paidAmount", label: "پرداخت شده" },
   { key: "unpaidAmount", label: "پرداخت نشده" },
-  { key: "embeddedProfit", label: "سود / کارمزد مستتر" },
   { key: "administrativeNumber", label: "شماره انتظامی" },
 ];
 
