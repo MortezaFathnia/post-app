@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     const filterValue = (params.get("filterValue") || "").trim();
     const allowedSortFields = [
       "createdAt", "counterLabel", "facilityNumber", "customerNumber", "serial", "checkNumber",
-      "checkStatus", "dueDate", "paidAmount", "unpaidAmount", "embeddedProfit",
+      "checkStatus", "domesticForeign", "dueDate", "paidAmount", "unpaidAmount", "embeddedProfit",
       "delayDays", "delayPenalty", "bankAgent", "administrativeNumber",
     ] as const;
     type SortField = (typeof allowedSortFields)[number];
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
 
     const searchableFields = [
       "counterLabel", "facilityNumber", "customerNumber", "serial", "checkNumber", "checkStatus",
-      "dueDate", "paidAmount", "unpaidAmount", "embeddedProfit", "delayDays",
+      "domesticForeign", "dueDate", "paidAmount", "unpaidAmount", "embeddedProfit", "delayDays",
       "delayPenalty", "bankAgent", "administrativeNumber",
     ] as const;
 
@@ -116,6 +116,7 @@ export async function GET(request: NextRequest) {
       customerNumber: "customerNumber",
       serial: "serial",
       checkStatus: "checkStatus",
+      domesticForeign: "domesticForeign",
       dueDate: "dueDate",
       bankAgent: "bankAgent",
       administrativeNumber: "administrativeNumber",
@@ -147,6 +148,33 @@ export async function GET(request: NextRequest) {
     console.error("Debt discounting records list error:", error);
     return NextResponse.json(
       { success: false, error: "خطا در دریافت فهرست اسناد خرید دین" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = (await request.json()) as { id?: number; checkStatus?: string };
+    const id = Number(body.id);
+    const allowedStatuses = ["درراه", "آزاد", "نقدشده"];
+    if (!Number.isInteger(id) || id <= 0 || !body.checkStatus || !allowedStatuses.includes(body.checkStatus)) {
+      return NextResponse.json(
+        { success: false, error: "شناسه رکورد یا وضعیت چک معتبر نیست." },
+        { status: 400 },
+      );
+    }
+
+    const record = await prisma.debtDiscountingRecord.update({
+      where: { id },
+      data: { checkStatus: body.checkStatus },
+      select: { id: true, checkStatus: true },
+    });
+    return NextResponse.json({ success: true, record });
+  } catch (error) {
+    console.error("Debt check status update error:", error);
+    return NextResponse.json(
+      { success: false, error: error instanceof Error ? error.message : "خطا در تغییر وضعیت چک." },
       { status: 500 },
     );
   }
@@ -234,7 +262,8 @@ export async function POST(request: NextRequest) {
           // In the original format, کد رهگیری is the serial; in the count format, شماره چک is.
           serial: countFormat ? checkNumber : value(row, "کد رهگیری"),
           checkNumber,
-          checkStatus: value(row, "نوع چک"),
+          checkStatus: "درراه",
+          domesticForeign: value(row, "چک داخلی یا خارجی"),
           dueDate: value(row, "تاریخ سررسید"),
           paidAmount: value(row, "مبلغ چک"),
           unpaidAmount: null,
