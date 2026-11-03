@@ -363,13 +363,51 @@ export async function POST(request: NextRequest) {
 
     await prisma.debtDiscountingRecord.createMany({ data: records });
 
-    const outputHeaders = countFormat ? countFormatHeaders : textHeaders;
-    const textContent = newFormat || countFormat
-      ? [
-          outputHeaders.join(","),
-          ...rows.map((row) => outputHeaders.map((header) => csvCell(textCell(row, header))).join(",")),
-        ].join("\r\n") + "\r\n"
+    const countFormatOutputHeaders = [
+      "شماره چک",
+      "مبلغ چک",
+      "شماره انتظامی(سری)",
+      "تاریخ سررسید",
+      "نوع چک",
+      "هزینه ارسال",
+      "تاریخ واخواست",
+      "هزینه واخواست",
+      "نوع دین",
+      "بانک عامل",
+      "شعبه چک",
+      "چک داخلی یا خارجی",
+      "حساب جاری چک",
+      "شماره انتظامی(سری)",
+    ] as const;
+
+    const formatDomesticForeign = (input: string): string => {
+      const normalized = input.trim().toLocaleLowerCase();
+      if (["true", "1", "بله", "داخلی"].includes(normalized)) return "TRUE";
+      if (["false", "0", "خیر", "خارجی"].includes(normalized)) return "FALSE";
+      return input;
+    };
+
+    const countFormatRows = countFormat
+      ? rows.map((row) => {
+          const values = countFormatOutputHeaders.map((header, index) => {
+            if (index === countFormatOutputHeaders.length - 1) {
+              return textCell(row, "شماره انتظامی(سری)");
+            }
+            const cell = textCell(row, header);
+            return header === "چک داخلی یا خارجی" ? formatDomesticForeign(cell) : cell;
+          });
+          return values;
+        })
       : undefined;
+
+    const textContent = countFormat
+      ? countFormatRows!.map((row) => row.map(csvCell).join(",")).join("\r\n") + "\r\n"
+      : newFormat
+        ? [
+            textHeaders.join(","),
+            ...rows.map((row) => textHeaders.map((header) => csvCell(textCell(row, header))).join(",")),
+          ].join("\r\n") + "\r\n"
+        : undefined;
 
     return NextResponse.json({
       success: true,
@@ -379,6 +417,8 @@ export async function POST(request: NextRequest) {
       ...(textContent === undefined ? {} : {
         textContent,
         textFileName: `${file.name.replace(/\.(xlsx|xls)$/i, "")}.txt`,
+        previewHeaders: countFormat ? countFormatOutputHeaders : textHeaders,
+        previewRows: countFormat ? countFormatRows : rows.map((row) => textHeaders.map((header) => textCell(row, header))),
       }),
     });
   } catch (error) {
