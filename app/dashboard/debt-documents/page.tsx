@@ -11,6 +11,7 @@ type DebtRecord = {
   serial: string | null;
   checkNumber: string | null;
   checkStatus: string | null;
+  domesticForeign: string | null;
   dueDate: string | null;
   paidAmount: string | null;
   unpaidAmount: string | null;
@@ -38,14 +39,16 @@ const columns: { key: string; label: string; rawKey?: string }[] = [
   { key: "paidAmount", label: "مبلغ چک" },
   { key: "administrativeNumber", label: "شماره انتظامی (سری)" },
   { key: "dueDate", label: "تاریخ سررسید" },
-  { key: "checkStatus", label: "نوع چک" },
+  { key: "checkStatus", label: "وضعیت سفته / چک" },
+  { key: "checkType", label: "نوع چک", rawKey: "نوع چک" },
+  { key: "domesticForeign", label: "چک داخلی یا خارجی" },
   { key: "sendCost", label: "هزینه ارسال", rawKey: "هزینه ارسال" },
   { key: "protestDate", label: "تاریخ واخواست", rawKey: "تاریخ واخواست" },
   { key: "protestCost", label: "هزینه واخواست", rawKey: "هزینه واخواست" },
   { key: "debtType", label: "نوع دین", rawKey: "نوع دین" },
   { key: "bankAgent", label: "بانک عامل" },
   { key: "checkBranch", label: "شعبه چک", rawKey: "شعبه چک" },
-  { key: "domesticForeign", label: "چک داخلی یا خارجی", rawKey: "چک داخلی یا خارجی" },
+  { key: "domesticForeign", label: "چک داخلی یا خارجی" },
   { key: "currentAccount", label: "حساب جاری چک", rawKey: "حساب جاری چک" },
 ];
 
@@ -135,6 +138,30 @@ export default function DebtDocumentsArchivePage() {
     }
   }
 
+  async function updateCheckStatus(recordId: number, checkStatus: string) {
+    setError("");
+    try {
+      const response = await fetch("/api/debt-documents/upload", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: recordId, checkStatus }),
+      });
+      const result = (await response.json()) as {
+        success: boolean;
+        error?: string;
+        record?: { id: number; checkStatus: string };
+      };
+      if (!response.ok || !result.success || !result.record) {
+        throw new Error(result.error ?? "تغییر وضعیت چک ناموفق بود.");
+      }
+      setRecords((current) => current.map((record) =>
+        record.id === recordId ? { ...record, checkStatus: result.record!.checkStatus } : record
+      ));
+    } catch (updateError) {
+      setError(updateError instanceof Error ? updateError.message : "خطا در تغییر وضعیت چک.");
+    }
+  }
+
   function toggleSort(field: string) {
     if (sortBy === field) setSortOrder((current) => current === "asc" ? "desc" : "asc");
     else {
@@ -220,7 +247,23 @@ export default function DebtDocumentsArchivePage() {
                   <tr key={record.id} className="hover:bg-slate-50">
                     <td className="whitespace-nowrap px-4 py-3">{(firstRecord + index).toLocaleString("fa-IR")}</td>
                     {columns.map((column) => (
-                      <td key={column.key} className="whitespace-nowrap px-4 py-3">{String((column.rawKey ? record.rawData?.[column.rawKey] : record[column.key as keyof DebtRecord]) ?? "—")}</td>
+                      <td key={column.key} className="whitespace-nowrap px-4 py-3">
+                        {column.key === "checkStatus" ? (
+                          <select
+                            value={record.checkStatus ?? "درراه"}
+                            onChange={(event) => void updateCheckStatus(record.id, event.target.value)}
+                            aria-label="وضعیت سفته یا چک"
+                            className="min-w-28 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm"
+                          >
+                            {!["درراه", "آزاد", "نقدشده"].includes(record.checkStatus ?? "") && record.checkStatus && (
+                              <option value={record.checkStatus}>{record.checkStatus}</option>
+                            )}
+                            <option value="درراه">درراه</option>
+                            <option value="آزاد">آزاد</option>
+                            <option value="نقدشده">نقدشده</option>
+                          </select>
+                        ) : String((column.rawKey ? record.rawData?.[column.rawKey] : record[column.key as keyof DebtRecord]) ?? "—")}
+                      </td>
                     ))}
                   </tr>
                 ))}
