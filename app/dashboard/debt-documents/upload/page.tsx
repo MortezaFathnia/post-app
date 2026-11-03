@@ -16,6 +16,10 @@ type DebtUploadTableRecord = {
   paidAmount: string | null;
   administrativeNumber: string | null;
   checkStatus: string | null;
+  checkNumber: string | null;
+  domesticForeign: string | null;
+  bankAgent: string | null;
+  rawData: Record<string, unknown> | null;
 };
 
 type ApiResult = {
@@ -294,8 +298,8 @@ export default function DebtDocumentsUploadPage() {
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">اسناد بارگذاری‌شده</h2>
-              <p className="mt-1 text-xs text-slate-500">نمایش آخرین ۱۰۰ رکورد ثبت‌شده در این بخش</p>
+              <h2 className="text-lg font-bold text-slate-900">جزئیات تکمیلی اسناد بارگذاری‌شده</h2>
+              <p className="mt-1 text-xs text-slate-500">نمایش اطلاعات تکمیلی فایل Excel برای آخرین ۱۰۰ رکورد ثبت‌شده</p>
             </div>
             <button
               type="button"
@@ -318,14 +322,17 @@ export default function DebtDocumentsUploadPage() {
               <thead className="bg-slate-100 text-slate-700">
                 <tr>
                   {[
-                    "کدباجه - نام باجه",
-                    "کد تسهیلات خرید دین",
-                    "شماره مشتری",
-                    "سریال سفته / چک",
-                    "تاریخ سررسید",
-                    "پرداخت شده",
-                    "شماره انتظامی",
-                    "وضعیت سفته / چک",
+                    "شماره چک / سفته",
+                    "نوع چک",
+                    "چک داخلی یا خارجی",
+                    "هزینه ارسال",
+                    "تاریخ واخواست",
+                    "هزینه واخواست",
+                    "نوع دین",
+                    "بانک عامل",
+                    "شعبه چک",
+                    "حساب جاری چک",
+                    "کد رهگیری",
                   ].map((label) => (
                     <th key={label} className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-semibold">
                       {label}
@@ -336,7 +343,7 @@ export default function DebtDocumentsUploadPage() {
               <tbody>
                 {tableLoading && tableRecords.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={11} className="px-4 py-8 text-center text-slate-500">
                       در حال دریافت اطلاعات...
                     </td>
                   </tr>
@@ -350,14 +357,17 @@ export default function DebtDocumentsUploadPage() {
                   tableRecords.map((record) => (
                     <tr key={record.id} className="odd:bg-white even:bg-slate-50">
                       {[
-                        record.counterLabel,
-                        record.facilityNumber,
-                        record.customerNumber,
-                        record.serial,
-                        record.dueDate,
-                        record.paidAmount,
-                        record.administrativeNumber,
-                        record.checkStatus,
+                        record.checkNumber ?? record.rawData?.["شماره سفته / چک"] ?? record.rawData?.["شماره چک"],
+                        record.rawData?.["نوع چک"],
+                        record.domesticForeign ?? record.rawData?.["چک داخلی یا خارجی"],
+                        record.rawData?.["هزینه ارسال"],
+                        record.rawData?.["تاریخ واخواست"],
+                        record.rawData?.["هزینه واخواست"],
+                        record.rawData?.["نوع دین"],
+                        record.bankAgent ?? record.rawData?.["بانک عامل"],
+                        record.rawData?.["شعبه چک"],
+                        record.rawData?.["حساب جاری چک"],
+                        record.rawData?.["کد رهگیری"],
                       ].map((cell, index) => (
                         <td key={index} className="whitespace-nowrap border-b border-slate-100 px-4 py-3 text-slate-700">
                           {cell || "—"}
