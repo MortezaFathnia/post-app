@@ -4,7 +4,15 @@ import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import UploadLoadingOverlay from "@/components/UploadLoadingOverlay";
 
 type CounterOption = { id: number; code: string; name: string };
-type ApiResult = { success: boolean; error?: string; count?: number; textContent?: string; textFileName?: string };
+type ApiResult = {
+  success: boolean;
+  error?: string;
+  count?: number;
+  textContent?: string;
+  textFileName?: string;
+  previewHeaders?: string[];
+  previewRows?: string[][];
+};
 
 type Props = { onUploaded?: () => void };
 
@@ -19,6 +27,16 @@ export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [previewHeaders, setPreviewHeaders] = useState<string[]>([]);
+  const [previewRows, setPreviewRows] = useState<string[][]>([]);
+  const [downloadUrl, setDownloadUrl] = useState("");
+  const [downloadFileName, setDownloadFileName] = useState("اسناد-خرید-دین.txt");
+
+  useEffect(() => {
+    return () => {
+      if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+    };
+  }, [downloadUrl]);
 
   async function loadCounters() {
     setCounterLoading(true);
@@ -49,18 +67,9 @@ export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
     setFile(event.target.files?.[0] ?? null);
     setError("");
     setSuccess("");
-  }
-
-  function downloadTextFile(textContent: string, fileName: string) {
-    const blob = new Blob(["\uFEFF", textContent], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = fileName;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setPreviewHeaders([]);
+    setPreviewRows([]);
+    setDownloadUrl("");
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -94,8 +103,13 @@ export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
       }
 
       if (result.textContent !== undefined) {
-        downloadTextFile(result.textContent, result.textFileName || "اسناد-خرید-دین.txt");
-        setSuccess(`${result.count ?? 0} ردیف ثبت شد و فایل متنی با موفقیت دریافت شد.`);
+        const blob = new Blob(["\uFEFF", result.textContent], { type: "text/plain;charset=utf-8" });
+        const nextUrl = URL.createObjectURL(blob);
+        setDownloadUrl(nextUrl);
+        setDownloadFileName(result.textFileName || "اسناد-خرید-دین.txt");
+        setPreviewHeaders(result.previewHeaders ?? []);
+        setPreviewRows(result.previewRows ?? []);
+        setSuccess(`${result.count ?? 0} ردیف ثبت شد. فایل متنی آماده دریافت است.`);
       } else {
         setSuccess(`${result.count ?? 0} ردیف با موفقیت در جدول اسناد خرید دین ثبت شد.`);
       }
@@ -241,11 +255,52 @@ export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
         </div>
         {error && <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
         {success && <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">{success}</div>}
-        <div className="mt-5 flex flex-wrap gap-3">
+        <div className="mt-5 flex flex-wrap items-center gap-3">
           <button type="submit" disabled={loading} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
             {loading ? "در حال ثبت..." : "بارگذاری و ثبت در جدول"}
           </button>
+          {downloadUrl && (
+            <a
+              href={downloadUrl}
+              download={downloadFileName}
+              className="inline-flex items-center rounded-xl border border-emerald-300 bg-emerald-50 px-6 py-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-100"
+            >
+              دریافت فایل TXT
+            </a>
+          )}
         </div>
+        {previewRows.length > 0 && (
+          <section className="mt-6">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h3 className="font-bold text-slate-900">پیش‌نمایش خروجی فایل متنی</h3>
+              <span className="text-xs text-slate-500">{previewRows.length.toLocaleString("fa-IR")} ردیف</span>
+            </div>
+            <div className="max-h-[28rem] overflow-auto rounded-xl border border-slate-200">
+              <table className="min-w-full border-collapse text-right text-xs">
+                <thead className="sticky top-0 bg-slate-100 text-slate-700">
+                  <tr>
+                    {previewHeaders.map((header, index) => (
+                      <th key={`${header}-${index}`} className="whitespace-nowrap border-b border-slate-200 px-3 py-3 font-bold">
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {previewRows.map((row, rowIndex) => (
+                    <tr key={rowIndex} className="odd:bg-white even:bg-slate-50">
+                      {row.map((cell, cellIndex) => (
+                        <td key={cellIndex} className="whitespace-nowrap border-b border-slate-100 px-3 py-2 text-slate-700">
+                          {cell || "—"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
       </form>
     </>
   );
