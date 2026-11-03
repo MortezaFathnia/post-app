@@ -237,21 +237,7 @@ export default function DebtDocumentsArchivePage() {
                     <td className="whitespace-nowrap px-4 py-3">{(firstRecord + index).toLocaleString("fa-IR")}</td>
                     {columns.map((column) => (
                       <td key={column.key} className="whitespace-nowrap px-4 py-3">
-                        {column.key === "checkStatus" ? (
-                          <select
-                            value={record.checkStatus ?? "درراه"}
-                            onChange={(event) => void updateCheckStatus(record.id, event.target.value)}
-                            aria-label="وضعیت سفته یا چک"
-                            className="min-w-28 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm"
-                          >
-                            {!["درراه", "آزاد", "نقدشده"].includes(record.checkStatus ?? "") && record.checkStatus && (
-                              <option value={record.checkStatus}>{record.checkStatus}</option>
-                            )}
-                            <option value="درراه">درراه</option>
-                            <option value="آزاد">آزاد</option>
-                            <option value="نقدشده">نقدشده</option>
-                          </select>
-                        ) : String(record[column.key] ?? "—")}
+{String(record[column.key] ?? "—")}
                       </td>
                     ))}
                   </tr>
