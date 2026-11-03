@@ -6,10 +6,23 @@ import UploadLoadingOverlay from "@/components/UploadLoadingOverlay";
 
 type CounterOption = { id: number; code: string; name: string };
 
+type DebtUploadTableRecord = {
+  id: number;
+  counterLabel: string;
+  facilityNumber: string;
+  customerNumber: string | null;
+  serial: string | null;
+  dueDate: string | null;
+  paidAmount: string | null;
+  administrativeNumber: string | null;
+  checkStatus: string | null;
+};
+
 type ApiResult = {
   success: boolean;
   error?: string;
   count?: number;
+  records?: DebtUploadTableRecord[];
 };
 
 export default function DebtDocumentsUploadPage() {
@@ -23,6 +36,29 @@ export default function DebtDocumentsUploadPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [tableRecords, setTableRecords] = useState<DebtUploadTableRecord[]>([]);
+  const [tableLoading, setTableLoading] = useState(false);
+  const [tableError, setTableError] = useState("");
+
+  async function loadRecords() {
+    setTableLoading(true);
+    setTableError("");
+    try {
+      const response = await fetch(
+        "/api/debt-documents/upload?page=1&pageSize=100&sortBy=createdAt&sortOrder=desc",
+        { cache: "no-store" },
+      );
+      const result = (await response.json()) as ApiResult;
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? "دریافت فهرست اسناد ناموفق بود.");
+      }
+      setTableRecords(Array.isArray(result.records) ? result.records : []);
+    } catch (loadError) {
+      setTableError(loadError instanceof Error ? loadError.message : "دریافت فهرست اسناد ناموفق بود.");
+    } finally {
+      setTableLoading(false);
+    }
+  }
 
   async function loadCounters() {
     setCounterLoading(true);
@@ -47,6 +83,7 @@ export default function DebtDocumentsUploadPage() {
 
   useEffect(() => {
     void loadCounters();
+    void loadRecords();
   }, []);
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -86,6 +123,7 @@ export default function DebtDocumentsUploadPage() {
       }
 
       setSuccess(`${result.count ?? 0} ردیف با موفقیت در جدول اسناد خرید دین ثبت شد.`);
+      await loadRecords();
       setFile(null);
       const fileInput = document.getElementById("debtExcelFile") as HTMLInputElement | null;
       if (fileInput) fileInput.value = "";
@@ -253,6 +291,85 @@ export default function DebtDocumentsUploadPage() {
           </div>
         </form>
 
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">اسناد بارگذاری‌شده</h2>
+              <p className="mt-1 text-xs text-slate-500">نمایش آخرین ۱۰۰ رکورد ثبت‌شده در این بخش</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void loadRecords()}
+              disabled={tableLoading}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              {tableLoading ? "در حال به‌روزرسانی..." : "به‌روزرسانی"}
+            </button>
+          </div>
+
+          {tableError && (
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {tableError}
+            </div>
+          )}
+
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <table className="min-w-full border-collapse text-right text-sm">
+              <thead className="bg-slate-100 text-slate-700">
+                <tr>
+                  {[
+                    "کدباجه - نام باجه",
+                    "کد تسهیلات خرید دین",
+                    "شماره مشتری",
+                    "سریال سفته / چک",
+                    "تاریخ سررسید",
+                    "پرداخت شده",
+                    "شماره انتظامی",
+                    "وضعیت سفته / چک",
+                  ].map((label) => (
+                    <th key={label} className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-semibold">
+                      {label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {tableLoading && tableRecords.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                      در حال دریافت اطلاعات...
+                    </td>
+                  </tr>
+                ) : tableRecords.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                      هنوز رکوردی ثبت نشده است.
+                    </td>
+                  </tr>
+                ) : (
+                  tableRecords.map((record) => (
+                    <tr key={record.id} className="odd:bg-white even:bg-slate-50">
+                      {[
+                        record.counterLabel,
+                        record.facilityNumber,
+                        record.customerNumber,
+                        record.serial,
+                        record.dueDate,
+                        record.paidAmount,
+                        record.administrativeNumber,
+                        record.checkStatus,
+                      ].map((cell, index) => (
+                        <td key={index} className="whitespace-nowrap border-b border-slate-100 px-4 py-3 text-slate-700">
+                          {cell || "—"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
     </>
   );
