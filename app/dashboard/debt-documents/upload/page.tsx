@@ -36,15 +36,16 @@ type ApiResult = {
   textFileName?: string;
 };
 
-const columns: { key: keyof DebtUploadTableRecord; label: string }[] = [
+const columns: { key: keyof DebtUploadTableRecord | "checkBranch"; label: string }[] = [
   { key: "counterLabel", label: "کدباجه - نام باجه" },
   { key: "facilityNumber", label: "کد تسهیلات خرید دین" },
   { key: "customerNumber", label: "شماره مشتری" },
   { key: "serial", label: "سریال سفته / چک" },
   { key: "dueDate", label: "تاریخ سررسید" },
-  { key: "paidAmount", label: "پرداخت شده" },
+  { key: "bankAgent", label: "بانک عامل" },
+  { key: "checkBranch", label: "شعبه چک" },
+  { key: "paidAmount", label: "مبلغ" },
   { key: "administrativeNumber", label: "شماره انتظامی" },
-  { key: "checkStatus", label: "وضعیت سفته / چک" },
 ];
 
 export default function DebtDocumentsUploadPage() {
@@ -502,7 +503,9 @@ export default function DebtDocumentsUploadPage() {
               <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600">
                 <tr>
                   <th className="whitespace-nowrap px-4 py-3 font-semibold">ردیف</th>
-                  {columns.map((column) => sortableHeader(column.label, column.key))}
+                  {columns.map((column) => column.key === "checkBranch" ? (
+                  <th key={column.key} className="whitespace-nowrap px-4 py-3 font-semibold">{column.label}</th>
+                ) : sortableHeader(column.label, column.key))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -511,7 +514,9 @@ export default function DebtDocumentsUploadPage() {
                     <td className="whitespace-nowrap px-4 py-3">{(firstRecord + index).toLocaleString("fa-IR")}</td>
                     {columns.map((column) => (
                       <td key={column.key} className="whitespace-nowrap px-4 py-3">
-                        {String(record[column.key] ?? "—")}
+                        {column.key === "checkBranch"
+                          ? String(record.rawData?.["شعبه چک"] ?? record.rawData?.["شعبه"] ?? "—")
+                          : String(record[column.key] ?? "—")}
                       </td>
                     ))}
                   </tr>
