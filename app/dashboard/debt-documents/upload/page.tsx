@@ -443,28 +443,28 @@ export default function DebtDocumentsUploadPage() {
           </div>
         </form>
 
-        {outputFileUrl && (
-          <section className="overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-sm">
-            <div className="flex flex-col gap-3 border-b border-emerald-100 p-5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="font-bold text-slate-900">اطلاعات فایل خروجی</h2>
-                <p className="mt-1 text-xs text-slate-500">کد تسهیلات، شماره مشتری و لینک دریافت فایل خروجی</p>
-              </div>
+        <section className="overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-sm">
+          <div className="flex flex-col gap-3 border-b border-emerald-100 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-bold text-slate-900">اطلاعات فایل خروجی</h2>
+              <p className="mt-1 text-xs text-slate-500">کد تسهیلات، شماره مشتری و لینک دریافت فایل خروجی</p>
             </div>
-            <div className="overflow-x-auto p-5">
-              <table className="min-w-full border-collapse text-right text-sm">
-                <thead className="bg-slate-100 text-slate-700">
-                  <tr>
-                    <th className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-bold">کد تسهیلات</th>
-                    <th className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-bold">شماره مشتری</th>
-                    <th className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-bold">فایل خروجی</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="bg-white">
-                    <td className="whitespace-nowrap border-b border-slate-100 px-4 py-3 text-slate-700">{outputFacilityNumber}</td>
-                    <td className="whitespace-nowrap border-b border-slate-100 px-4 py-3 text-slate-700">{outputCustomerNumber}</td>
-                    <td className="whitespace-nowrap border-b border-slate-100 px-4 py-3">
+          </div>
+          <div className="overflow-x-auto p-5">
+            <table className="min-w-full border-collapse text-right text-sm">
+              <thead className="bg-slate-100 text-slate-700">
+                <tr>
+                  <th className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-bold">کد تسهیلات</th>
+                  <th className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-bold">شماره مشتری</th>
+                  <th className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-bold">فایل خروجی</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="bg-white">
+                  <td className="whitespace-nowrap border-b border-slate-100 px-4 py-3 text-slate-700">{outputFacilityNumber || "—"}</td>
+                  <td className="whitespace-nowrap border-b border-slate-100 px-4 py-3 text-slate-700">{outputCustomerNumber || "—"}</td>
+                  <td className="whitespace-nowrap border-b border-slate-100 px-4 py-3">
+                    {outputFileUrl ? (
                       <a
                         href={outputFileUrl}
                         download={outputFileName}
@@ -472,13 +472,15 @@ export default function DebtDocumentsUploadPage() {
                       >
                         دریافت فایل TXT
                       </a>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
+                    ) : (
+                      <span className="text-slate-400">فایلی بارگذاری نشده است</span>
+                    )}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 p-5">
