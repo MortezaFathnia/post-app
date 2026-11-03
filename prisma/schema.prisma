@@ -272,7 +272,8 @@ model DebtDiscountingRecord {
   customerNumber       String?
   serial               String?
   checkNumber          String?
-  checkStatus          String?
+  checkStatus          String   @default("درراه")
+  domesticForeign      String?
   dueDate              String?
   paidAmount           String?
   unpaidAmount         String?
