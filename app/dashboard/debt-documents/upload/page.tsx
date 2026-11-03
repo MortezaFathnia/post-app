@@ -194,7 +194,7 @@ export default function DebtDocumentsUploadPage() {
 
       if (result.textContent !== undefined) {
         if (outputFileUrl) URL.revokeObjectURL(outputFileUrl);
-        const blob = new Blob(["\\uFEFF", result.textContent], { type: "text/plain;charset=utf-8" });
+        const blob = new Blob(["\uFEFF", result.textContent], { type: "text/plain;charset=utf-8" });
         setOutputFileUrl(URL.createObjectURL(blob));
         setOutputFileName(result.textFileName || "اسناد-خرید-دین.txt");
         setOutputFacilityNumber(facilityNumber.trim());
