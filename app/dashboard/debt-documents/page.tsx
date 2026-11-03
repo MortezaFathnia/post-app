@@ -48,7 +48,6 @@ const columns: { key: string; label: string; rawKey?: string }[] = [
   { key: "debtType", label: "نوع دین", rawKey: "نوع دین" },
   { key: "bankAgent", label: "بانک عامل" },
   { key: "checkBranch", label: "شعبه چک", rawKey: "شعبه چک" },
-  { key: "domesticForeign", label: "چک داخلی یا خارجی" },
   { key: "currentAccount", label: "حساب جاری چک", rawKey: "حساب جاری چک" },
 ];
 
