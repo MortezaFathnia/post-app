@@ -34,6 +34,17 @@ type ApiResult = {
   total?: number;
 };
 
+const columns: { key: keyof DebtUploadTableRecord; label: string }[] = [
+  { key: "counterLabel", label: "کدباجه - نام باجه" },
+  { key: "facilityNumber", label: "کد تسهیلات خرید دین" },
+  { key: "customerNumber", label: "شماره مشتری" },
+  { key: "serial", label: "سریال سفته / چک" },
+  { key: "dueDate", label: "تاریخ سررسید" },
+  { key: "paidAmount", label: "پرداخت شده" },
+  { key: "administrativeNumber", label: "شماره انتظامی" },
+  { key: "checkStatus", label: "وضعیت سفته / چک" },
+];
+
 export default function DebtDocumentsUploadPage() {
   const [counterLabel, setCounterLabel] = useState("");
   const [counters, setCounters] = useState<CounterOption[]>([]);
@@ -443,8 +454,8 @@ export default function DebtDocumentsUploadPage() {
           </div>
         </div>
 
-        {error && <p className="m-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-        {loading ? (
+        {tableError && <p className="m-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{tableError}</p>}
+        {tableLoading ? (
           <div className="p-10 text-center text-sm text-slate-500">در حال دریافت اطلاعات...</div>
         ) : tableRecords.length === 0 ? (
           <div className="p-10 text-center text-sm text-slate-500">رکوردی پیدا نشد. ابتدا اسناد را بارگذاری کنید یا فیلترها را تغییر دهید.</div>
