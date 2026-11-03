@@ -49,6 +49,23 @@ const textHeaders = [
   "کد رهگیری",
 ] as const;
 
+const countFormatHeaders = [
+  "تعداد",
+  "شماره چک",
+  "مبلغ چک",
+  "شماره انتظامی(سری)",
+  "تاریخ سررسید",
+  "نوع چک",
+  "هزینه ارسال",
+  "تاریخ واخواست",
+  "هزینه واخواست",
+  "نوع دین",
+  "بانک عامل",
+  "شعبه چک",
+  "چک داخلی یا خارجی",
+  "حساب جاری چک",
+] as const;
+
 export async function GET(request: NextRequest) {
   try {
     const params = request.nextUrl.searchParams;
@@ -165,6 +182,7 @@ export async function POST(request: NextRequest) {
     const headerRows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1, defval: "" });
     const normalizedHeaders = (headerRows[0] ?? []).map(normalizeHeader);
     const headers = new Set(normalizedHeaders);
+    const countFormat = countFormatHeaders.every((header) => headers.has(header));
     const newFormat = textHeaders.every((header) => headers.has(header));
     const legacyHeaders = [
       "سریال سفته/ چک",
@@ -179,7 +197,7 @@ export async function POST(request: NextRequest) {
       "بانک عامل",
       "شماره انتظامی",
     ];
-    const missingHeaders = (newFormat ? [] : legacyHeaders.filter((header) => !headers.has(header)));
+    const missingHeaders = (newFormat || countFormat ? [] : legacyHeaders.filter((header) => !headers.has(header)));
     if (missingHeaders.length) {
       return NextResponse.json(
         {
@@ -204,7 +222,8 @@ export async function POST(request: NextRequest) {
     }
 
     const records = rows.map((row, index) => {
-      if (newFormat) {
+      if (newFormat || countFormat) {
+        const checkNumber = value(row, "شماره چک");
         return {
           sourceFile: file.name,
           sheetName,
@@ -212,9 +231,9 @@ export async function POST(request: NextRequest) {
           counterLabel,
           facilityNumber,
           customerNumber: customerNumberFromFacility(facilityNumber),
-          // The tracking code is the serial identifier for the existing uniqueness rule.
-          serial: value(row, "کد رهگیری"),
-          checkNumber: value(row, "شماره چک"),
+          // In the original format, کد رهگیری is the serial; in the count format, شماره چک is.
+          serial: countFormat ? checkNumber : value(row, "کد رهگیری"),
+          checkNumber,
           checkStatus: value(row, "نوع چک"),
           dueDate: value(row, "تاریخ سررسید"),
           paidAmount: value(row, "مبلغ چک"),
@@ -223,7 +242,9 @@ export async function POST(request: NextRequest) {
           delayDays: null,
           delayPenalty: null,
           bankAgent: value(row, "بانک عامل"),
-          administrativeNumber: value(row, "شماره انتظامی"),
+          administrativeNumber: countFormat
+            ? value(row, "شماره انتظامی(سری)")
+            : value(row, "شماره انتظامی"),
           rawData: row as Prisma.InputJsonObject,
         };
       }
@@ -313,10 +334,11 @@ export async function POST(request: NextRequest) {
 
     await prisma.debtDiscountingRecord.createMany({ data: records });
 
-    const textContent = newFormat
+    const outputHeaders = countFormat ? countFormatHeaders : textHeaders;
+    const textContent = newFormat || countFormat
       ? [
-          textHeaders.join(","),
-          ...rows.map((row) => textHeaders.map((header) => csvCell(textCell(row, header))).join(",")),
+          outputHeaders.join(","),
+          ...rows.map((row) => outputHeaders.map((header) => csvCell(textCell(row, header))).join(",")),
         ].join("\r\n") + "\r\n"
       : undefined;
 
