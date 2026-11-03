@@ -63,11 +63,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!counterLabel || !facilityNumber || !serial || !dueDate || !bankAgent || !checkBranch || !amount || !administrativeNumber) {
+      return NextResponse.json({ success: false, error: "اطلاعات ارسالی ناقص است." }, { status: 400 });
+    }
+
     const record = await prisma.debtDiscountingRecord.create({
       data: {
-        sourceFile: "ثبت دستی",
+        sourceFile: `ثبت دستی-${new Date().toISOString()}`,
         sheetName: "ثبت دستی",
-        sourceRow: 0,
+        sourceRow: 1,
         counterLabel,
         facilityNumber,
         customerNumber: customerNumberFromFacility(facilityNumber),
