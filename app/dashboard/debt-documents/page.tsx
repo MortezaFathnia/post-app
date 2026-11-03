@@ -19,6 +19,7 @@ type DebtRecord = {
   delayPenalty: string | null;
   bankAgent: string | null;
   administrativeNumber: string | null;
+  rawData: Record<string, unknown> | null;
 };
 
 type ApiResult = {
@@ -28,15 +29,24 @@ type ApiResult = {
   total?: number;
 };
 
-const columns: { key: keyof DebtRecord; label: string }[] = [
+const columns: { key: string; label: string; rawKey?: string }[] = [
   { key: "counterLabel", label: "کدباجه - نام باجه" },
   { key: "facilityNumber", label: "کد تسهیلات خرید دین" },
   { key: "customerNumber", label: "شماره مشتری" },
-  { key: "serial", label: "سریال سفته / چک" },
+  { key: "count", label: "تعداد", rawKey: "تعداد" },
+  { key: "checkNumber", label: "شماره چک", rawKey: "شماره چک" },
+  { key: "paidAmount", label: "مبلغ چک" },
+  { key: "administrativeNumber", label: "شماره انتظامی (سری)" },
   { key: "dueDate", label: "تاریخ سررسید" },
-  { key: "paidAmount", label: "پرداخت شده" },
-  { key: "administrativeNumber", label: "شماره انتظامی" },
-  { key: "checkStatus", label: "وضعیت سفته / چک" },
+  { key: "checkStatus", label: "نوع چک" },
+  { key: "sendCost", label: "هزینه ارسال", rawKey: "هزینه ارسال" },
+  { key: "protestDate", label: "تاریخ واخواست", rawKey: "تاریخ واخواست" },
+  { key: "protestCost", label: "هزینه واخواست", rawKey: "هزینه واخواست" },
+  { key: "debtType", label: "نوع دین", rawKey: "نوع دین" },
+  { key: "bankAgent", label: "بانک عامل" },
+  { key: "checkBranch", label: "شعبه چک", rawKey: "شعبه چک" },
+  { key: "domesticForeign", label: "چک داخلی یا خارجی", rawKey: "چک داخلی یا خارجی" },
+  { key: "currentAccount", label: "حساب جاری چک", rawKey: "حساب جاری چک" },
 ];
 
 export default function DebtDocumentsArchivePage() {
@@ -210,7 +220,7 @@ export default function DebtDocumentsArchivePage() {
                   <tr key={record.id} className="hover:bg-slate-50">
                     <td className="whitespace-nowrap px-4 py-3">{(firstRecord + index).toLocaleString("fa-IR")}</td>
                     {columns.map((column) => (
-                      <td key={column.key} className="whitespace-nowrap px-4 py-3">{String(record[column.key] ?? "—")}</td>
+                      <td key={column.key} className="whitespace-nowrap px-4 py-3">{String((column.rawKey ? record.rawData?.[column.rawKey] : record[column.key as keyof DebtRecord]) ?? "—")}</td>
                     ))}
                   </tr>
                 ))}
