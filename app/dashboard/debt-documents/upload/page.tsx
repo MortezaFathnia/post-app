@@ -156,10 +156,6 @@ export default function DebtDocumentsUploadPage() {
     setFile(event.target.files?.[0] ?? null);
     setError("");
     setSuccess("");
-    if (outputFileUrl) URL.revokeObjectURL(outputFileUrl);
-    setOutputFileUrl("");
-    setOutputFacilityNumber("");
-    setOutputCustomerNumber("");
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -192,9 +188,13 @@ export default function DebtDocumentsUploadPage() {
         throw new Error(result.error ?? "خطا در بارگذاری فایل");
       }
 
+      if (outputFileUrl) URL.revokeObjectURL(outputFileUrl);
+      setOutputFileUrl("");
+      setOutputFacilityNumber("");
+      setOutputCustomerNumber("");
+
       if (result.textContent !== undefined) {
-        if (outputFileUrl) URL.revokeObjectURL(outputFileUrl);
-        const blob = new Blob(["\uFEFF", result.textContent], { type: "text/plain;charset=utf-8" });
+        const blob = new Blob(["\\uFEFF", result.textContent], { type: "text/plain;charset=utf-8" });
         setOutputFileUrl(URL.createObjectURL(blob));
         setOutputFileName(result.textFileName || "اسناد-خرید-دین.txt");
         setOutputFacilityNumber(facilityNumber.trim());
