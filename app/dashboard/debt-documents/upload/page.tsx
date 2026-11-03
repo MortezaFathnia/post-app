@@ -239,29 +239,7 @@ export default function DebtDocumentsUploadPage() {
     }
   }
 
-  async function updateCheckStatus(recordId: number, checkStatus: string) {
-    setTableError("");
-    try {
-      const response = await fetch("/api/debt-documents/upload", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: recordId, checkStatus }),
-      });
-      const result = (await response.json()) as {
-        success: boolean;
-        error?: string;
-        record?: { id: number; checkStatus: string };
-      };
-      if (!response.ok || !result.success || !result.record) {
-        throw new Error(result.error ?? "تغییر وضعیت چک ناموفق بود.");
-      }
-      setTableRecords((current) => current.map((record) =>
-        record.id === recordId ? { ...record, checkStatus: result.record!.checkStatus } : record
-      ));
-    } catch (updateError) {
-      setTableError(updateError instanceof Error ? updateError.message : "خطا در تغییر وضعیت چک.");
-    }
-  }
+
 
   function toggleSort(field: string) {
     if (sortBy === field) setSortOrder((current) => current === "asc" ? "desc" : "asc");
@@ -533,21 +511,7 @@ export default function DebtDocumentsUploadPage() {
                     <td className="whitespace-nowrap px-4 py-3">{(firstRecord + index).toLocaleString("fa-IR")}</td>
                     {columns.map((column) => (
                       <td key={column.key} className="whitespace-nowrap px-4 py-3">
-                        {column.key === "checkStatus" ? (
-                          <select
-                            value={record.checkStatus ?? "درراه"}
-                            onChange={(event) => void updateCheckStatus(record.id, event.target.value)}
-                            aria-label="وضعیت سفته یا چک"
-                            className="min-w-28 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm"
-                          >
-                            {!["درراه", "آزاد", "نقدشده"].includes(record.checkStatus ?? "") && record.checkStatus && (
-                              <option value={record.checkStatus}>{record.checkStatus}</option>
-                            )}
-                            <option value="درراه">درراه</option>
-                            <option value="آزاد">آزاد</option>
-                            <option value="نقدشده">نقدشده</option>
-                          </select>
-                        ) : String(record[column.key] ?? "—")}
+                        {String(record[column.key] ?? "—")}
                       </td>
                     ))}
                   </tr>
