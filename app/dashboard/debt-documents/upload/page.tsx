@@ -32,6 +32,8 @@ type ApiResult = {
   count?: number;
   records?: DebtUploadTableRecord[];
   total?: number;
+  textContent?: string;
+  textFileName?: string;
 };
 
 const columns: { key: keyof DebtUploadTableRecord; label: string }[] = [
@@ -68,6 +70,10 @@ export default function DebtDocumentsUploadPage() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [exportLoading, setExportLoading] = useState(false);
+  const [outputFileUrl, setOutputFileUrl] = useState("");
+  const [outputFileName, setOutputFileName] = useState("اسناد-خرید-دین.txt");
+  const [outputFacilityNumber, setOutputFacilityNumber] = useState("");
+  const [outputCustomerNumber, setOutputCustomerNumber] = useState("");
 
   const totalPages = Math.max(1, Math.ceil(tableTotal / pageSize));
   const firstRecord = tableTotal === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -150,6 +156,10 @@ export default function DebtDocumentsUploadPage() {
     setFile(event.target.files?.[0] ?? null);
     setError("");
     setSuccess("");
+    if (outputFileUrl) URL.revokeObjectURL(outputFileUrl);
+    setOutputFileUrl("");
+    setOutputFacilityNumber("");
+    setOutputCustomerNumber("");
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -182,7 +192,17 @@ export default function DebtDocumentsUploadPage() {
         throw new Error(result.error ?? "خطا در بارگذاری فایل");
       }
 
-      setSuccess(`${result.count ?? 0} ردیف با موفقیت در جدول اسناد خرید دین ثبت شد.`);
+      if (result.textContent !== undefined) {
+        if (outputFileUrl) URL.revokeObjectURL(outputFileUrl);
+        const blob = new Blob(["\\uFEFF", result.textContent], { type: "text/plain;charset=utf-8" });
+        setOutputFileUrl(URL.createObjectURL(blob));
+        setOutputFileName(result.textFileName || "اسناد-خرید-دین.txt");
+        setOutputFacilityNumber(facilityNumber.trim());
+        setOutputCustomerNumber(facilityNumber.trim().split(".")[2]?.trim() || "—");
+        setSuccess(`${result.count ?? 0} ردیف ثبت شد و فایل خروجی متنی آماده دریافت است.`);
+      } else {
+        setSuccess(`${result.count ?? 0} ردیف با موفقیت در جدول اسناد خرید دین ثبت شد. برای این قالب فایل خروجی متنی تولید نمی‌شود.`);
+      }
       await loadRecords();
       setFile(null);
       const fileInput = document.getElementById("debtExcelFile") as HTMLInputElement | null;
@@ -422,6 +442,40 @@ export default function DebtDocumentsUploadPage() {
             </button>
           </div>
         </form>
+
+        {outputFileUrl && (
+          <section className="overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-sm">
+            <div className="flex flex-col gap-3 border-b border-emerald-100 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="font-bold text-slate-900">اطلاعات فایل خروجی</h2>
+                <p className="mt-1 text-xs text-slate-500">کد تسهیلات و شماره مشتری مربوط به فایل خروجی</p>
+              </div>
+              <a
+                href={outputFileUrl}
+                download={outputFileName}
+                className="inline-flex items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 px-5 py-2.5 text-sm font-semibold text-emerald-800 hover:bg-emerald-100"
+              >
+                دریافت فایل خروجی TXT
+              </a>
+            </div>
+            <div className="overflow-x-auto p-5">
+              <table className="min-w-full border-collapse text-right text-sm">
+                <thead className="bg-slate-100 text-slate-700">
+                  <tr>
+                    <th className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-bold">کد تسهیلات</th>
+                    <th className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-bold">شماره مشتری</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="bg-white">
+                    <td className="whitespace-nowrap border-b border-slate-100 px-4 py-3 text-slate-700">{outputFacilityNumber}</td>
+                    <td className="whitespace-nowrap border-b border-slate-100 px-4 py-3 text-slate-700">{outputCustomerNumber}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 p-5">
