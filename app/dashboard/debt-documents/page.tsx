@@ -30,25 +30,15 @@ type ApiResult = {
   total?: number;
 };
 
-const columns: { key: string; label: string; rawKey?: string }[] = [
+const columns: { key: keyof DebtRecord; label: string }[] = [
   { key: "counterLabel", label: "کدباجه - نام باجه" },
   { key: "facilityNumber", label: "کد تسهیلات خرید دین" },
   { key: "customerNumber", label: "شماره مشتری" },
-  { key: "count", label: "تعداد", rawKey: "تعداد" },
-  { key: "checkNumber", label: "شماره چک", rawKey: "شماره چک" },
-  { key: "paidAmount", label: "مبلغ چک" },
-  { key: "administrativeNumber", label: "شماره انتظامی (سری)" },
+  { key: "serial", label: "سریال سفته / چک" },
   { key: "dueDate", label: "تاریخ سررسید" },
+  { key: "paidAmount", label: "پرداخت شده" },
+  { key: "administrativeNumber", label: "شماره انتظامی" },
   { key: "checkStatus", label: "وضعیت سفته / چک" },
-  { key: "checkType", label: "نوع چک", rawKey: "نوع چک" },
-  { key: "domesticForeign", label: "چک داخلی یا خارجی" },
-  { key: "sendCost", label: "هزینه ارسال", rawKey: "هزینه ارسال" },
-  { key: "protestDate", label: "تاریخ واخواست", rawKey: "تاریخ واخواست" },
-  { key: "protestCost", label: "هزینه واخواست", rawKey: "هزینه واخواست" },
-  { key: "debtType", label: "نوع دین", rawKey: "نوع دین" },
-  { key: "bankAgent", label: "بانک عامل" },
-  { key: "checkBranch", label: "شعبه چک", rawKey: "شعبه چک" },
-  { key: "currentAccount", label: "حساب جاری چک", rawKey: "حساب جاری چک" },
 ];
 
 export default function DebtDocumentsArchivePage() {
@@ -200,7 +190,7 @@ export default function DebtDocumentsArchivePage() {
         <div className="border-b border-slate-100 p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="font-bold text-slate-900">رکوردهای اسناد خرید دین</h2>
+              <h2 className="font-bold text-slate-900">فهرست اسناد خرید دین</h2>
               <p className="mt-1 text-xs text-slate-500">تعداد نتایج: {total.toLocaleString("fa-IR")}</p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -234,7 +224,7 @@ export default function DebtDocumentsArchivePage() {
           <div className="p-10 text-center text-sm text-slate-500">رکوردی پیدا نشد. ابتدا اسناد را بارگذاری کنید یا فیلترها را تغییر دهید.</div>
         ) : (
           <div className="max-h-[70vh] overflow-auto">
-            <table className="w-full min-w-[1300px] text-right text-sm">
+            <table className="w-full min-w-[1050px] text-right text-sm">
               <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600">
                 <tr>
                   <th className="whitespace-nowrap px-4 py-3 font-semibold">ردیف</th>
@@ -261,7 +251,7 @@ export default function DebtDocumentsArchivePage() {
                             <option value="آزاد">آزاد</option>
                             <option value="نقدشده">نقدشده</option>
                           </select>
-                        ) : String((column.rawKey ? record.rawData?.[column.rawKey] : record[column.key as keyof DebtRecord]) ?? "—")}
+                        ) : String(record[column.key] ?? "—")}
                       </td>
                     ))}
                   </tr>
