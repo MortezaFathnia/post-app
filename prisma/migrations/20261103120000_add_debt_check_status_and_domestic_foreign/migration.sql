@@ -4,7 +4,9 @@ ADD COLUMN "domesticForeign" TEXT;
 
 UPDATE "DebtDiscountingRecord"
 SET "checkStatus" = 'درراه'
-WHERE "checkStatus" IS NULL OR BTRIM("checkStatus") = '';
+WHERE "checkStatus" IS NULL
+   OR BTRIM("checkStatus") = ''
+   OR "checkStatus" NOT IN ('درراه', 'آزاد', 'نقدشده');
 
 ALTER TABLE "DebtDiscountingRecord"
 ALTER COLUMN "checkStatus" SET DEFAULT 'درراه',
