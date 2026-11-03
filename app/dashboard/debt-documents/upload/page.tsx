@@ -427,7 +427,7 @@ export default function DebtDocumentsUploadPage() {
         <div className="border-b border-slate-100 p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="font-bold text-slate-900">فهرست اسناد خرید دین</h2>
+              <h2 className="font-bold text-slate-900">فهرست اسناد جدید خرید دین بارگذاری شده</h2>
               <p className="mt-1 text-xs text-slate-500">تعداد نتایج: {tableTotal.toLocaleString("fa-IR")}</p>
             </div>
             <div className="flex flex-wrap gap-2">
