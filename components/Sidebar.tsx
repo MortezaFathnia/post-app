@@ -22,7 +22,7 @@ const menuItems = [
     ],
   },
   { title: "بایگانی تسهیلات", href: "/dashboard/bayegani", icon: "▣", description: "ورود و ویرایش فایل بایگانی" },
-  { title: "تنظیمات", href: "/dashboard/settings", icon: "⚙", description: "فهرست و کد باجه‌ها" },
+  { title: "تنظیمات", href: "/dashboard/settings", icon: "⚙", description: "فهرست‌های مرجع", children: [\n      { title: "مدیریت کد و نام باجه", href: "/dashboard/settings", icon: "▤", description: "فهرست باجه‌ها" },\n      { title: "فهرست بانک‌ها", href: "/dashboard/settings/banks", icon: "▤", description: "نام و شناسه بانک‌ها" },\n    ] },
 ];
 
 function isActivePath(pathname: string, href: string) {
