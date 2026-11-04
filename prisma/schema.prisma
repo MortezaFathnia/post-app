@@ -249,7 +249,7 @@ model BayeganiRecord {
   @@index([serialSort])
 }
 
-model BajehCode {
+model Bank {\n  id        Int      @id @default(autoincrement())\n  name      String   @unique\n  bankId    String   @unique\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nmodel BajehCode {
   id        Int      @id @default(autoincrement())
   code      String
   name      String
