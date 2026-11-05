@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
       dueDate?: string;
       bankAgent?: string;
       checkBranch?: string;
+      description?: string;
       amount?: string;
       administrativeNumber?: string;
     };
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
     const dueDate = clean(body.dueDate);
     const bankAgent = clean(body.bankAgent);
     const checkBranch = clean(body.checkBranch);
+    const description = clean(body.description);
     const amount = clean(body.amount);
     const administrativeNumber = clean(body.administrativeNumber);
 
@@ -82,9 +84,11 @@ export async function POST(request: NextRequest) {
         paidAmount: amount,
         bankAgent,
         checkBranch,
+        description,
         administrativeNumber,
         rawData: {
           "شعبه چک": checkBranch,
+          "توضیحات": description,
           "بانک عامل": bankAgent,
           "مبلغ چک": amount,
           "سریال چک": serial,
