@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 
 type CounterOption = { id: number; code: string; name: string };
+type BankOption = { id: number; bankId: string; name: string };
 
 type ApiResult = {
   success: boolean;
@@ -15,6 +16,8 @@ const inputClass = "w-full rounded-xl border border-slate-300 bg-white px-4 py-3
 
 export default function AddDebtCheckPage() {
   const [counters, setCounters] = useState<CounterOption[]>([]);
+  const [banks, setBanks] = useState<BankOption[]>([]);
+  const [loadingBanks, setLoadingBanks] = useState(true);
   const [counterLabel, setCounterLabel] = useState("");
   const [facilityNumber, setFacilityNumber] = useState("");
   const [serial, setSerial] = useState("");
@@ -46,6 +49,27 @@ export default function AddDebtCheckPage() {
       }
     }
     void loadCounters();
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadBanks() {
+      setLoadingBanks(true);
+      try {
+        const response = await fetch("/api/banks", { cache: "no-store", signal: controller.signal });
+        const result = (await response.json()) as { success?: boolean; banks?: BankOption[]; error?: string };
+        if (!response.ok || !result.success) throw new Error(result.error ?? "دریافت فهرست بانک‌ها ناموفق بود.");
+        setBanks(Array.isArray(result.banks) ? result.banks : []);
+      } catch (loadError) {
+        if (!controller.signal.aborted) {
+          setError(loadError instanceof Error ? loadError.message : "دریافت فهرست بانک‌ها ناموفق بود.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoadingBanks(false);
+      }
+    }
+    void loadBanks();
     return () => controller.abort();
   }, []);
 
@@ -130,8 +154,23 @@ export default function AddDebtCheckPage() {
           </div>
 
           <div>
-            <label htmlFor="bankAgent" className="mb-2 block text-sm font-semibold text-slate-700">بانک عامل</label>
-            <input id="bankAgent" required value={bankAgent} onChange={(event) => setBankAgent(event.target.value)} disabled={saving} placeholder="نام بانک عامل" className={inputClass} />
+            <label htmlFor="bankAgent" className="mb-2 block text-sm font-semibold text-slate-700">کدبانک - نام بانک</label>
+            <input
+              id="bankAgent"
+              required
+              list="debt-check-bank-options"
+              value={bankAgent}
+              onChange={(event) => setBankAgent(event.target.value)}
+              disabled={saving || loadingBanks}
+              placeholder={loadingBanks ? "در حال دریافت فهرست بانک‌ها..." : "کد یا نام بانک را جست‌وجو کنید"}
+              className={inputClass}
+              autoComplete="off"
+            />
+            <datalist id="debt-check-bank-options">
+              {banks.map((bank) => (
+                <option key={bank.id} value={`${bank.bankId}-${bank.name}`} />
+              ))}
+            </datalist>
           </div>
 
           <div>
