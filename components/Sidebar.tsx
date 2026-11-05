@@ -19,7 +19,6 @@ const menuItems = [
       { title: "بایگانی اسناد خرید دین", href: "/dashboard/debt-documents", icon: "▤", description: "مشاهده و جستجوی اسناد ثبت‌شده" },
       { title: "بارگذاری اسناد جدید خرید دین", href: "/dashboard/debt-documents/upload", icon: "⇧", description: "ثبت فایل جدید خرید دین" },
       { title: "افزودن چک جدید", href: "/dashboard/debt-documents/checks/new", icon: "＋", description: "ثبت دستی اطلاعات چک" },
-      { title: "گزارش گیری اسناد خرید دین", href: "/dashboard/debt-documents/reports", icon: "▥", description: "گزارش‌گیری از اسناد خرید دین" },
     ],
   },
   { title: "بایگانی تسهیلات", href: "/dashboard/bayegani", icon: "▣", description: "ورود و ویرایش فایل بایگانی" },
