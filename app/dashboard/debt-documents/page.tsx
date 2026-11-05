@@ -19,6 +19,7 @@ type DebtRecord = {
   delayDays: string | null;
   delayPenalty: string | null;
   bankAgent: string | null;
+  checkBranch: string | null;
   administrativeNumber: string | null;
   rawData: Record<string, unknown> | null;
 };
