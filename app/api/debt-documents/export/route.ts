@@ -34,6 +34,7 @@ export async function GET() {
       "جریمه تأخیر": record.delayPenalty ?? "",
       "بانک عامل": record.bankAgent ?? "",
       "شعبه چک": record.checkBranch ?? "",
+      "توضیحات": record.description ?? "",
       "نام فایل": record.sourceFile,
       "نام برگه": record.sheetName,
       "شماره ردیف در فایل": record.sourceRow,
