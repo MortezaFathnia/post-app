@@ -117,7 +117,13 @@ export async function POST(request: NextRequest) {
         },
       });
     }, { isolationLevel: "Serializable" });
-    return NextResponse.json({ success: true, record }, { status: 201 });
+    // Prisma returns serialSort as BigInt, which JSON.stringify cannot serialize.
+    // Convert it to a string for the API response; keep the database column as BIGINT.
+    const responseRecord = {
+      ...record,
+      serialSort: record.serialSort === null ? null : record.serialSort.toString(),
+    };
+    return NextResponse.json({ success: true, record: responseRecord }, { status: 201 });
   } catch (error) {
     console.error("Manual Bayegani record creation failed:", error);
     return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "ثبت رکورد ناموفق بود." }, { status: 500 });
