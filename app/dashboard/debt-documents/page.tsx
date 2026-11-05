@@ -20,6 +20,7 @@ type DebtRecord = {
   delayPenalty: string | null;
   bankAgent: string | null;
   checkBranch: string | null;
+  description: string | null;
   administrativeNumber: string | null;
   rawData: Record<string, unknown> | null;
 };
@@ -39,6 +40,7 @@ const columns: { key: keyof DebtRecord; label: string }[] = [
   { key: "dueDate", label: "تاریخ سررسید" },
   { key: "paidAmount", label: "پرداخت شده" },
   { key: "administrativeNumber", label: "شماره انتظامی" },
+  { key: "description", label: "توضیحات" },
   { key: "checkStatus", label: "وضعیت سفته / چک" },
 ];
 
