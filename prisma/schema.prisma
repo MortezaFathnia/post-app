@@ -292,6 +292,7 @@ model DebtDiscountingRecord {
   delayPenalty         String?
   bankAgent            String?
   checkBranch          String?
+  description          String?
   administrativeNumber String?
   rawData              Json
   createdAt            DateTime @default(now())
