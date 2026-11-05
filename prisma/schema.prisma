@@ -242,13 +242,13 @@ model BayeganiRecord {
   rawData           Json
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  debtDiscountingFacilities DebtDiscountingFacility[]
 
   @@unique([sourceFile, sheetName, sourceRow])
   @@index([facilityNumber])
   @@index([customerNumber])
   @@index([archiveCode])
   @@index([serialSort])
-  debtDiscountingFacilities DebtDiscountingFacility[]
 }
 
 model Bank {
