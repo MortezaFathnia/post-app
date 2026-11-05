@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
         dueDate,
         paidAmount: amount,
         bankAgent,
+        checkBranch,
         administrativeNumber,
         rawData: {
           "شعبه چک": checkBranch,
