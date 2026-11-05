@@ -33,6 +33,7 @@ export async function GET() {
       "مدت تأخیر به روز": record.delayDays ?? "",
       "جریمه تأخیر": record.delayPenalty ?? "",
       "بانک عامل": record.bankAgent ?? "",
+      "شعبه چک": record.checkBranch ?? "",
       "نام فایل": record.sourceFile,
       "نام برگه": record.sheetName,
       "شماره ردیف در فایل": record.sourceRow,
