@@ -198,6 +198,7 @@ model Customer {
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
   debtDocuments DebtDocument[]
+  debtDiscountingFacilities DebtDiscountingFacility[]
 }
 
 model DebtDocument {
@@ -247,6 +248,7 @@ model BayeganiRecord {
   @@index([customerNumber])
   @@index([archiveCode])
   @@index([serialSort])
+  debtDiscountingFacilities DebtDiscountingFacility[]
 }
 
 model Bank {
@@ -298,4 +300,22 @@ model DebtDiscountingRecord {
   @@index([counterLabel])
   @@unique([serial, administrativeNumber])
   @@index([sourceFile, sheetName])
+}
+
+
+model DebtDiscountingFacility {
+  id         Int           @id @default(autoincrement())
+  customerId Int
+  contractId Int
+  status     String        @default("فعال")
+  startDate  String
+  endDate    String
+  customer   Customer      @relation(fields: [customerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  contract   BayeganiRecord @relation(fields: [contractId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([customerId])
+  @@index([contractId])
+  @@index([status])
 }
