@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     const allowedSortFields = [
       "createdAt", "counterLabel", "facilityNumber", "customerNumber", "serial", "checkNumber",
       "checkStatus", "domesticForeign", "dueDate", "paidAmount", "unpaidAmount", "embeddedProfit",
-      "delayDays", "delayPenalty", "bankAgent", "administrativeNumber",
+      "delayDays", "delayPenalty", "bankAgent", "checkBranch", "administrativeNumber",
     ] as const;
     type SortField = (typeof allowedSortFields)[number];
     const requestedSort = params.get("sortBy") || "createdAt";
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
     const searchableFields = [
       "counterLabel", "facilityNumber", "customerNumber", "serial", "checkNumber", "checkStatus",
       "domesticForeign", "dueDate", "paidAmount", "unpaidAmount", "embeddedProfit", "delayDays",
-      "delayPenalty", "bankAgent", "administrativeNumber",
+      "delayPenalty", "bankAgent", "checkBranch", "administrativeNumber",
     ] as const;
 
     const normalizeDigits = (input: string) =>
@@ -119,6 +119,7 @@ export async function GET(request: NextRequest) {
       domesticForeign: "domesticForeign",
       dueDate: "dueDate",
       bankAgent: "bankAgent",
+      checkBranch: "checkBranch",
       administrativeNumber: "administrativeNumber",
     };
     const filterField = filterFields[filterType];
@@ -271,6 +272,7 @@ export async function POST(request: NextRequest) {
           delayDays: null,
           delayPenalty: null,
           bankAgent: value(row, "بانک عامل"),
+          checkBranch: value(row, "شعبه چک"),
           administrativeNumber: countFormat
             ? value(row, "شماره انتظامی(سری)")
             : value(row, "شماره انتظامی"),
@@ -294,6 +296,7 @@ export async function POST(request: NextRequest) {
         delayDays: value(row, "مدت تاخير به روز"),
         delayPenalty: value(row, "جريمه تاخير"),
         bankAgent: value(row, "بانک عامل"),
+        checkBranch: value(row, "شعبه چک"),
         administrativeNumber: value(row, "شماره انتظامی"),
         rawData: row as Prisma.InputJsonObject,
       };
