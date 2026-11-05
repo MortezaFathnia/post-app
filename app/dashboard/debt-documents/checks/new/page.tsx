@@ -24,6 +24,7 @@ export default function AddDebtCheckPage() {
   const [dueDate, setDueDate] = useState("");
   const [bankAgent, setBankAgent] = useState("");
   const [checkBranch, setCheckBranch] = useState("");
+  const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [administrativeNumber, setAdministrativeNumber] = useState("");
   const [loadingCounters, setLoadingCounters] = useState(true);
@@ -89,6 +90,7 @@ export default function AddDebtCheckPage() {
           dueDate,
           bankAgent,
           checkBranch,
+          description,
           amount,
           administrativeNumber,
         }),
@@ -101,6 +103,7 @@ export default function AddDebtCheckPage() {
       setDueDate("");
       setBankAgent("");
       setCheckBranch("");
+      setDescription("");
       setAmount("");
       setAdministrativeNumber("");
     } catch (submitError) {
@@ -178,6 +181,11 @@ export default function AddDebtCheckPage() {
             <input id="checkBranch" required value={checkBranch} onChange={(event) => setCheckBranch(event.target.value)} disabled={saving} placeholder="نام یا کد شعبه چک" className={inputClass} />
           </div>
 
+          <div className="md:col-span-2">
+            <label htmlFor="description" className="mb-2 block text-sm font-semibold text-slate-700">توضیحات</label>
+            <textarea id="description" value={description} onChange={(event) => setDescription(event.target.value)} disabled={saving} rows={3} placeholder="توضیحات (اختیاری)" className={inputClass} />
+          </div>
+
           <div>
             <label htmlFor="amount" className="mb-2 block text-sm font-semibold text-slate-700">مبلغ چک</label>
             <input id="amount" required inputMode="numeric" value={amount} onChange={(event) => setAmount(event.target.value)} disabled={saving} placeholder="مبلغ را به ریال وارد کنید" className={inputClass} />
@@ -207,6 +215,7 @@ export default function AddDebtCheckPage() {
             setDueDate("");
             setBankAgent("");
             setCheckBranch("");
+            setDescription("");
             setAmount("");
             setAdministrativeNumber("");
             setError("");
