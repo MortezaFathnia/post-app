@@ -47,7 +47,7 @@ export default function BayeganiPage() {
       page: String(page),
       pageSize: String(pageSize),
       search,
-      filterType: filterValue.trim() ? filterType : "",
+      filterType: filterType === "serialNull" || filterValue.trim() ? filterType : "",
       filterValue: filterValue.trim(),
       sortBy,
       sortOrder,
@@ -162,7 +162,7 @@ export default function BayeganiPage() {
         <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:flex-wrap sm:items-center">
           <input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="جستجوی عمومی..." aria-label="جستجوی عمومی" className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm sm:min-w-56 sm:flex-1" />
           <label htmlFor="archive-filter-type" className="shrink-0 text-sm font-medium text-slate-700">فیلتر بر اساس</label>
-          <select id="archive-filter-type" value={filterType} onChange={(e) => { setFilterType(e.target.value); setPage(1); }} aria-label="نوع فیلتر" className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm">
+          <select id="archive-filter-type" value={filterType} onChange={(e) => { setFilterType(e.target.value); if (e.target.value === "serialNull") setFilterValue(""); setPage(1); }} aria-label="نوع فیلتر" className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm">
             <option value="counter">باجه</option>
             <option value="startDate">تاریخ شروع</option>
             <option value="endDate">تاریخ پایان</option>
@@ -170,8 +170,9 @@ export default function BayeganiPage() {
             <option value="status">وضعیت</option>
             <option value="nationalId">کد ملی</option>
             <option value="serial">سریال</option>
+            <option value="serialNull">سریال خالی (NULL)</option>
           </select>
-          <input value={filterValue} onChange={(e) => { setFilterValue(e.target.value); setPage(1); }} placeholder="مقدار موردنظر برای فیلتر..." aria-label="مقدار فیلتر" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
+          <input value={filterValue} onChange={(e) => { setFilterValue(e.target.value); setPage(1); }} disabled={filterType === "serialNull"} placeholder={filterType === "serialNull" ? "فقط رکوردهای بدون سریال" : "مقدار موردنظر برای فیلتر..."} aria-label="مقدار فیلتر" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm disabled:bg-slate-100 disabled:text-slate-500" />
           <button type="button" onClick={() => { setFilterValue(""); setPage(1); }} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100">پاک کردن</button>
         </div>
       </div>
