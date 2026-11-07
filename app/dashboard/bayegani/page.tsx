@@ -169,6 +169,7 @@ export default function BayeganiPage() {
             <option value="approvedAmount">مبلغ مصوب</option>
             <option value="status">وضعیت</option>
             <option value="nationalId">کد ملی</option>
+            <option value="serial">سریال</option>
           </select>
           <input value={filterValue} onChange={(e) => { setFilterValue(e.target.value); setPage(1); }} placeholder="مقدار موردنظر برای فیلتر..." aria-label="مقدار فیلتر" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
           <button type="button" onClick={() => { setFilterValue(""); setPage(1); }} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100">پاک کردن</button>
