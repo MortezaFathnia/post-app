@@ -239,7 +239,7 @@ export async function GET(request: NextRequest) {
         ],
       });
     }
-    if (filterValue) {
+    if (filterValue || filterType === "serialNull") {
       switch (filterType) {
         case "counter":
           conditions.push({
@@ -267,6 +267,9 @@ export async function GET(request: NextRequest) {
           break;
         case "serial":
           conditions.push({ serial: { contains: filterValue, mode: "insensitive" as const } });
+          break;
+        case "serialNull":
+          conditions.push({ OR: [{ serial: null }, { serial: "" }] });
           break;
       }
     }
