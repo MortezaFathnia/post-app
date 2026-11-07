@@ -226,7 +226,7 @@ model BayeganiRecord {
   customerNumber    String?
   archiveCode       String?
   facilityTitle     String?
-  serial            String?  @unique
+  serial            String?
   serialSort        BigInt?
   classification    String?
   counterName       String?
@@ -245,6 +245,7 @@ model BayeganiRecord {
   debtDiscountingFacilities DebtDiscountingFacility[]
 
   @@unique([sourceFile, sheetName, sourceRow])
+  @@unique([facilityNumber, serial])
   @@index([facilityNumber])
   @@index([customerNumber])
   @@index([archiveCode])
