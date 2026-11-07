@@ -234,6 +234,7 @@ export async function GET(request: NextRequest) {
           { archiveCode: { contains: search, mode: "insensitive" as const } },
           { facilityTitle: { contains: search, mode: "insensitive" as const } },
           { nationalId: { contains: search, mode: "insensitive" as const } },
+          { serial: { contains: search, mode: "insensitive" as const } },
           { sheetName: { contains: search, mode: "insensitive" as const } },
         ],
       });
@@ -263,6 +264,9 @@ export async function GET(request: NextRequest) {
           break;
         case "nationalId":
           conditions.push({ nationalId: { contains: filterValue, mode: "insensitive" as const } });
+          break;
+        case "serial":
+          conditions.push({ serial: { contains: filterValue, mode: "insensitive" as const } });
           break;
       }
     }
