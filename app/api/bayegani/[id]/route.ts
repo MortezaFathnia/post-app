@@ -138,6 +138,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         startDate: value(raw, "تاريخ شروع", "تاریخ شروع"),
         endDate: value(raw, " پایان قرارداد", "پایان قرارداد", "تاریخ پایان قرارداد"),
         duration: value(raw, "مدت", "24"),
+        installmentCount: value(raw, "تعداد اقساط") || null,
         approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
         remainingAmount: value(raw, "مانده تسهيلات", "مانده تسهیلات"),
         nationalId: value(raw, "کد ملي ", "کد ملي مشتري", "کد ملی"),
