@@ -39,6 +39,39 @@ function customerNumberFromFacility(facilityNumber: string): string {
   return parts.length >= 3 ? (parts[2] || "").trim() : "";
 }
 
+
+export async function GET() {
+  try {
+    const existing = await prisma.bayeganiRecord.findMany({
+      select: { serial: true, serialSort: true },
+    });
+    let highestSerial = 0n;
+    for (const item of existing) {
+      if (item.serialSort !== null && item.serialSort > highestSerial) {
+        highestSerial = item.serialSort;
+        continue;
+      }
+      if (item.serial) {
+        const digits = item.serial
+          .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+          .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+          .replace(/[^0-9]/g, "");
+        if (/^\d{1,18}$/.test(digits)) {
+          const numeric = BigInt(digits);
+          if (numeric > highestSerial) highestSerial = numeric;
+        }
+      }
+    }
+    return NextResponse.json({ success: true, lastSerial: highestSerial.toString() });
+  } catch (error) {
+    console.error("Latest Bayegani serial lookup failed:", error);
+    return NextResponse.json(
+      { success: false, error: error instanceof Error ? error.message : "دریافت آخرین سریال ناموفق بود." },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json() as { rawData?: unknown };
