@@ -205,8 +205,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
       const result = await readApiResponse(response);
       if (!response.ok || !result.success) throw new Error(result.error || "ذخیره اطلاعات ناموفق بود.");
       setSuccess("اطلاعات با موفقیت ذخیره شد.");
-      if (!recordId) router.push("/dashboard/bayegani");
-      else router.refresh();
+      router.push("/dashboard/bayegani");
     } catch (e) {
       setError(e instanceof Error ? e.message : "خطا در ذخیره اطلاعات.");
     } finally {
