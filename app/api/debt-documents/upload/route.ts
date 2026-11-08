@@ -430,6 +430,7 @@ export async function POST(request: NextRequest) {
       "تاریخ واخواست",
       "هزینه واخواست",
       "نوع دین",
+      "بانک عامل",
       "شعبه چک",
       "چک داخلی یا خارجی",
       "حساب جاری چک",
@@ -449,6 +450,7 @@ export async function POST(request: NextRequest) {
             if (index === countFormatOutputHeaders.length - 1) {
               return textCell(row, "شماره انتظامی(سری)");
             }
+            if (header === "بانک عامل") return "17";
             if (header === "شعبه چک") return "8881";
             const cell = textCell(row, header);
             return header === "چک داخلی یا خارجی" ? formatDomesticForeign(cell) : cell;
@@ -462,7 +464,12 @@ export async function POST(request: NextRequest) {
       : newFormat
         ? [
             textHeaders.join(","),
-            ...rows.map((row) => textHeaders.map((header) => csvCell(textCell(row, header))).join(",")),
+            ...rows.map((row) => textHeaders.map((header) => {
+              if (header === "بانک عامل") return "17";
+              if (header === "شعبه چک") return "8881";
+              const cell = textCell(row, header);
+              return header === "چک داخلی یا خارجی" ? formatDomesticForeign(cell) : cell;
+            }).map(csvCell).join(",")),
           ].join("\r\n") + "\r\n"
         : undefined;
 
@@ -491,7 +498,12 @@ export async function POST(request: NextRequest) {
         textContent,
         textFileName: `${facilityNumber.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")}-${shamsiDateString()}.txt`,
         previewHeaders: countFormat ? countFormatOutputHeaders : textHeaders,
-        previewRows: countFormat ? countFormatRows : rows.map((row) => textHeaders.map((header) => textCell(row, header))),
+        previewRows: countFormat ? countFormatRows : rows.map((row) => textHeaders.map((header) => {
+          if (header === "بانک عامل") return "17";
+          if (header === "شعبه چک") return "8881";
+          const cell = textCell(row, header);
+          return header === "چک داخلی یا خارجی" ? formatDomesticForeign(cell) : cell;
+        })),
       }),
     });
   } catch (error) {
