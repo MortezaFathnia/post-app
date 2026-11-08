@@ -10,7 +10,7 @@ function normalizeInput(body: unknown) {
   const code = normalizePersianText(String(input.code ?? "").trim());
   const name = normalizeCounterName(String(input.name ?? "").trim());
   if (!code || !name) throw new Error("کد باجه و نام باجه الزامی هستند.");
-  if (!/^\\d+$/.test(code)) throw new Error("کد باجه باید فقط شامل عدد باشد.");
+  if (!/^\d+$/.test(code)) throw new Error("کد باجه باید فقط شامل عدد باشد.");
   return { code, name };
 }
 
