@@ -304,7 +304,6 @@ export async function POST(request: NextRequest) {
     const records = validSourceRows.map(({ row, sourceRow }) => {
       if (newFormat || countFormat) {
         const checkNumber = value(row, "شماره چک");
-        const recordRawData = { ...row, "بانک عامل": "17", "شعبه چک": "8881" };
         return {
           sourceFile: file.name,
           sheetName,
@@ -323,13 +322,13 @@ export async function POST(request: NextRequest) {
           embeddedProfit: null,
           delayDays: null,
           delayPenalty: null,
-          bankAgent: "17",
-          checkBranch: "8881",
+          bankAgent: value(row, "بانک عامل"),
+          checkBranch: value(row, "شعبه چک"),
           description: value(row, "توضیحات"),
           administrativeNumber: countFormat
             ? value(row, "شماره انتظامی(سری)")
             : value(row, "شماره انتظامی"),
-          rawData: recordRawData as Prisma.InputJsonObject,
+          rawData: row as Prisma.InputJsonObject,
         };
       }
       return {
@@ -423,7 +422,7 @@ export async function POST(request: NextRequest) {
     const countFormatOutputHeaders = [
       "شماره چک",
       "مبلغ چک",
-      "شماره انتظامی(سری)",
+      "شماره انتظامی",
       "تاریخ سررسید",
       "نوع چک",
       "هزینه ارسال",
@@ -434,7 +433,7 @@ export async function POST(request: NextRequest) {
       "شعبه چک",
       "چک داخلی یا خارجی",
       "حساب جاری چک",
-      "شماره انتظامی(سری)",
+      "کد رهگیری",
     ] as const;
 
     const formatDomesticForeign = (input: string): string => {
@@ -445,18 +444,12 @@ export async function POST(request: NextRequest) {
     };
 
     const countFormatRows = countFormat
-      ? rows.map((row) => {
-          const values = countFormatOutputHeaders.map((header, index) => {
-            if (index === countFormatOutputHeaders.length - 1) {
-              return textCell(row, "شماره انتظامی(سری)");
-            }
-            if (header === "بانک عامل") return "17";
-            if (header === "شعبه چک") return "8881";
-            const cell = textCell(row, header);
-            return header === "چک داخلی یا خارجی" ? formatDomesticForeign(cell) : cell;
-          });
-          return values;
-        })
+      ? rows.map((row) => countFormatOutputHeaders.map((header, index) => {
+          if (header === "شماره انتظامی") return textCell(row, "شماره انتظامی(سری)");
+          if (header === "کد رهگیری") return textCell(row, "شماره انتظامی(سری)");
+          const cell = textCell(row, header);
+          return header === "چک داخلی یا خارجی" ? formatDomesticForeign(cell) : cell;
+        }))
       : undefined;
 
     const textContent = countFormat
@@ -465,8 +458,6 @@ export async function POST(request: NextRequest) {
         ? [
             textHeaders.join(","),
             ...rows.map((row) => textHeaders.map((header) => {
-              if (header === "بانک عامل") return "17";
-              if (header === "شعبه چک") return "8881";
               const cell = textCell(row, header);
               return header === "چک داخلی یا خارجی" ? formatDomesticForeign(cell) : cell;
             }).map(csvCell).join(",")),
@@ -496,11 +487,9 @@ export async function POST(request: NextRequest) {
       })),
       ...(textContent === undefined ? {} : {
         textContent,
-        textFileName: `${facilityNumber.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")}-${shamsiDateString()}.txt`,
+        textFileName: `${facilityNumber.replace(/[<>:"/\\\\|?*\x00-\x1F]/g, "_")}-${shamsiDateString()}.txt`,
         previewHeaders: countFormat ? countFormatOutputHeaders : textHeaders,
         previewRows: countFormat ? countFormatRows : rows.map((row) => textHeaders.map((header) => {
-          if (header === "بانک عامل") return "17";
-          if (header === "شعبه چک") return "8881";
           const cell = textCell(row, header);
           return header === "چک داخلی یا خارجی" ? formatDomesticForeign(cell) : cell;
         })),
