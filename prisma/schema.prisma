@@ -175,11 +175,11 @@ model Customer {
   guarantor3BirthPlace               String?
   guarantor3Residence               String?
   guarantor3Address                 String?
-  guarantor3WorkAddress             String?
+  guarantor3WorkAddress              String?
   guarantor3Landline                String?
   guarantor3WorkPhone               String?
   guarantor3Mobile                  String?
-  guarantor3Occupation              String?
+  guarantor3Occupation               String?
   guarantor3AccountNumber           String?
   guarantor3AccountOpeningDate      String?
   guarantor3LongTermDepositNumber   String?
@@ -236,6 +236,7 @@ model BayeganiRecord {
   startDate         String?
   endDate           String?
   duration          String?
+  installmentCount  String?
   approvedAmount    String?
   remainingAmount   String?
   nationalId        String?
