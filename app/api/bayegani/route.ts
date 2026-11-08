@@ -239,7 +239,7 @@ export async function GET(request: NextRequest) {
         ],
       });
     }
-    if (filterValue || filterType === "serialNull") {
+    if (filterValue || filterType === "serialNull" || filterType === "facilityNumberNull") {
       switch (filterType) {
         case "counter":
           conditions.push({
@@ -270,6 +270,9 @@ export async function GET(request: NextRequest) {
           break;
         case "serialNull":
           conditions.push({ OR: [{ serial: null }, { serial: "" }] });
+          break;
+        case "facilityNumberNull":
+          conditions.push({ OR: [{ facilityNumber: null }, { facilityNumber: "" }] });
           break;
       }
     }
