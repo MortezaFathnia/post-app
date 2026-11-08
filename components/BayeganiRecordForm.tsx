@@ -71,7 +71,7 @@ async function readApiResponse(response: Response) {
     throw new Error(`پاسخ سرور خالی است (HTTP ${response.status}). خطای سرور را در ترمینال Next.js بررسی کنید.`);
   }
   try {
-    return JSON.parse(text) as { success?: boolean; error?: string; record?: ApiRecord; counters?: CounterOption[] };
+    return JSON.parse(text) as { success?: boolean; error?: string; record?: ApiRecord; counters?: CounterOption[]; nextSerial?: string };
   } catch {
     const detail = text.trim().slice(0, 180).replace(/\\s+/g, " ");
     throw new Error(`پاسخ API معتبر نیست (HTTP ${response.status}). ${detail}`);
@@ -101,6 +101,26 @@ export default function BayeganiRecordForm({ recordId }: Props) {
       .catch(() => { /* Counter options are an enhancement; manual text fallback remains available. */ });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (recordId) return;
+    let active = true;
+    fetch("/api/bayegani/manual", { cache: "no-store" })
+      .then(async (res) => {
+        const result = await readApiResponse(res);
+        if (!res.ok || !result.success) throw new Error(result.error || "دریافت سریال بعدی ناموفق بود.");
+        if (active) {
+          setFields((current) => ({
+            ...current,
+            "سریال": result.nextSerial || "1",
+          }));
+        }
+      })
+      .catch((e: unknown) => {
+        if (active) setError(e instanceof Error ? e.message : "دریافت سریال بعدی ناموفق بود.");
+      });
+    return () => { active = false; };
+  }, [recordId]);
 
   useEffect(() => {
     if (!recordId) return;
