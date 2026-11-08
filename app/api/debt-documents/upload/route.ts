@@ -275,9 +275,7 @@ export async function POST(request: NextRequest) {
     const records = validSourceRows.map(({ row, sourceRow }) => {
       if (newFormat || countFormat) {
         const checkNumber = value(row, "شماره چک");
-        const recordRawData = countFormat
-          ? { ...row, "بانک عامل": "17", "شعبه چک": "8881" }
-          : row;
+        const recordRawData = { ...row, "بانک عامل": "17", "شعبه چک": "8881" };
         return {
           sourceFile: file.name,
           sheetName,
@@ -296,8 +294,8 @@ export async function POST(request: NextRequest) {
           embeddedProfit: null,
           delayDays: null,
           delayPenalty: null,
-          bankAgent: countFormat ? "17" : value(row, "بانک عامل"),
-          checkBranch: countFormat ? "8881" : value(row, "شعبه چک"),
+          bankAgent: "17",
+          checkBranch: "8881",
           description: value(row, "توضیحات"),
           administrativeNumber: countFormat
             ? value(row, "شماره انتظامی(سری)")
