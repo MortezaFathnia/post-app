@@ -464,7 +464,7 @@ export async function POST(request: NextRequest) {
       })),
       ...(textContent === undefined ? {} : {
         textContent,
-        textFileName: `${file.name.replace(/\.(xlsx|xls)$/i, "")}.txt`,
+        textFileName: `${facilityNumber.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")}.txt`,
         previewHeaders: countFormat ? countFormatOutputHeaders : textHeaders,
         previewRows: countFormat ? countFormatRows : rows.map((row) => textHeaders.map((header) => textCell(row, header))),
       }),
