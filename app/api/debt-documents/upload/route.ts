@@ -259,7 +259,11 @@ export async function POST(request: NextRequest) {
       return { row: normalized, sourceRow: index + 2 };
     });
     // Ignore formatting/blank rows and rows without a check number.
-    const validSourceRows = sourceRows.filter(({ row }) => Boolean(value(row, "شماره چک")));
+    const validSourceRows = sourceRows.filter(({ row }) =>
+      countFormat || newFormat
+        ? Boolean(value(row, "شماره چک"))
+        : Object.values(row).some((cell) => String(cell ?? "").trim() !== "")
+    );
     const rows = validSourceRows.map(({ row }) => row);
     if (!rows.length) {
       return NextResponse.json(
