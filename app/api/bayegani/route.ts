@@ -114,6 +114,7 @@ function mapRow(rawData: Record<string, unknown>) {
     startDate: findValue(rawData, "تاريخ شروع", "تاریخ شروع"),
     endDate: findValue(rawData, " پایان قرارداد", "پایان قرارداد", "تاریخ پایان قرارداد"),
     duration: findValue(rawData, "مدت", "24"),
+    installmentCount: findValue(rawData, "تعداد اقساط") || null,
     approvedAmount: findValue(rawData, "مبلغ مصوب", "مبلغ"),
     remainingAmount: findValue(rawData, "مانده تسهيلات", "مانده تسهیلات"),
     nationalId: findValue(rawData, "کد ملي ", "کد ملي مشتري", "کد ملی"),
