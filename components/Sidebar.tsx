@@ -17,6 +17,7 @@ const menuItems = [
     children: [
       { title: "پرونده های خرید دین", href: "/dashboard/debt-discounting-facilities", icon: "▦", description: "مدیریت پرونده های خرید دین" },
       { title: "بایگانی اسناد خرید دین", href: "/dashboard/debt-documents", icon: "▤", description: "مشاهده و جستجوی اسناد ثبت‌شده" },
+      { title: "فهرست اسناد جدید خرید دین بارگذاری شده", href: "/dashboard/debt-documents/uploaded", icon: "▥", description: "مشاهده اطلاعات فایل‌های Excel بارگذاری‌شده" },
       { title: "بارگذاری اسناد جدید خرید دین", href: "/dashboard/debt-documents/upload", icon: "⇧", description: "ثبت فایل جدید خرید دین" },
       { title: "افزودن چک جدید", href: "/dashboard/debt-documents/checks/new", icon: "＋", description: "ثبت دستی اطلاعات چک" },
     ],
