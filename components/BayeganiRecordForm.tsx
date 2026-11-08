@@ -88,7 +88,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   const [counters, setCounters] = useState<CounterOption[]>([]);
   const [counterQuery, setCounterQuery] = useState("");
   const [counterOpen, setCounterOpen] = useState(false);
-  const [lastSerial, setLastSerial] = useState<string | null>(null);
+
 
   useEffect(() => {
     let active = true;
@@ -213,7 +213,6 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         <Link href="/dashboard/bayegani" className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">بازگشت به فهرست</Link>
       </header>
       <form onSubmit={submit} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        {!recordId && <p className="mb-4 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-800">آخرین سریال ثبت‌شده: <strong dir="ltr" className="font-bold">{lastSerial === null ? "در حال دریافت..." : lastSerial}</strong></p>}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {entries.map(([key, value]) => (
             <label key={key} className="block">
@@ -324,7 +323,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                 </div>
               ) : (
                 <input
-                  value={key === "سریال" && !recordId ? "پس از ثبت به‌صورت خودکار ایجاد می‌شود" : key === "مبلغ مصوب" ? formatAmount(value) : value}
+                  value={key === "مبلغ مصوب" ? formatAmount(value) : value}
                   readOnly={key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد"}
                   onChange={(event) => changeField(key, event.target.value)}
                   className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
