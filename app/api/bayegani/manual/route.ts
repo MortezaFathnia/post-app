@@ -62,7 +62,7 @@ export async function GET() {
         }
       }
     }
-    return NextResponse.json({ success: true, lastSerial: highestSerial.toString() });
+    return NextResponse.json({ success: true, lastSerial: highestSerial.toString(), nextSerial: (highestSerial + 1n).toString() });
   } catch (error) {
     console.error("Latest Bayegani serial lookup failed:", error);
     return NextResponse.json(
