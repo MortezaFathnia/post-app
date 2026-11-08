@@ -170,7 +170,7 @@ export default function BayeganiPage() {
             <option value="status">وضعیت</option>
             <option value="nationalId">کد ملی</option>
             <option value="serial">سریال</option>
-            <option value="serialNull">سریال خالی (NULL)</option>
+            <option value="serialNull">سریال خالی (null)</option>
             <option value="facilityNumberNull">شماره تسهیلات خالی (NULL)</option>
           </select>
           <input value={filterValue} onChange={(e) => { setFilterValue(e.target.value); setPage(1); }} disabled={filterType === "serialNull" || filterType === "facilityNumberNull"} placeholder={filterType === "serialNull" ? "فقط رکوردهای بدون سریال" : filterType === "facilityNumberNull" ? "فقط رکوردهای بدون شماره تسهیلات" : "مقدار موردنظر برای فیلتر..."} aria-label="مقدار فیلتر" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm disabled:bg-slate-100 disabled:text-slate-500" />
