@@ -219,10 +219,36 @@ export async function POST(request: NextRequest) {
     }
 
     const workbook = XLSX.read(await file.arrayBuffer(), { type: "array", raw: false });
-    const sheetName = workbook.SheetNames.find((name) => normalizeHeader(name) === "چک ها");
+    const legacyHeaders = [
+      "سریال سفته/ چک",
+      "شماره سفته / چک",
+      "وضعیت سفته / چک",
+      "تاريخ سررسيد",
+      "پرداخت شده",
+      "پرداخت نشده",
+      "سود/کارمزد مستتر",
+      "مدت تاخير به روز",
+      "جريمه تاخير",
+      "بانک عامل",
+      "شماره انتظامی",
+    ];
+    // Keep supporting the current «چک ها» sheet, and also accept the legacy
+    // workbook layout where the same columns are stored in a sheet such as «Result».
+    const sheetName =
+      workbook.SheetNames.find((name) => normalizeHeader(name) === "چک ها") ??
+      workbook.SheetNames.find((name) => {
+        const candidate = workbook.Sheets[name];
+        const headerRows = XLSX.utils.sheet_to_json<unknown[]>(candidate, {
+          header: 1,
+          defval: "",
+          range: "A1:N1",
+        });
+        const candidateHeaders = new Set((headerRows[0] ?? []).map(normalizeHeader));
+        return legacyHeaders.every((header) => candidateHeaders.has(header));
+      });
     if (!sheetName) {
       return NextResponse.json(
-        { success: false, error: "Sheet با نام «چک ها» در فایل Excel پیدا نشد." },
+        { success: false, error: "Sheet «چک ها» یا قالب قبلی خرید دین (ستون‌های سریال سفته/چک تا شماره انتظامی) در فایل Excel پیدا نشد." },
         { status: 400 },
       );
     }
@@ -243,19 +269,6 @@ export async function POST(request: NextRequest) {
     const headers = new Set(normalizedHeaders);
     const countFormat = countFormatHeaders.every((header) => headers.has(header));
     const newFormat = textHeaders.every((header) => headers.has(header));
-    const legacyHeaders = [
-      "سریال سفته/ چک",
-      "شماره سفته / چک",
-      "وضعیت سفته / چک",
-      "تاريخ سررسيد",
-      "پرداخت شده",
-      "پرداخت نشده",
-      "سود/کارمزد مستتر",
-      "مدت تاخير به روز",
-      "جريمه تاخير",
-      "بانک عامل",
-      "شماره انتظامی",
-    ];
     const missingHeaders = (newFormat || countFormat ? [] : legacyHeaders.filter((header) => !headers.has(header)));
     if (missingHeaders.length) {
       return NextResponse.json(
