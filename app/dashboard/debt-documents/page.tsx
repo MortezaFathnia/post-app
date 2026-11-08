@@ -25,23 +25,6 @@ type DebtRecord = {
   rawData: Record<string, unknown> | null;
 };
 
-type UploadedDebtRecord = {
-  id: number;
-  counterLabel: string;
-  facilityNumber: string;
-  customerNumber: string | null;
-  serial: string | null;
-  checkNumber: string | null;
-  checkStatus: string | null;
-  dueDate: string | null;
-  paidAmount: string | null;
-  administrativeNumber: string | null;
-  bankAgent: string | null;
-  checkBranch: string | null;
-  domesticForeign: string | null;
-  sourceRow: number;
-};
-
 type ApiResult = {
   success: boolean;
   error?: string;
@@ -63,7 +46,6 @@ const columns: { key: keyof DebtRecord; label: string }[] = [
 
 export default function DebtDocumentsArchivePage() {
   const [records, setRecords] = useState<DebtRecord[]>([]);
-  const [latestUploadedRecords, setLatestUploadedRecords] = useState<UploadedDebtRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("counter");
@@ -206,56 +188,11 @@ export default function DebtDocumentsArchivePage() {
       </header>
 
       <DebtDocumentsUploadForm
-        onUploaded={(uploadedRecords) => {
-          setLatestUploadedRecords(uploadedRecords);
+        onUploaded={() => {
           setPage(1);
           void loadRecords();
         }}
       />
-
-      <section className="overflow-hidden rounded-2xl border border-blue-200 bg-white shadow-sm">
-        <div className="border-b border-slate-100 p-5">
-          <h2 className="font-bold text-slate-900">اسناد جدید خرید دین بارگذاری شده</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            {latestUploadedRecords.length
-              ? `فقط ${latestUploadedRecords.length.toLocaleString("fa-IR")} ردیف از آخرین فایل بارگذاری‌شده نمایش داده می‌شود.`
-              : "پس از بارگذاری فایل Excel، فقط اطلاعات همان فایل در این جدول نمایش داده می‌شود."}
-          </p>
-        </div>
-        {latestUploadedRecords.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-500">هنوز فایلی بارگذاری نشده است.</div>
-        ) : (
-          <div className="max-h-[55vh] overflow-auto">
-            <table className="w-full min-w-[1100px] text-right text-sm">
-              <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600">
-                <tr>
-                  {["ردیف","کدباجه - نام باجه","کد تسهیلات خرید دین","شماره مشتری","شماره چک","مبلغ چک","شماره انتظامی","تاریخ سررسید","بانک عامل","شعبه چک","چک داخلی یا خارجی","وضعیت چک"].map((header) => (
-                    <th key={header} className="whitespace-nowrap px-4 py-3 font-semibold">{header}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {latestUploadedRecords.map((record, index) => (
-                  <tr key={record.sourceRow} className="hover:bg-slate-50">
-                    <td className="whitespace-nowrap px-4 py-3">{(index + 1).toLocaleString("fa-IR")}</td>
-                    <td className="whitespace-nowrap px-4 py-3">{record.counterLabel}</td>
-                    <td className="whitespace-nowrap px-4 py-3">{record.facilityNumber}</td>
-                    <td className="whitespace-nowrap px-4 py-3">{record.customerNumber ?? "—"}</td>
-                    <td className="whitespace-nowrap px-4 py-3">{record.checkNumber ?? "—"}</td>
-                    <td className="whitespace-nowrap px-4 py-3">{record.paidAmount ?? "—"}</td>
-                    <td className="whitespace-nowrap px-4 py-3">{record.administrativeNumber ?? "—"}</td>
-                    <td className="whitespace-nowrap px-4 py-3">{record.dueDate ?? "—"}</td>
-                    <td className="whitespace-nowrap px-4 py-3">{record.bankAgent ?? "—"}</td>
-                    <td className="whitespace-nowrap px-4 py-3">{record.checkBranch ?? "—"}</td>
-                    <td className="whitespace-nowrap px-4 py-3">{record.domesticForeign ?? "—"}</td>
-                    <td className="whitespace-nowrap px-4 py-3">{record.checkStatus ?? "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 p-5">
