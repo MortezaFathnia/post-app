@@ -28,6 +28,18 @@ function textCell(row: Record<string, unknown>, key: string): string {
   return /^[-+]?\d{1,3}(,\d{3})+(\.\d+)?$/.test(cell) ? cell.replace(/,/g, "") : cell;
 }
 
+function shamsiDateString(date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", {
+    timeZone: "Asia/Tehran",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((item) => item.type === type)?.value ?? "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+
 function csvCell(input: string): string {
   return /[",\r\n]/.test(input) ? `"${input.replace(/"/g, '""')}"` : input;
 }
@@ -464,7 +476,7 @@ export async function POST(request: NextRequest) {
       })),
       ...(textContent === undefined ? {} : {
         textContent,
-        textFileName: `${facilityNumber.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")}-${new Date().toISOString().slice(0, 10)}.txt`,
+        textFileName: `${facilityNumber.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")}-${shamsiDateString()}.txt`,
         previewHeaders: countFormat ? countFormatOutputHeaders : textHeaders,
         previewRows: countFormat ? countFormatRows : rows.map((row) => textHeaders.map((header) => textCell(row, header))),
       }),
