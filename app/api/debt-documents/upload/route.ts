@@ -464,7 +464,7 @@ export async function POST(request: NextRequest) {
       })),
       ...(textContent === undefined ? {} : {
         textContent,
-        textFileName: `${facilityNumber.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")}.txt`,
+        textFileName: `${facilityNumber.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")}-${new Date().toISOString().slice(0, 10)}.txt`,
         previewHeaders: countFormat ? countFormatOutputHeaders : textHeaders,
         previewRows: countFormat ? countFormatRows : rows.map((row) => textHeaders.map((header) => textCell(row, header))),
       }),
