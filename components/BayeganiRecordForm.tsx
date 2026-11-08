@@ -88,6 +88,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   const [counters, setCounters] = useState<CounterOption[]>([]);
   const [counterQuery, setCounterQuery] = useState("");
   const [counterOpen, setCounterOpen] = useState(false);
+  const [lastSerial, setLastSerial] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -212,6 +213,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         <Link href="/dashboard/bayegani" className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">بازگشت به فهرست</Link>
       </header>
       <form onSubmit={submit} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        {!recordId && <p className="mb-4 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-800">آخرین سریال ثبت‌شده: <strong dir="ltr" className="font-bold">{lastSerial === null ? "در حال دریافت..." : lastSerial}</strong></p>}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {entries.map(([key, value]) => (
             <label key={key} className="block">
