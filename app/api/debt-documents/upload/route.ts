@@ -203,14 +203,27 @@ export async function POST(request: NextRequest) {
     }
 
     const workbook = XLSX.read(await file.arrayBuffer(), { type: "array", raw: false });
-    const sheetName = workbook.SheetNames[0];
+    const sheetName = workbook.SheetNames.find((name) => normalizeHeader(name) === "چک ها");
     if (!sheetName) {
-      return NextResponse.json({ success: false, error: "فایل Excel فاقد Sheet است." }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Sheet با نام «چک ها» در فایل Excel پیدا نشد." },
+        { status: 400 },
+      );
     }
 
     const worksheet = workbook.Sheets[sheetName];
-    const headerRows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1, defval: "" });
-    const normalizedHeaders = (headerRows[0] ?? []).map(normalizeHeader);
+    const usedRange = XLSX.utils.decode_range(worksheet["!ref"] || "A1:N1");
+    const checksRange: XLSX.Range = {
+      s: { r: 0, c: 0 },
+      e: { r: usedRange.e.r, c: 13 },
+    };
+    // Read only columns A:N from the «چک ها» sheet.
+    const headerRows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, {
+      header: 1,
+      defval: "",
+      range: checksRange,
+    });
+    const normalizedHeaders = (headerRows[0] ?? []).slice(0, 14).map(normalizeHeader);
     const headers = new Set(normalizedHeaders);
     const countFormat = countFormatHeaders.every((header) => headers.has(header));
     const newFormat = textHeaders.every((header) => headers.has(header));
@@ -238,30 +251,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const sourceRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, {
-      defval: "",
-      raw: false,
-    });
-    const rows = sourceRows.map((sourceRow) => {
+    const sourceRows = headerRows.slice(1).map((cells, index) => {
       const normalized: Record<string, unknown> = {};
-      for (const [key, cell] of Object.entries(sourceRow)) normalized[normalizeHeader(key)] = cell;
-      return normalized;
+      normalizedHeaders.forEach((header, columnIndex) => {
+        if (header) normalized[header] = cells[columnIndex] ?? "";
+      });
+      return { row: normalized, sourceRow: index + 2 };
     });
+    // Ignore formatting/blank rows and rows without a check number.
+    const validSourceRows = sourceRows.filter(({ row }) => Boolean(value(row, "شماره چک")));
+    const rows = validSourceRows.map(({ row }) => row);
     if (!rows.length) {
-      return NextResponse.json({ success: false, error: "فایل Excel فاقد ردیف اطلاعاتی است." }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "در Sheet «چک ها» هیچ ردیفی با شماره چک معتبر در ستون‌های A:N پیدا نشد." },
+        { status: 400 },
+      );
     }
 
-    const records = rows.map((row, index) => {
+    const records = validSourceRows.map(({ row, sourceRow }) => {
       if (newFormat || countFormat) {
         const checkNumber = value(row, "شماره چک");
+        const recordRawData = countFormat
+          ? { ...row, "بانک عامل": "17", "شعبه چک": "8881" }
+          : row;
         return {
           sourceFile: file.name,
           sheetName,
-          sourceRow: index + 2,
+          sourceRow,
           counterLabel,
           facilityNumber,
           customerNumber: customerNumberFromFacility(facilityNumber),
-          // In the original format, کد رهگیری is the serial; in the count format, شماره چک is.
+          // For the 14-column checks sheet, the check number is also stored as the serial.
           serial: countFormat ? checkNumber : value(row, "کد رهگیری"),
           checkNumber,
           checkStatus: "درراه",
@@ -272,19 +292,19 @@ export async function POST(request: NextRequest) {
           embeddedProfit: null,
           delayDays: null,
           delayPenalty: null,
-          bankAgent: value(row, "بانک عامل"),
-          checkBranch: value(row, "شعبه چک"),
+          bankAgent: countFormat ? "17" : value(row, "بانک عامل"),
+          checkBranch: countFormat ? "8881" : value(row, "شعبه چک"),
           description: value(row, "توضیحات"),
           administrativeNumber: countFormat
             ? value(row, "شماره انتظامی(سری)")
             : value(row, "شماره انتظامی"),
-          rawData: row as Prisma.InputJsonObject,
+          rawData: recordRawData as Prisma.InputJsonObject,
         };
       }
       return {
         sourceFile: file.name,
         sheetName,
-        sourceRow: index + 2,
+        sourceRow,
         counterLabel,
         facilityNumber,
         customerNumber: customerNumberFromFacility(facilityNumber),
@@ -379,7 +399,6 @@ export async function POST(request: NextRequest) {
       "تاریخ واخواست",
       "هزینه واخواست",
       "نوع دین",
-      "بانک عامل",
       "شعبه چک",
       "چک داخلی یا خارجی",
       "حساب جاری چک",
@@ -399,6 +418,7 @@ export async function POST(request: NextRequest) {
             if (index === countFormatOutputHeaders.length - 1) {
               return textCell(row, "شماره انتظامی(سری)");
             }
+            if (header === "شعبه چک") return "8881";
             const cell = textCell(row, header);
             return header === "چک داخلی یا خارجی" ? formatDomesticForeign(cell) : cell;
           });
