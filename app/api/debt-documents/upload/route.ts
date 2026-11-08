@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
     const sortBy: SortField = allowedSortFields.includes(requestedSort as SortField)
       ? requestedSort as SortField
       : "createdAt";
-    const sortOrder = params.get("sortOrder") === "asc" ? "asc" : "desc";
+    const sortOrder = params.get("sortOrder") === "desc" ? "desc" : "asc";
 
     const searchableFields = [
       "counterLabel", "facilityNumber", "customerNumber", "serial", "checkNumber", "checkStatus",
@@ -102,6 +102,10 @@ export async function GET(request: NextRequest) {
 
     const searchTerms = [...new Set([search, normalizeDigits(search)].filter(Boolean))];
     const where: Prisma.DebtDiscountingRecordWhereInput = {};
+    if (params.get("uploadedOnly") === "true") {
+      where.sourceFile = { not: null };
+      where.sheetName = "چک ها";
+    }
     if (searchTerms.length) {
       where.OR = searchTerms.flatMap((term) =>
         searchableFields.map((field) => ({
