@@ -12,9 +12,27 @@ type ApiResult = {
   textFileName?: string;
   previewHeaders?: string[];
   previewRows?: string[][];
+  uploadedRecords?: {
+    id: number;
+    counterLabel: string;
+    facilityNumber: string;
+    customerNumber: string | null;
+    serial: string | null;
+    checkNumber: string | null;
+    checkStatus: string | null;
+    dueDate: string | null;
+    paidAmount: string | null;
+    administrativeNumber: string | null;
+    bankAgent: string | null;
+    checkBranch: string | null;
+    domesticForeign: string | null;
+    sourceRow: number;
+  }[];
 };
 
-type Props = { onUploaded?: () => void };
+type Props = {
+  onUploaded?: (records: NonNullable<ApiResult["uploadedRecords"]>) => void;
+};
 
 export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
   const [counterLabel, setCounterLabel] = useState("");
@@ -116,7 +134,7 @@ export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
       setFile(null);
       const fileInput = document.getElementById("debtArchiveExcelFile") as HTMLInputElement | null;
       if (fileInput) fileInput.value = "";
-      onUploaded?.();
+      onUploaded?.(result.uploadedRecords ?? []);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "خطا در بارگذاری فایل");
     } finally {
