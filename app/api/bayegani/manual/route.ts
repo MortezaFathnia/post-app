@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
           status: value(raw, "وضعیت کنونی", "وضعيت کنونی") || "فعال",
           startDate: value(raw, "تاریخ شروع", "تاريخ شروع"),
           endDate: value(raw, "پایان قرارداد", " پایان قرارداد", "تاریخ پایان قرارداد"),
-          duration: value(raw, "مدت"), approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
+          duration: value(raw, "مدت"), installmentCount: value(raw, "تعداد اقساط") || null, approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
           remainingAmount: value(raw, "مانده تسهیلات", "مانده تسهيلات"),
           nationalId: value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري") || null,
           rawData: raw as never,
