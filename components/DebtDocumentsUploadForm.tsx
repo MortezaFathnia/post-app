@@ -110,6 +110,7 @@ export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
       formData.append("counterLabel", counterLabel.trim());
       formData.append("facilityNumber", facilityNumber.trim());
       formData.append("file", file);
+      formData.append("format", "legacy");
 
       const response = await fetch("/api/debt-documents/upload", {
         method: "POST",
@@ -158,7 +159,7 @@ export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
       <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-4">
           <h2 className="font-bold text-slate-900">بارگذاری اسناد جدید خرید دین</h2>
-          <p className="mt-1 text-xs text-slate-500">فقط Sheet «چک ها» و ستون‌های A تا N پردازش می‌شود؛ ردیف‌های بدون شماره چک نادیده گرفته می‌شوند. بانک عامل با مقدار 17 و شعبه چک با مقدار 8881 ثبت می‌شود و فایل TXT نیز آماده دریافت خواهد شد.</p>
+          <p className="mt-1 text-xs text-slate-500">این بخش فقط قالب قدیمی ۱۱ ستونی فهرست اسناد خرید دین را می‌پذیرد. فایل‌های قالب جدید چک‌ها را از صفحه «بارگذاری اسناد جدید خرید دین» بارگذاری کنید.</p>
         </div>
         <div className="grid gap-5 md:grid-cols-2">
           <div>
