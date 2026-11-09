@@ -474,51 +474,37 @@ export async function POST(request: NextRequest) {
       return input;
     };
 
-    const countFormatRows = countFormat || simpleCountFormat
+    const countFormatRows = countFormat || simpleCountFormat || newFormat
       ? rows.map((row) => {
-          if (simpleCountFormat) {
-            const amount = Number(textCell(row, "مبلغ چک").replace(/,/g, "").replace(/[^0-9.-]/g, ""));
-            const amountInOutputUnit = Number.isFinite(amount) ? String(Math.round(amount * 100)) : "";
-            const dueDate = textCell(row, "تاریخ سررسید");
-            const administrativeNumber = textCell(row, "شماره انتظامی(سری)");
-            return [
-              textCell(row, "شماره چک"),
-              amountInOutputUnit,
-              administrativeNumber,
-              dueDate,
-              "L",
-              "0",
-              dueDate,
-              "0",
-              "0",
-              "17",
-              "8881",
-              "TRUE",
-              textCell(row, "حساب جاری چک"),
-              administrativeNumber,
-            ];
-          }
-          return countFormatOutputHeaders.map((header) => {
-            if (header === "شماره انتظامی" || header === "کد رهگیری") {
-              return textCell(row, "شماره انتظامی(سری)");
-            }
-            const cell = textCell(row, header);
-            return header === "چک داخلی یا خارجی" ? formatDomesticForeign(cell) : cell;
-          });
+          const amount = Number(textCell(row, "مبلغ چک").replace(/,/g, "").replace(/[^0-9.-]/g, ""));
+          const amountInOutputUnit = Number.isFinite(amount) ? String(Math.round(amount * 100)) : "";
+          const dueDate = textCell(row, "تاریخ سررسید");
+          const administrativeNumber = textCell(
+            row,
+            countFormat || simpleCountFormat ? "شماره انتظامی(سری)" : "شماره انتظامی",
+          );
+          return [
+            textCell(row, "شماره چک"),
+            amountInOutputUnit,
+            administrativeNumber,
+            dueDate,
+            "L",
+            "0",
+            dueDate,
+            "0",
+            "0",
+            "17",
+            "8881",
+            "TRUE",
+            textCell(row, "حساب جاری چک"),
+            administrativeNumber,
+          ];
         })
       : undefined;
 
-    const textContent = countFormat || simpleCountFormat
-      ? countFormatRows!.map((row) => row.map(csvCell).join(",")).join("\r\n") + "\r\n"
-      : newFormat
-        ? [
-            textHeaders.join(","),
-            ...rows.map((row) => textHeaders.map((header) => {
-              const cell = textCell(row, header);
-              return header === "چک داخلی یا خارجی" ? formatDomesticForeign(cell) : cell;
-            }).map(csvCell).join(",")),
-          ].join("\r\n") + "\r\n"
-        : undefined;
+    const textContent = countFormat || simpleCountFormat || newFormat
+      ? countFormatRows!.map((row) => row.map(csvCell).join(",")).join("\\r\\n") + "\\r\\n"
+      : undefined;
 
     return NextResponse.json({
       success: true,
@@ -544,8 +530,8 @@ export async function POST(request: NextRequest) {
       ...(textContent === undefined ? {} : {
         textContent,
         textFileName: `${facilityNumber.replace(/[<>:"/\\\\|?*\x00-\x1F]/g, "_")}-${shamsiDateString()}.txt`,
-        previewHeaders: countFormat || simpleCountFormat ? countFormatOutputHeaders : textHeaders,
-        previewRows: countFormat || simpleCountFormat ? countFormatRows : rows.map((row) => textHeaders.map((header) => {
+        previewHeaders: countFormat || simpleCountFormat || newFormat ? countFormatOutputHeaders : textHeaders,
+        previewRows: countFormat || simpleCountFormat || newFormat ? countFormatRows : rows.map((row) => textHeaders.map((header) => {
           const cell = textCell(row, header);
           return header === "چک داخلی یا خارجی" ? formatDomesticForeign(cell) : cell;
         })),
