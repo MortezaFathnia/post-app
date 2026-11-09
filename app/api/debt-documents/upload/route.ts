@@ -503,7 +503,7 @@ export async function POST(request: NextRequest) {
       : undefined;
 
     const textContent = countFormat || simpleCountFormat || newFormat
-      ? countFormatRows!.map((row) => row.map(csvCell).join(",")).join("\\r\\n") + "\\r\\n"
+      ? countFormatRows!.map((row) => row.map(csvCell).join(",")).join("\r\n") + "\r\n"
       : undefined;
 
     return NextResponse.json({
