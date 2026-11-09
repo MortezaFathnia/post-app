@@ -353,7 +353,7 @@ export async function POST(request: NextRequest) {
           embeddedProfit: null,
           delayDays: null,
           delayPenalty: null,
-          bankAgent: value(row, "بانک عامل"),
+          bankAgent: simpleCountFormat ? "17" : value(row, "بانک عامل"),
           checkBranch: value(row, "شعبه چک"),
           description: simpleCountFormat ? value(row, "هزینه واخواست") : value(row, "توضیحات"),
           administrativeNumber: countFormat || simpleCountFormat
