@@ -179,6 +179,7 @@ export default function DebtDocumentsUploadPage() {
       formData.append("counterLabel", counterLabel.trim());
       formData.append("facilityNumber", facilityNumber.trim());
       formData.append("file", file);
+      formData.append("format", "new");
 
       const response = await fetch("/api/debt-documents/upload", {
         method: "POST",
@@ -276,7 +277,7 @@ export default function DebtDocumentsUploadPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">بارگذاری اسناد جدید خرید دین</h1>
           <p className="mt-2 text-sm text-slate-600">
-            فایل اکسل را همراه با کد باجه و کد تسهیلات خرید دین ثبت کنید.
+            فقط فایل اکسل با قالب جدید ۱۴ ستونی چک‌ها را همراه با کد باجه و کد تسهیلات خرید دین بارگذاری کنید. قالب قدیمی ۱۱ ستونی از صفحه فهرست اسناد خرید دین پذیرفته می‌شود.
           </p>
           <Link href="/dashboard/debt-documents" className="mt-3 inline-flex rounded-xl border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50">
             مشاهده بایگانی اسناد خرید دین
