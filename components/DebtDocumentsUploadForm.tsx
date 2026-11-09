@@ -158,7 +158,7 @@ export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
       />
       <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-4">
-          <h2 className="font-bold text-slate-900">بارگذاری اسناد جدید خرید دین</h2>
+          <h2 className="font-bold text-slate-900">ورود فایل قالب قبلی به فهرست اسناد خرید دین</h2>
           <p className="mt-1 text-xs text-slate-500">این بخش فقط قالب قدیمی ۱۱ ستونی فهرست اسناد خرید دین را می‌پذیرد. فایل‌های قالب جدید چک‌ها را از صفحه «بارگذاری اسناد جدید خرید دین» بارگذاری کنید.</p>
         </div>
         <div className="grid gap-5 md:grid-cols-2">
