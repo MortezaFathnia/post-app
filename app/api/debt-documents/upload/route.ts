@@ -232,23 +232,35 @@ export async function POST(request: NextRequest) {
       "بانک عامل",
       "شماره انتظامی",
     ];
-    // Keep supporting the current «چک ها» sheet, and also accept the legacy
-    // workbook layout where the same columns are stored in a sheet such as «Result».
-    const sheetName =
-      workbook.SheetNames.find((name) => normalizeHeader(name) === "چک ها") ??
-      workbook.SheetNames.find((name) => {
-        const candidate = workbook.Sheets[name];
-        const headerRows = XLSX.utils.sheet_to_json<unknown[]>(candidate, {
-          header: 1,
-          defval: "",
-          range: "A1:N1",
-        });
-        const candidateHeaders = new Set((headerRows[0] ?? []).map(normalizeHeader));
-        return legacyHeaders.every((header) => candidateHeaders.has(header));
+    const uploadFormat = String(formData.get("format") ?? "new");
+    if (uploadFormat !== "legacy" && uploadFormat !== "new") {
+      return NextResponse.json(
+        { success: false, error: "نوع فرایند بارگذاری معتبر نیست." },
+        { status: 400 },
+      );
+    }
+    const expectedHeaders = uploadFormat === "legacy" ? legacyHeaders : null;
+    const matchingSheet = workbook.SheetNames.find((name) => {
+      const candidate = workbook.Sheets[name];
+      const headerRows = XLSX.utils.sheet_to_json<unknown[]>(candidate, {
+        header: 1,
+        defval: "",
+        range: "A1:N1",
       });
+      const candidateHeaders = new Set((headerRows[0] ?? []).map(normalizeHeader));
+      if (expectedHeaders) return expectedHeaders.every((header) => candidateHeaders.has(header));
+      return textHeaders.every((header) => candidateHeaders.has(header))
+        || countFormatHeaders.every((header) => candidateHeaders.has(header));
+    });
+    const sheetName = matchingSheet;
     if (!sheetName) {
       return NextResponse.json(
-        { success: false, error: "Sheet «چک ها» یا قالب قبلی خرید دین (ستون‌های سریال سفته/چک تا شماره انتظامی) در فایل Excel پیدا نشد." },
+        {
+          success: false,
+          error: uploadFormat === "legacy"
+            ? "این صفحه فقط قالب قدیمی ۱۱ ستونی فهرست اسناد خرید دین را می‌پذیرد."
+            : "این صفحه فقط قالب جدید چک‌ها (۱۴ ستون) را می‌پذیرد.",
+        },
         { status: 400 },
       );
     }
@@ -269,12 +281,17 @@ export async function POST(request: NextRequest) {
     const headers = new Set(normalizedHeaders);
     const countFormat = countFormatHeaders.every((header) => headers.has(header));
     const newFormat = textHeaders.every((header) => headers.has(header));
-    const missingHeaders = (newFormat || countFormat ? [] : legacyHeaders.filter((header) => !headers.has(header)));
-    if (missingHeaders.length) {
+    const isLegacyFormat = legacyHeaders.every((header) => headers.has(header));
+    if (
+      (uploadFormat === "legacy" && (!isLegacyFormat || newFormat || countFormat)) ||
+      (uploadFormat === "new" && (!newFormat && !countFormat))
+    ) {
       return NextResponse.json(
         {
           success: false,
-          error: `ستون‌های موردنیاز در فایل وجود ندارند. فایل باید دارای قالب ۱۴ ستونی جدید یا قالب قبلی خرید دین باشد. ستون‌های مفقود: ${missingHeaders.join("، ")}`,
+          error: uploadFormat === "legacy"
+            ? "قالب فایل با صفحه فهرست اسناد خرید دین مطابقت ندارد؛ قالب قدیمی ۱۱ ستونی لازم است."
+            : "قالب فایل با صفحه بارگذاری اسناد جدید خرید دین مطابقت ندارد؛ قالب جدید ۱۴ ستونی لازم است.",
         },
         { status: 400 },
       );
