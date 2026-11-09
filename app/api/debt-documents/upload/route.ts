@@ -78,6 +78,18 @@ const countFormatHeaders = [
   "حساب جاری چک",
 ] as const;
 
+const simpleCountFormatHeaders = [
+  "تعداد",
+  "شماره چک",
+  "مبلغ چک",
+  "شماره انتظامی(سری)",
+  "تاریخ سررسید",
+  "هزینه واخواست",
+  "بانک عامل",
+  "شعبه چک",
+  "حساب جاری چک",
+] as const;
+
 export async function GET(request: NextRequest) {
   try {
     const params = request.nextUrl.searchParams;
@@ -250,7 +262,8 @@ export async function POST(request: NextRequest) {
       const candidateHeaders = new Set((headerRows[0] ?? []).map(normalizeHeader));
       if (expectedHeaders) return expectedHeaders.every((header) => candidateHeaders.has(header));
       return textHeaders.every((header) => candidateHeaders.has(header))
-        || countFormatHeaders.every((header) => candidateHeaders.has(header));
+        || countFormatHeaders.every((header) => candidateHeaders.has(header))
+        || simpleCountFormatHeaders.every((header) => candidateHeaders.has(header));
     });
     const sheetName = matchingSheet;
     if (!sheetName) {
@@ -280,11 +293,12 @@ export async function POST(request: NextRequest) {
     const normalizedHeaders = (headerRows[0] ?? []).slice(0, 14).map(normalizeHeader);
     const headers = new Set(normalizedHeaders);
     const countFormat = countFormatHeaders.every((header) => headers.has(header));
+    const simpleCountFormat = simpleCountFormatHeaders.every((header) => headers.has(header));
     const newFormat = textHeaders.every((header) => headers.has(header));
     const isLegacyFormat = legacyHeaders.every((header) => headers.has(header));
     if (
       (uploadFormat === "legacy" && (!isLegacyFormat || newFormat || countFormat)) ||
-      (uploadFormat === "new" && (!newFormat && !countFormat))
+      (uploadFormat === "new" && (!newFormat && !countFormat && !simpleCountFormat))
     ) {
       return NextResponse.json(
         {
@@ -306,7 +320,7 @@ export async function POST(request: NextRequest) {
     });
     // Ignore formatting/blank rows and rows without a check number.
     const validSourceRows = sourceRows.filter(({ row }) =>
-      countFormat || newFormat
+      countFormat || simpleCountFormat || newFormat
         ? Boolean(value(row, "شماره چک"))
         : Object.values(row).some((cell) => String(cell ?? "").trim() !== "")
     );
@@ -319,7 +333,7 @@ export async function POST(request: NextRequest) {
     }
 
     const records = validSourceRows.map(({ row, sourceRow }) => {
-      if (newFormat || countFormat) {
+      if (newFormat || countFormat || simpleCountFormat) {
         const checkNumber = value(row, "شماره چک");
         return {
           sourceFile: file.name,
@@ -329,7 +343,7 @@ export async function POST(request: NextRequest) {
           facilityNumber,
           customerNumber: customerNumberFromFacility(facilityNumber),
           // For the 14-column checks sheet, the check number is also stored as the serial.
-          serial: countFormat ? checkNumber : value(row, "کد رهگیری"),
+          serial: countFormat || simpleCountFormat ? checkNumber : value(row, "کد رهگیری"),
           checkNumber,
           checkStatus: "درراه",
           domesticForeign: value(row, "چک داخلی یا خارجی"),
@@ -342,7 +356,7 @@ export async function POST(request: NextRequest) {
           bankAgent: value(row, "بانک عامل"),
           checkBranch: value(row, "شعبه چک"),
           description: value(row, "توضیحات"),
-          administrativeNumber: countFormat
+          administrativeNumber: countFormat || simpleCountFormat
             ? value(row, "شماره انتظامی(سری)")
             : value(row, "شماره انتظامی"),
           rawData: row as Prisma.InputJsonObject,
@@ -460,16 +474,41 @@ export async function POST(request: NextRequest) {
       return input;
     };
 
-    const countFormatRows = countFormat
-      ? rows.map((row) => countFormatOutputHeaders.map((header, index) => {
-          if (header === "شماره انتظامی") return textCell(row, "شماره انتظامی(سری)");
-          if (header === "کد رهگیری") return textCell(row, "شماره انتظامی(سری)");
-          const cell = textCell(row, header);
-          return header === "چک داخلی یا خارجی" ? formatDomesticForeign(cell) : cell;
-        }))
+    const countFormatRows = countFormat || simpleCountFormat
+      ? rows.map((row) => {
+          if (simpleCountFormat) {
+            const amount = Number(textCell(row, "مبلغ چک").replace(/,/g, "").replace(/[^0-9.-]/g, ""));
+            const amountInOutputUnit = Number.isFinite(amount) ? String(Math.round(amount * 100)) : "";
+            const dueDate = textCell(row, "تاریخ سررسید");
+            const administrativeNumber = textCell(row, "شماره انتظامی(سری)");
+            return [
+              textCell(row, "شماره چک"),
+              amountInOutputUnit,
+              administrativeNumber,
+              dueDate,
+              "L",
+              "0",
+              dueDate,
+              "0",
+              "0",
+              "17",
+              "8881",
+              "TRUE",
+              textCell(row, "حساب جاری چک"),
+              administrativeNumber,
+            ];
+          }
+          return countFormatOutputHeaders.map((header) => {
+            if (header === "شماره انتظامی" || header === "کد رهگیری") {
+              return textCell(row, "شماره انتظامی(سری)");
+            }
+            const cell = textCell(row, header);
+            return header === "چک داخلی یا خارجی" ? formatDomesticForeign(cell) : cell;
+          });
+        })
       : undefined;
 
-    const textContent = countFormat
+    const textContent = countFormat || simpleCountFormat
       ? countFormatRows!.map((row) => row.map(csvCell).join(",")).join("\r\n") + "\r\n"
       : newFormat
         ? [
@@ -505,8 +544,8 @@ export async function POST(request: NextRequest) {
       ...(textContent === undefined ? {} : {
         textContent,
         textFileName: `${facilityNumber.replace(/[<>:"/\\\\|?*\x00-\x1F]/g, "_")}-${shamsiDateString()}.txt`,
-        previewHeaders: countFormat ? countFormatOutputHeaders : textHeaders,
-        previewRows: countFormat ? countFormatRows : rows.map((row) => textHeaders.map((header) => {
+        previewHeaders: countFormat || simpleCountFormat ? countFormatOutputHeaders : textHeaders,
+        previewRows: countFormat || simpleCountFormat ? countFormatRows : rows.map((row) => textHeaders.map((header) => {
           const cell = textCell(row, header);
           return header === "چک داخلی یا خارجی" ? formatDomesticForeign(cell) : cell;
         })),
