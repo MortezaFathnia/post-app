@@ -201,19 +201,21 @@ model Customer {
 }
 
 model DebtDocument {
-  id                    Int      @id @default(autoincrement())
-  customerId            Int
-  customer              Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  documentType          String?
-  dueDate               String?
-  serialNumber          String?
-  nominalAmount         String?
-  nominalAmountWords    String?
-  paidAmount            String?
-  paidAmountWords       String?
-  obligorName           String?
-  description           String?
-  createdAt             DateTime @default(now())
+  id             Int               @id @default(autoincrement())
+  contractId     Int?              @unique
+  facilityNumber String?
+  facilityTitle  String?
+  counterLabel   String?
+  serial         String?
+  status         String            @default("فعال")
+  startDate      String?
+  endDate        String?
+  contract       BayeganiRecord?   @relation(fields: [contractId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([facilityNumber])
+  @@index([status])
 }
 
 model BayeganiRecord {
@@ -243,6 +245,7 @@ model BayeganiRecord {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   debtDiscountingFacilities DebtDiscountingFacility[]
+  debtDocuments DebtDocument[]
 
   @@unique([sourceFile, sheetName, sourceRow])
   @@unique([facilityNumber, serial])
