@@ -69,7 +69,8 @@ export default function DebtDiscountingFacilitiesPage() {
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || "همگام‌سازی اطلاعات ناموفق بود.");
       setMessage(`همگام‌سازی انجام شد؛ ${result.created} رکورد جدید، ${result.updated} بروزرسانی و ${result.skipped} مورد رد شد.`);
-      setPage(1);\n      await loadRecords();
+      setPage(1);
+      await loadRecords();
     } catch (e) {
       setError(e instanceof Error ? e.message : "خطا در همگام‌سازی اطلاعات");
     } finally {
