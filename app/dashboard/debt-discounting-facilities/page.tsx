@@ -28,12 +28,68 @@ type ApiResult = {
   records?: FacilityRecord[];
 };
 
+function normalizeDigits(value: string) {
+  return value.replace(/[۰-۹٠-٩]/g, (digit) => {
+    const persianIndex = "۰۱۲۳۴۵۶۷۸۹".indexOf(digit);
+    return String(persianIndex >= 0 ? persianIndex : "٠١٢٣٤٥٦٧٨٩".indexOf(digit));
+  });
+}
+
 export default function DebtDiscountingFacilitiesPage() {
   const [records, setRecords] = useState<FacilityRecord[]>([]);
-  const [total,setTotal]=useState(0), [search,setSearch]=useState(""), [filterType,setFilterType]=useState("facilityNumber"), [filterValue,setFilterValue]=useState("");
-  const [page,setPage]=useState(1), [pageSize,setPageSize]=useState(20);
-  const totalPages=Math.max(1,Math.ceil(total/pageSize)), firstRecord=total?(page-1)*pageSize+1:0, lastRecord=Math.min(page*pageSize,total);
-  const visiblePages=Array.from({length:Math.min(3,totalPages)},(_,i)=>Math.max(1,Math.min(page-1,totalPages-2))+i);
+  const [search,setSearch]=useState("");
+  const [filterType,setFilterType]=useState("facilityNumber");
+  const [filterValue,setFilterValue]=useState("");
+  const [page,setPage]=useState(1);
+  const [pageSize,setPageSize]=useState(20);
+
+  const filteredRecords = records.filter((record) => {
+    const values = [
+      record.id,
+      record.contractId,
+      record.facilityTitle,
+      record.contract?.facilityTitle,
+      record.facilityNumber,
+      record.contract?.facilityNumber,
+      record.counterLabel,
+      record.serial,
+      record.status,
+      record.startDate,
+      record.endDate,
+    ].map((value) => normalizeDigits(String(value ?? "")).toLocaleLowerCase());
+
+    const normalizedSearch = normalizeDigits(search.trim()).toLocaleLowerCase();
+    const searchMatches = !normalizedSearch || values.some((value) => value.includes(normalizedSearch));
+
+    const filterMap: Record<string, string> = {
+      facilityTitle: record.facilityTitle || record.contract?.facilityTitle || "",
+      facilityNumber: record.facilityNumber || record.contract?.facilityNumber || "",
+      contractId: String(record.contractId),
+      counterLabel: record.counterLabel || "",
+      serial: record.serial || "",
+      status: record.status || "",
+      startDate: record.startDate || "",
+      endDate: record.endDate || "",
+    };
+    const normalizedFilter = normalizeDigits(filterValue.trim()).toLocaleLowerCase();
+    const filterSource = normalizeDigits(filterMap[filterType] || "").toLocaleLowerCase();
+    const filterMatches = !normalizedFilter || (filterType === "contractId"
+      ? filterSource === normalizedFilter
+      : filterSource.includes(normalizedFilter));
+
+    return searchMatches && filterMatches;
+  });
+
+  const total = filteredRecords.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageRecords = filteredRecords.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const firstRecord = total ? (currentPage - 1) * pageSize + 1 : 0;
+  const lastRecord = Math.min(currentPage * pageSize, total);
+  const visiblePages = Array.from(
+    { length: Math.min(3, totalPages) },
+    (_, i) => Math.max(1, Math.min(currentPage - 1, totalPages - 2)) + i
+  );
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState("");
@@ -41,13 +97,13 @@ export default function DebtDiscountingFacilitiesPage() {
 
   async function loadRecords() {
     setLoading(true);
+    setError("");
     try {
-      const params=new URLSearchParams({page:String(page),pageSize:String(pageSize),search,filterType:filterValue.trim()?filterType:"",filterValue:filterValue.trim()});
-      const response = await fetch(`/api/debt-discounting-facilities?${params}`, {cache:"no-store"});
+      const response = await fetch("/api/debt-discounting-facilities", { cache: "no-store" });
       const result = await response.json() as ApiResult;
       if (!response.ok || !result.success) throw new Error(result.error || "دریافت اطلاعات ناموفق بود.");
       setRecords(result.records || []);
-      setTotal(result.total || 0);
+      setPage(1);
     } catch (e) {
       setError(e instanceof Error ? e.message : "خطا در دریافت اطلاعات");
     } finally {
@@ -56,9 +112,8 @@ export default function DebtDiscountingFacilitiesPage() {
   }
 
   useEffect(() => {
-    const timer=window.setTimeout(()=>{void loadRecords();},250);
-    return ()=>window.clearTimeout(timer);
-  },[page,pageSize,search,filterType,filterValue]);
+    void loadRecords();
+  }, []);
 
   async function syncRecords() {
     setError("");
@@ -142,9 +197,9 @@ export default function DebtDiscountingFacilitiesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {records.length === 0 ? (
+              {pageRecords.length === 0 ? (
                 <tr><td colSpan={10} className="px-4 py-12 text-center text-slate-500">{loading ? "در حال دریافت اطلاعات..." : "هنوز تسهیلاتی ثبت نشده است."}</td></tr>
-              ) : records.map((record) => (
+              ) : pageRecords.map((record, index) => (
                 <tr key={record.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3">{(firstRecord+index).toLocaleString("fa-IR")}</td>\n                  <td className="px-4 py-3">{record.id.toLocaleString("fa-IR")}</td>
                   <td className="px-4 py-3">{record.facilityTitle || record.contract.facilityTitle || "—"}</td>
