@@ -7,7 +7,7 @@ const allowedStatuses = ["فعال", "تسویه شده"];
 
 export async function GET() {
   try {
-    const records = await prisma.debtDiscountingFacility.findMany({
+    const records = await prisma.debtDocument.findMany({
       orderBy: { createdAt: "desc" },
       include: {
         contract: {
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "رکورد بایگانی پیدا نشد." }, { status: 404 });
     }
 
-    const record = await prisma.debtDiscountingFacility.create({
+    const record = await prisma.debtDocument.create({
       data: {
         contractId,
         facilityNumber: source.facilityNumber,
@@ -93,7 +93,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const record = await prisma.debtDiscountingFacility.update({
+    const record = await prisma.debtDocument.update({
       where: { id },
       data: { status: body.status },
       select: { id: true, status: true },
