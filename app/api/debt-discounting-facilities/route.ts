@@ -6,32 +6,30 @@ export const runtime = "nodejs";
 
 const allowedStatuses = ["فعال", "تسویه شده"];
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const p=request.nextUrl.searchParams,page=Math.max(1,Number(p.get("page")||1)),pageSize=Math.min(100,Math.max(10,Number(p.get("pageSize")||20)));
-    const search=(p.get("search")||"").trim(),filterType=p.get("filterType")||"",filterValue=(p.get("filterValue")||"").trim();
-    const fields=["facilityTitle","facilityNumber","counterLabel","serial","status","startDate","endDate"] as const;
-    const normalize=(v:string)=>v.replace(/[۰-۹٠-٩]/g,d=>{const x="۰۱۲۳۴۵۶۷۸۹".indexOf(d);return String(x>=0?x:"٠١٢٣٤٥٦٧٨٩".indexOf(d));});
-    const terms=[...new Set([search,normalize(search)].filter(Boolean))];
-    const where:Prisma.DebtDiscountingFacilityWhereInput={};
-    if(terms.length)where.OR=terms.flatMap(t=>[...fields.map(f=>({[f]:{contains:t,mode:"insensitive" as const}})),...(Number.isInteger(Number(t))&&Number(t)>0?[{id:Number(t)},{contractId:Number(t)}]:[])]);
-    const filterFields:Record<string,keyof Prisma.DebtDiscountingFacilityWhereInput>={facilityTitle:"facilityTitle",facilityNumber:"facilityNumber",contractId:"contractId",counterLabel:"counterLabel",serial:"serial",status:"status",startDate:"startDate",endDate:"endDate"};
-    const field=filterFields[filterType];
-    if(field&&filterValue){
-      if(filterType === "contractId" && !Number.isInteger(Number(normalize(filterValue)))) {
-        return NextResponse.json({success:true,records:[],total:0,page,pageSize});
-      }
-      const conditions = filterType === "contractId"
-        ? [{ contractId: Number(normalize(filterValue)) }]
-        : [...new Set([filterValue,normalize(filterValue)])].map(t=>({[field]:{contains:t,mode:"insensitive" as const}}));
-      if(where.OR){where.AND=[{OR:where.OR},{OR:conditions}];delete where.OR;}else where.OR=conditions;
-    }
-    const [records,total]=await Promise.all([
-      prisma.debtDiscountingFacility.findMany({where,orderBy:{createdAt:"desc"},skip:(page-1)*pageSize,take:pageSize,include:{contract:{select:{id:true,facilityNumber:true,facilityTitle:true,customerNumber:true}}}}),
-      prisma.debtDiscountingFacility.count({where})
-    ]);
-    return NextResponse.json({success:true,records,total,page,pageSize});
-  }catch(error){console.error("Debt discounting facilities list error:",error);return NextResponse.json({success:false,error:"خطا در دریافت فهرست تسهیلات خرید دین"},{status:500});}
+    const records = await prisma.debtDiscountingFacility.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        contract: {
+          select: {
+            id: true,
+            facilityNumber: true,
+            facilityTitle: true,
+            customerNumber: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({ success: true, records });
+  } catch (error) {
+    console.error("Debt discounting facilities list error:", error);
+    return NextResponse.json(
+      { success: false, error: "خطا در دریافت فهرست تسهیلات خرید دین" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(request: NextRequest) {
