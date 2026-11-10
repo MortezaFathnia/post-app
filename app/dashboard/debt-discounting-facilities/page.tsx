@@ -225,7 +225,7 @@ export default function DebtDiscountingFacilitiesPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 p-4">
           <div className="flex flex-wrap items-center gap-1.5">
             <button onClick={()=>setPage(1)} disabled={currentPage===1} className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40">اولین</button>
-            <button onClick={()=>setPage(v=>Math.max(1,v-1))} disabled={page===1} className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40">قبلی</button>
+            <button onClick={()=>setPage(Math.max(1,currentPage-1))} disabled={currentPage===1} className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40">قبلی</button>
             {visiblePages.map(n=><button key={n} onClick={()=>setPage(n)} className={`rounded-lg border px-3 py-2 text-sm ${n===currentPage?"bg-blue-600 text-white":""}`}>{n.toLocaleString("fa-IR")}</button>)}
             <button onClick={()=>setPage(Math.min(totalPages,currentPage+1))} disabled={currentPage===totalPages} className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40">بعدی</button>
             <button onClick={()=>setPage(totalPages)} disabled={currentPage===totalPages} className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40">آخرین</button>
