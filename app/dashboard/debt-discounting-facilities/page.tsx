@@ -156,7 +156,7 @@ export default function DebtDiscountingFacilitiesPage() {
     <div dir="rtl" className="space-y-6">
       <header>
         <h1 className="text-2xl font-bold text-slate-900">تسهیلات خرید دین</h1>
-        <p className="mt-2 text-sm text-slate-500">اطلاعات تسهیلات از جداول بایگانی و اسناد خرید دین دریافت می‌شود.</p>
+        <p className="mt-2 text-sm text-slate-500">اطلاعات تسهیلات از جدول DebtDocument دریافت می‌شود.</p>
       </header>
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -169,7 +169,7 @@ export default function DebtDiscountingFacilitiesPage() {
             <p className="mt-1 text-xs text-slate-500">تمام رکوردها دریافت می‌شوند؛ جستجو، فیلتر و صفحه‌بندی در مرورگر انجام می‌شود.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => void syncRecords()} disabled={syncing || loading} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{syncing ? "در حال همگام‌سازی..." : "بروزرسانی از جداول"}</button>
+            <button type="button" onClick={() => void syncRecords()} disabled={syncing || loading} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{syncing ? "در حال همگام‌سازی..." : "بروزرسانی اطلاعات تسهیلات"}</button>
             <button type="button" onClick={() => void loadRecords()} disabled={loading || syncing} className="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50">{loading ? "در حال دریافت..." : "بارگذاری مجدد"}</button>
           </div>
         </div>
