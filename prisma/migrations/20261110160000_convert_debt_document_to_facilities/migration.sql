@@ -1,4 +1,10 @@
 -- Convert DebtDocument into the facility master table.
+-- Recreate the table shell if an earlier migration removed it.
+CREATE TABLE IF NOT EXISTS "DebtDocument" (
+  "id" SERIAL PRIMARY KEY,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Keep existing rows, but remove the former customer/document-specific columns.
 ALTER TABLE "DebtDocument"
   DROP CONSTRAINT IF EXISTS "DebtDocument_customerId_fkey";
