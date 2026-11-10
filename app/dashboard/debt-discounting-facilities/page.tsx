@@ -2,14 +2,6 @@
 
 import { FormEvent, useEffect, useState } from "react";
 
-type CustomerOption = {
-  id: number;
-  type: string;
-  name: string | null;
-  companyName: string | null;
-  nationalCode: string | null;
-};
-
 type ContractOption = {
   id: number;
   facilityNumber: string | null;
@@ -19,16 +11,14 @@ type ContractOption = {
 
 type FacilityRecord = {
   id: number;
-  customerId: number;
   contractId: number;
-  customerName: string | null;
   facilityNumber: string | null;
+  facilityTitle: string | null;
   counterLabel: string | null;
   serial: string | null;
   status: string;
   startDate: string;
   endDate: string;
-  customer: CustomerOption;
   contract: ContractOption;
 };
 
@@ -36,22 +26,13 @@ type ApiResult = {
   success: boolean;
   error?: string;
   records?: FacilityRecord[];
-  customers?: CustomerOption[];
   contracts?: ContractOption[];
 };
 
-function customerTitle(customer: CustomerOption) {
-  return (customer.type === "COMPANY" ? customer.companyName : customer.name) ||
-    customer.nationalCode || `مشتری ${customer.id}`;
-}
-
 export default function DebtDiscountingFacilitiesPage() {
   const [records, setRecords] = useState<FacilityRecord[]>([]);
-  const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [contracts, setContracts] = useState<ContractOption[]>([]);
-  const [customerSearch, setCustomerSearch] = useState("");
   const [contractSearch, setContractSearch] = useState("");
-  const [customerId, setCustomerId] = useState("");
   const [contractId, setContractId] = useState("");
   const [status, setStatus] = useState("فعال");
   const [startDate, setStartDate] = useState("");
@@ -65,12 +46,11 @@ export default function DebtDiscountingFacilitiesPage() {
   async function loadRecords() {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ customerSearch, contractSearch });
+      const params = new URLSearchParams({ contractSearch });
       const response = await fetch(`/api/debt-discounting-facilities?${params}`, { cache: "no-store" });
       const result = await response.json() as ApiResult;
       if (!response.ok || !result.success) throw new Error(result.error || "دریافت اطلاعات ناموفق بود.");
       setRecords(result.records || []);
-      setCustomers(result.customers || []);
       setContracts(result.contracts || []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "خطا در دریافت اطلاعات");
@@ -82,23 +62,17 @@ export default function DebtDiscountingFacilitiesPage() {
   useEffect(() => {
     const timer = window.setTimeout(() => { void loadRecords(); }, 250);
     return () => window.clearTimeout(timer);
-  }, [customerSearch, contractSearch]);
+  }, [contractSearch]);
 
   async function syncRecords() {
     setError("");
     setMessage("");
     setSyncing(true);
     try {
-      const response = await fetch("/api/debt-discounting-facilities/sync", {
-        method: "POST",
-      });
+      const response = await fetch("/api/debt-discounting-facilities/sync", { method: "POST" });
       const result = await response.json();
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "همگام‌سازی اطلاعات ناموفق بود.");
-      }
-      setMessage(
-        `همگام‌سازی انجام شد؛ ${result.created} رکورد جدید، ${result.updated} بروزرسانی و ${result.skipped} مورد رد شد.`
-      );
+      if (!response.ok || !result.success) throw new Error(result.error || "همگام‌سازی اطلاعات ناموفق بود.");
+      setMessage(`همگام‌سازی انجام شد؛ ${result.created} رکورد جدید، ${result.updated} بروزرسانی و ${result.skipped} مورد رد شد.`);
       await loadRecords();
     } catch (e) {
       setError(e instanceof Error ? e.message : "خطا در همگام‌سازی اطلاعات");
@@ -116,12 +90,11 @@ export default function DebtDiscountingFacilitiesPage() {
       const response = await fetch("/api/debt-discounting-facilities", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customerId, contractId, status, startDate, endDate }),
+        body: JSON.stringify({ contractId, status, startDate, endDate }),
       });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || "ثبت اطلاعات ناموفق بود.");
       setMessage("تسهیلات خرید دین با موفقیت ثبت شد.");
-      setCustomerId("");
       setContractId("");
       setStatus("فعال");
       setStartDate("");
@@ -157,21 +130,13 @@ export default function DebtDiscountingFacilitiesPage() {
     <div dir="rtl" className="space-y-6">
       <header>
         <h1 className="text-2xl font-bold text-slate-900">تسهیلات خرید دین</h1>
-        <p className="mt-2 text-sm text-slate-500">ثبت و مدیریت تسهیلات مرتبط با مشتری و رکوردهای بایگانی تسهیلات</p>
+        <p className="mt-2 text-sm text-slate-500">اطلاعات تسهیلات از جداول بایگانی و اسناد خرید دین دریافت می‌شود.</p>
       </header>
 
       <form onSubmit={createRecord} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="font-bold text-slate-900">ثبت تسهیلات جدید</h2>
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <label htmlFor="customer-search" className="block text-sm font-medium text-slate-700">جستجوی مشتری</label>
-            <input id="customer-search" value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} placeholder="نام، نام شرکت، کد ملی یا موبایل" className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm" />
-            <select required value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm">
-              <option value="">انتخاب مشتری</option>
-              {customers.map((customer) => <option key={customer.id} value={customer.id}>{customerTitle(customer)} — شناسه {customer.id}</option>)}
-            </select>
-          </div>
-          <div className="space-y-2">
+          <div className="space-y-2 md:col-span-2">
             <label htmlFor="contract-search" className="block text-sm font-medium text-slate-700">جستجوی رکورد بایگانی تسهیلات</label>
             <input id="contract-search" value={contractSearch} onChange={(e) => setContractSearch(e.target.value)} placeholder="شماره تسهیلات، عنوان، شماره مشتری یا سریال" className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm" />
             <select required value={contractId} onChange={(e) => setContractId(e.target.value)} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm">
@@ -214,11 +179,11 @@ export default function DebtDiscountingFacilitiesPage() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1250px] text-right text-sm">
+          <table className="w-full min-w-[1350px] text-right text-sm">
             <thead className="bg-slate-50 text-slate-600">
               <tr>
                 <th className="px-4 py-3 font-semibold">شناسه</th>
-                <th className="px-4 py-3 font-semibold">مشتری</th>
+                <th className="px-4 py-3 font-semibold">عنوان تسهیلات</th>
                 <th className="px-4 py-3 font-semibold">شماره تسهیلات</th>
                 <th className="px-4 py-3 font-semibold">شناسه قرارداد</th>
                 <th className="px-4 py-3 font-semibold">کد باجه - نام باجه</th>
@@ -234,7 +199,7 @@ export default function DebtDiscountingFacilitiesPage() {
               ) : records.map((record) => (
                 <tr key={record.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3">{record.id.toLocaleString("fa-IR")}</td>
-                  <td className="px-4 py-3">{record.customerName || customerTitle(record.customer)}</td>
+                  <td className="px-4 py-3">{record.facilityTitle || record.contract.facilityTitle || "—"}</td>
                   <td className="px-4 py-3" dir="ltr">{record.facilityNumber || record.contract.facilityNumber || "—"}</td>
                   <td className="px-4 py-3">{record.contractId.toLocaleString("fa-IR")}</td>
                   <td className="px-4 py-3">{record.counterLabel || "—"}</td>
