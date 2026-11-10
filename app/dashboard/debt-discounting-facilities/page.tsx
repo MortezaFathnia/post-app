@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 type ContractOption = {
   id: number;
@@ -26,19 +26,11 @@ type ApiResult = {
   success: boolean;
   error?: string;
   records?: FacilityRecord[];
-  contracts?: ContractOption[];
 };
 
 export default function DebtDiscountingFacilitiesPage() {
   const [records, setRecords] = useState<FacilityRecord[]>([]);
-  const [contracts, setContracts] = useState<ContractOption[]>([]);
-  const [contractSearch, setContractSearch] = useState("");
-  const [contractId, setContractId] = useState("");
-  const [status, setStatus] = useState("فعال");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -46,12 +38,10 @@ export default function DebtDiscountingFacilitiesPage() {
   async function loadRecords() {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ contractSearch });
-      const response = await fetch(`/api/debt-discounting-facilities?${params}`, { cache: "no-store" });
+      const response = await fetch("/api/debt-discounting-facilities", { cache: "no-store" });
       const result = await response.json() as ApiResult;
       if (!response.ok || !result.success) throw new Error(result.error || "دریافت اطلاعات ناموفق بود.");
       setRecords(result.records || []);
-      setContracts(result.contracts || []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "خطا در دریافت اطلاعات");
     } finally {
@@ -60,9 +50,8 @@ export default function DebtDiscountingFacilitiesPage() {
   }
 
   useEffect(() => {
-    const timer = window.setTimeout(() => { void loadRecords(); }, 250);
-    return () => window.clearTimeout(timer);
-  }, [contractSearch]);
+    void loadRecords();
+  }, []);
 
   async function syncRecords() {
     setError("");
@@ -78,32 +67,6 @@ export default function DebtDiscountingFacilitiesPage() {
       setError(e instanceof Error ? e.message : "خطا در همگام‌سازی اطلاعات");
     } finally {
       setSyncing(false);
-    }
-  }
-
-  async function createRecord(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError("");
-    setMessage("");
-    setSaving(true);
-    try {
-      const response = await fetch("/api/debt-discounting-facilities", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contractId, status, startDate, endDate }),
-      });
-      const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || "ثبت اطلاعات ناموفق بود.");
-      setMessage("تسهیلات خرید دین با موفقیت ثبت شد.");
-      setContractId("");
-      setStatus("فعال");
-      setStartDate("");
-      setEndDate("");
-      await loadRecords();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "خطا در ثبت اطلاعات");
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -133,41 +96,10 @@ export default function DebtDiscountingFacilitiesPage() {
         <p className="mt-2 text-sm text-slate-500">اطلاعات تسهیلات از جداول بایگانی و اسناد خرید دین دریافت می‌شود.</p>
       </header>
 
-      <form onSubmit={createRecord} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="font-bold text-slate-900">ثبت تسهیلات جدید</h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2 md:col-span-2">
-            <label htmlFor="contract-search" className="block text-sm font-medium text-slate-700">جستجوی رکورد بایگانی تسهیلات</label>
-            <input id="contract-search" value={contractSearch} onChange={(e) => setContractSearch(e.target.value)} placeholder="شماره تسهیلات، عنوان، شماره مشتری یا سریال" className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm" />
-            <select required value={contractId} onChange={(e) => setContractId(e.target.value)} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm">
-              <option value="">انتخاب رکورد بایگانی</option>
-              {contracts.map((contract) => <option key={contract.id} value={contract.id}>شناسه {contract.id} — {contract.facilityNumber || "بدون شماره"} — {contract.facilityTitle || "بدون عنوان"}</option>)}
-            </select>
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="facility-status" className="block text-sm font-medium text-slate-700">وضعیت</label>
-            <select id="facility-status" value={status} onChange={(e) => setStatus(e.target.value)} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm">
-              <option value="فعال">فعال</option>
-              <option value="تسویه شده">تسویه شده</option>
-            </select>
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="facility-start-date" className="block text-sm font-medium text-slate-700">تاریخ شروع</label>
-            <input id="facility-start-date" required value={startDate} onChange={(e) => setStartDate(e.target.value)} placeholder="مثلاً ۱۴۰۵/۰۱/۰۱" className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm" />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="facility-end-date" className="block text-sm font-medium text-slate-700">تاریخ پایان</label>
-            <input id="facility-end-date" required value={endDate} onChange={(e) => setEndDate(e.target.value)} placeholder="مثلاً ۱۴۰۶/۰۱/۰۱" className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm" />
-          </div>
-        </div>
-        <button type="submit" disabled={saving} className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
-          {saving ? "در حال ثبت..." : "ثبت تسهیلات خرید دین"}
-        </button>
-        {message && <p className="text-sm text-emerald-700">{message}</p>}
-        {error && <p className="text-sm text-red-600">{error}</p>}
-      </form>
-
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        {message && <p className="border-b border-slate-100 px-5 py-3 text-sm text-emerald-700">{message}</p>}
+        {error && <p className="border-b border-slate-100 px-5 py-3 text-sm text-red-600">{error}</p>}
+
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-5">
           <div>
             <h2 className="font-bold text-slate-900">فهرست تسهیلات خرید دین</h2>
