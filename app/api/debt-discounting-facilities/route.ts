@@ -7,52 +7,39 @@ const allowedStatuses = ["فعال", "تسویه شده"];
 
 export async function GET(request: NextRequest) {
   try {
-    const params = request.nextUrl.searchParams;
-    const customerSearch = (params.get("customerSearch") || "").trim();
-    const contractSearch = (params.get("contractSearch") || "").trim();
-
-    const [records, customers, contracts] = await Promise.all([
-      prisma.debtDiscountingFacility.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 200,
-        include: {
-          customer: { select: { id: true, type: true, name: true, companyName: true, nationalCode: true } },
-          contract: { select: { id: true, facilityNumber: true, facilityTitle: true, customerNumber: true } },
+    const contractSearch = (request.nextUrl.searchParams.get("contractSearch") || "").trim();
+    const records = await prisma.debtDiscountingFacility.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 200,
+      include: {
+        contract: {
+          select: {
+            id: true,
+            facilityNumber: true,
+            facilityTitle: true,
+            customerNumber: true,
+          },
         },
-      }),
-      prisma.customer.findMany({
-        where: customerSearch
-          ? {
-              OR: [
-                { name: { contains: customerSearch, mode: "insensitive" } },
-                { companyName: { contains: customerSearch, mode: "insensitive" } },
-                { nationalCode: { contains: customerSearch, mode: "insensitive" } },
-                { mobile: { contains: customerSearch, mode: "insensitive" } },
-              ],
-            }
-          : undefined,
-        orderBy: { id: "desc" },
-        take: 30,
-        select: { id: true, type: true, name: true, companyName: true, nationalCode: true },
-      }),
-      prisma.bayeganiRecord.findMany({
-        where: contractSearch
-          ? {
-              OR: [
-                { facilityNumber: { contains: contractSearch, mode: "insensitive" } },
-                { facilityTitle: { contains: contractSearch, mode: "insensitive" } },
-                { customerNumber: { contains: contractSearch, mode: "insensitive" } },
-                { serial: { contains: contractSearch, mode: "insensitive" } },
-              ],
-            }
-          : undefined,
-        orderBy: { id: "desc" },
-        take: 30,
-        select: { id: true, facilityNumber: true, facilityTitle: true, customerNumber: true },
-      }),
-    ]);
+      },
+    });
 
-    return NextResponse.json({ success: true, records, customers, contracts });
+    const contracts = await prisma.bayeganiRecord.findMany({
+      where: contractSearch
+        ? {
+            OR: [
+              { facilityNumber: { contains: contractSearch, mode: "insensitive" } },
+              { facilityTitle: { contains: contractSearch, mode: "insensitive" } },
+              { customerNumber: { contains: contractSearch, mode: "insensitive" } },
+              { serial: { contains: contractSearch, mode: "insensitive" } },
+            ],
+          }
+        : undefined,
+      orderBy: { id: "desc" },
+      take: 50,
+      select: { id: true, facilityNumber: true, facilityTitle: true, customerNumber: true },
+    });
+
+    return NextResponse.json({ success: true, records, contracts });
   } catch (error) {
     console.error("Debt discounting facilities list error:", error);
     return NextResponse.json(
@@ -65,29 +52,43 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json() as {
-      customerId?: number | string;
       contractId?: number | string;
       status?: string;
       startDate?: string;
       endDate?: string;
     };
-    const customerId = Number(body.customerId);
     const contractId = Number(body.contractId);
     const status = body.status || "فعال";
     const startDate = String(body.startDate || "").trim();
     const endDate = String(body.endDate || "").trim();
 
-    if (!Number.isInteger(customerId) || customerId <= 0 ||
-        !Number.isInteger(contractId) || contractId <= 0 ||
+    if (!Number.isInteger(contractId) || contractId <= 0 ||
         !allowedStatuses.includes(status) || !startDate || !endDate) {
       return NextResponse.json(
-        { success: false, error: "مشتری، رکورد بایگانی، وضعیت و تاریخ شروع و پایان را بررسی کنید." },
+        { success: false, error: "رکورد بایگانی، وضعیت و تاریخ شروع و پایان را بررسی کنید." },
         { status: 400 },
       );
     }
 
+    const source = await prisma.bayeganiRecord.findUnique({
+      where: { id: contractId },
+      select: { facilityNumber: true, facilityTitle: true, counterLabel: true, serial: true },
+    });
+    if (!source) {
+      return NextResponse.json({ success: false, error: "رکورد بایگانی پیدا نشد." }, { status: 404 });
+    }
+
     const record = await prisma.debtDiscountingFacility.create({
-      data: { customerId, contractId, status, startDate, endDate },
+      data: {
+        contractId,
+        facilityNumber: source.facilityNumber,
+        facilityTitle: source.facilityTitle,
+        counterLabel: source.counterLabel,
+        serial: source.serial,
+        status,
+        startDate,
+        endDate,
+      },
     });
     return NextResponse.json({ success: true, record });
   } catch (error) {
