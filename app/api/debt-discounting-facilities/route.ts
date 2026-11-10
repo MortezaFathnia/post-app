@@ -17,7 +17,10 @@ export async function GET(request: NextRequest) {
     const filterFields:Record<string,keyof Prisma.DebtDiscountingFacilityWhereInput>={facilityTitle:"facilityTitle",facilityNumber:"facilityNumber",contractId:"contractId",counterLabel:"counterLabel",serial:"serial",status:"status",startDate:"startDate",endDate:"endDate"};
     const field=filterFields[filterType];
     if(field&&filterValue){
-      const conditions = filterType === "contractId" && Number.isInteger(Number(normalize(filterValue)))
+      if(filterType === "contractId" && !Number.isInteger(Number(normalize(filterValue)))) {
+        return NextResponse.json({success:true,records:[],total:0,page,pageSize});
+      }
+      const conditions = filterType === "contractId"
         ? [{ contractId: Number(normalize(filterValue)) }]
         : [...new Set([filterValue,normalize(filterValue)])].map(t=>({[field]:{contains:t,mode:"insensitive" as const}}));
       if(where.OR){where.AND=[{OR:where.OR},{OR:conditions}];delete where.OR;}else where.OR=conditions;
