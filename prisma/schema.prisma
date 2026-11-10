@@ -302,7 +302,7 @@ model DebtDiscountingRecord {
 
   @@index([facilityNumber])
   @@index([counterLabel])
-  @@unique([serial, administrativeNumber])
+  @@unique([checkNumber, administrativeNumber])
   @@index([sourceFile, sheetName])
 }
 
