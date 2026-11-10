@@ -185,7 +185,8 @@ export default function DebtDiscountingFacilitiesPage() {
           <table className="w-full min-w-[1350px] text-right text-sm">
             <thead className="bg-slate-50 text-slate-600">
               <tr>
-                <th className="px-4 py-3 font-semibold">ردیف</th>\n                <th className="px-4 py-3 font-semibold">شناسه</th>
+                <th className="px-4 py-3 font-semibold">ردیف</th>
+                <th className="px-4 py-3 font-semibold">شناسه</th>
                 <th className="px-4 py-3 font-semibold">عنوان تسهیلات</th>
                 <th className="px-4 py-3 font-semibold">شماره تسهیلات</th>
                 <th className="px-4 py-3 font-semibold">شناسه قرارداد</th>
@@ -201,7 +202,8 @@ export default function DebtDiscountingFacilitiesPage() {
                 <tr><td colSpan={10} className="px-4 py-12 text-center text-slate-500">{loading ? "در حال دریافت اطلاعات..." : "هنوز تسهیلاتی ثبت نشده است."}</td></tr>
               ) : pageRecords.map((record, index) => (
                 <tr key={record.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3">{(firstRecord+index).toLocaleString("fa-IR")}</td>\n                  <td className="px-4 py-3">{record.id.toLocaleString("fa-IR")}</td>
+                  <td className="px-4 py-3">{(firstRecord+index).toLocaleString("fa-IR")}</td>
+                  <td className="px-4 py-3">{record.id.toLocaleString("fa-IR")}</td>
                   <td className="px-4 py-3">{record.facilityTitle || record.contract.facilityTitle || "—"}</td>
                   <td className="px-4 py-3" dir="ltr">{record.facilityNumber || record.contract.facilityNumber || "—"}</td>
                   <td className="px-4 py-3">{record.contractId.toLocaleString("fa-IR")}</td>
@@ -222,11 +224,11 @@ export default function DebtDiscountingFacilitiesPage() {
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 p-4">
           <div className="flex flex-wrap items-center gap-1.5">
-            <button onClick={()=>setPage(1)} disabled={page===1} className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40">اولین</button>
+            <button onClick={()=>setPage(1)} disabled={currentPage===1} className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40">اولین</button>
             <button onClick={()=>setPage(v=>Math.max(1,v-1))} disabled={page===1} className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40">قبلی</button>
-            {visiblePages.map(n=><button key={n} onClick={()=>setPage(n)} className={`rounded-lg border px-3 py-2 text-sm ${n===page?"bg-blue-600 text-white":""}`}>{n.toLocaleString("fa-IR")}</button>)}
-            <button onClick={()=>setPage(v=>Math.min(totalPages,v+1))} disabled={page===totalPages} className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40">بعدی</button>
-            <button onClick={()=>setPage(totalPages)} disabled={page===totalPages} className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40">آخرین</button>
+            {visiblePages.map(n=><button key={n} onClick={()=>setPage(n)} className={`rounded-lg border px-3 py-2 text-sm ${n===currentPage?"bg-blue-600 text-white":""}`}>{n.toLocaleString("fa-IR")}</button>)}
+            <button onClick={()=>setPage(Math.min(totalPages,currentPage+1))} disabled={currentPage===totalPages} className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40">بعدی</button>
+            <button onClick={()=>setPage(totalPages)} disabled={currentPage===totalPages} className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40">آخرین</button>
             <select value={pageSize} onChange={e=>{setPageSize(Number(e.target.value));setPage(1);}} className="rounded-lg border px-3 py-2 text-sm"><option value={10}>۱۰ در صفحه</option><option value={20}>۲۰ در صفحه</option><option value={50}>۵۰ در صفحه</option><option value={100}>۱۰۰ در صفحه</option></select>
           </div>
           <div className="text-sm text-slate-600">تعداد کل: {total.toLocaleString("fa-IR")} | نمایش {firstRecord.toLocaleString("fa-IR")} تا {lastRecord.toLocaleString("fa-IR")}</div>
