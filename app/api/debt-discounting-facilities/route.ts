@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";\nimport { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -16,7 +16,12 @@ export async function GET(request: NextRequest) {
     if(terms.length)where.OR=terms.flatMap(t=>[...fields.map(f=>({[f]:{contains:t,mode:"insensitive" as const}})),...(Number.isInteger(Number(t))&&Number(t)>0?[{id:Number(t)},{contractId:Number(t)}]:[])]);
     const filterFields:Record<string,keyof Prisma.DebtDiscountingFacilityWhereInput>={facilityTitle:"facilityTitle",facilityNumber:"facilityNumber",contractId:"contractId",counterLabel:"counterLabel",serial:"serial",status:"status",startDate:"startDate",endDate:"endDate"};
     const field=filterFields[filterType];
-    if(field&&filterValue){const conditions=[...new Set([filterValue,normalize(filterValue)])].map(t=>({[field]:{contains:t,mode:"insensitive" as const}}));if(where.OR){where.AND=[{OR:where.OR},{OR:conditions}];delete where.OR;}else where.OR=conditions;}
+    if(field&&filterValue){
+      const conditions = filterType === "contractId" && Number.isInteger(Number(normalize(filterValue)))
+        ? [{ contractId: Number(normalize(filterValue)) }]
+        : [...new Set([filterValue,normalize(filterValue)])].map(t=>({[field]:{contains:t,mode:"insensitive" as const}}));
+      if(where.OR){where.AND=[{OR:where.OR},{OR:conditions}];delete where.OR;}else where.OR=conditions;
+    }
     const [records,total]=await Promise.all([
       prisma.debtDiscountingFacility.findMany({where,orderBy:{createdAt:"desc"},skip:(page-1)*pageSize,take:pageSize,include:{contract:{select:{id:true,facilityNumber:true,facilityTitle:true,customerNumber:true}}}}),
       prisma.debtDiscountingFacility.count({where})
