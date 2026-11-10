@@ -13,24 +13,21 @@ export async function POST() {
 
     const facilityNumbers = sourceFacilities
       .map((item) => item.facilityNumber)
-      .filter((value): value is string => Boolean(value));
+      .filter(Boolean);
 
     if (facilityNumbers.length === 0) {
       return NextResponse.json({
-        success: true,
-        created: 0,
-        updated: 0,
-        skipped: 0,
-        message: "هیچ شماره تسهیلات مشترکی پیدا نشد.",
+        success: true, created: 0, updated: 0, skipped: 0,
+        message: "هیچ شماره تسهیلاتی در جدول اسناد خرید دین وجود ندارد.",
       });
     }
 
-    const bayeganiRecords = await prisma.bayeganiRecord.findMany({
+    const sourceRecords = await prisma.bayeganiRecord.findMany({
       where: { facilityNumber: { in: facilityNumbers } },
       select: {
         id: true,
         facilityNumber: true,
-        customerNumber: true,
+        facilityTitle: true,
         counterLabel: true,
         serial: true,
         startDate: true,
@@ -38,57 +35,16 @@ export async function POST() {
       },
     });
 
-    const customerNumbers = Array.from(
-      new Set(
-        bayeganiRecords
-          .map((record) => record.customerNumber)
-          .filter((value): value is string => Boolean(value))
-      )
-    );
-
-    const customers = customerNumbers.length
-      ? await prisma.customer.findMany({
-          where: { debtorCustomerNumber: { in: customerNumbers } },
-          select: {
-            id: true,
-            debtorCustomerNumber: true,
-            name: true,
-            companyName: true,
-          },
-        })
-      : [];
-
-    const customersByNumber = new Map<string, typeof customers>();
-    for (const customer of customers) {
-      if (!customer.debtorCustomerNumber) continue;
-      const matches = customersByNumber.get(customer.debtorCustomerNumber) || [];
-      matches.push(customer);
-      customersByNumber.set(customer.debtorCustomerNumber, matches);
-    }
-
     let created = 0;
     let updated = 0;
-    let skipped = 0;
 
     await prisma.$transaction(async (tx) => {
-      for (const source of bayeganiRecords) {
-        if (!source.facilityNumber || !source.customerNumber) {
-          skipped++;
-          continue;
-        }
+      for (const source of sourceRecords) {
+        if (!source.facilityNumber) continue;
 
-        const matchingCustomers = customersByNumber.get(source.customerNumber) || [];
-        if (matchingCustomers.length !== 1) {
-          skipped++;
-          continue;
-        }
-
-        const customer = matchingCustomers[0];
-        const customerName = customer.name || customer.companyName || null;
         const data = {
-          customerId: customer.id,
-          customerName,
           facilityNumber: source.facilityNumber,
+          facilityTitle: source.facilityTitle,
           counterLabel: source.counterLabel,
           serial: source.serial,
           startDate: source.startDate || "",
@@ -108,16 +64,14 @@ export async function POST() {
           updated++;
         } else {
           await tx.debtDiscountingFacility.create({
-            data: {
-              ...data,
-              contractId: source.id,
-            },
+            data: { ...data, contractId: source.id },
           });
           created++;
         }
       }
     });
 
+    const skipped = Math.max(0, sourceFacilities.length - sourceRecords.length);
     return NextResponse.json({
       success: true,
       created,
@@ -130,9 +84,7 @@ export async function POST() {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error
-          ? error.message
-          : "همگام‌سازی اطلاعات تسهیلات خرید دین ناموفق بود.",
+        error: error instanceof Error ? error.message : "همگام‌سازی اطلاعات تسهیلات خرید دین ناموفق بود.",
       },
       { status: 500 },
     );
