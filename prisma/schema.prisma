@@ -198,7 +198,6 @@ model Customer {
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
   debtDocuments DebtDocument[]
-  debtDiscountingFacilities DebtDiscountingFacility[]
 }
 
 model DebtDocument {
@@ -309,21 +308,18 @@ model DebtDiscountingRecord {
 
 model DebtDiscountingFacility {
   id             Int            @id @default(autoincrement())
-  customerId     Int
   contractId     Int
-  customerName   String?
   facilityNumber String?
+  facilityTitle  String?
   counterLabel   String?
   serial         String?
   status         String         @default("فعال")
   startDate      String
   endDate        String
-  customer       Customer       @relation(fields: [customerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   contract       BayeganiRecord @relation(fields: [contractId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
-  @@index([customerId])
   @@index([contractId])
   @@index([facilityNumber])
   @@index([status])
