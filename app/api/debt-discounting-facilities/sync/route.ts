@@ -25,39 +25,38 @@ export async function POST() {
       });
     }
 
-    const [bayeganiRecords, customers] = await Promise.all([
-      prisma.bayeganiRecord.findMany({
-        where: { facilityNumber: { in: facilityNumbers } },
-        select: {
-          id: true,
-          facilityNumber: true,
-          customerNumber: true,
-          counterLabel: true,
-          serial: true,
-          startDate: true,
-          endDate: true,
-        },
-      }),
-      prisma.customer.findMany({
-        where: {
-          debtorCustomerNumber: {
-            in: (await prisma.bayeganiRecord.findMany({
-              where: { facilityNumber: { in: facilityNumbers } },
-              distinct: ["customerNumber"],
-              select: { customerNumber: true },
-            }))
-              .map((item) => item.customerNumber)
-              .filter((value): value is string => Boolean(value)),
+    const bayeganiRecords = await prisma.bayeganiRecord.findMany({
+      where: { facilityNumber: { in: facilityNumbers } },
+      select: {
+        id: true,
+        facilityNumber: true,
+        customerNumber: true,
+        counterLabel: true,
+        serial: true,
+        startDate: true,
+        endDate: true,
+      },
+    });
+
+    const customerNumbers = Array.from(
+      new Set(
+        bayeganiRecords
+          .map((record) => record.customerNumber)
+          .filter((value): value is string => Boolean(value))
+      )
+    );
+
+    const customers = customerNumbers.length
+      ? await prisma.customer.findMany({
+          where: { debtorCustomerNumber: { in: customerNumbers } },
+          select: {
+            id: true,
+            debtorCustomerNumber: true,
+            name: true,
+            companyName: true,
           },
-        },
-        select: {
-          id: true,
-          debtorCustomerNumber: true,
-          name: true,
-          companyName: true,
-        },
-      }),
-    ]);
+        })
+      : [];
 
     const customersByNumber = new Map<string, typeof customers>();
     for (const customer of customers) {
