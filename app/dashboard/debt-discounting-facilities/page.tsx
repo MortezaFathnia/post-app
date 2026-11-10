@@ -11,7 +11,7 @@ type ContractOption = {
 
 type FacilityRecord = {
   id: number;
-  contractId: number;
+  contractId: number | null;
   facilityNumber: string | null;
   facilityTitle: string | null;
   counterLabel: string | null;
@@ -19,7 +19,7 @@ type FacilityRecord = {
   status: string;
   startDate: string;
   endDate: string;
-  contract: ContractOption;
+  contract: ContractOption | null;
 };
 
 type ApiResult = {
@@ -204,9 +204,9 @@ export default function DebtDiscountingFacilitiesPage() {
                 <tr key={record.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3">{(firstRecord+index).toLocaleString("fa-IR")}</td>
                   <td className="px-4 py-3">{record.id.toLocaleString("fa-IR")}</td>
-                  <td className="px-4 py-3">{record.facilityTitle || record.contract.facilityTitle || "—"}</td>
-                  <td className="px-4 py-3" dir="ltr">{record.facilityNumber || record.contract.facilityNumber || "—"}</td>
-                  <td className="px-4 py-3">{record.contractId.toLocaleString("fa-IR")}</td>
+                  <td className="px-4 py-3">{record.facilityTitle || record.contract?.facilityTitle || "—"}</td>
+                  <td className="px-4 py-3" dir="ltr">{record.facilityNumber || record.contract?.facilityNumber || "—"}</td>
+                  <td className="px-4 py-3">{record.contractId?.toLocaleString("fa-IR") || "—"}</td>
                   <td className="px-4 py-3">{record.counterLabel || "—"}</td>
                   <td className="px-4 py-3" dir="ltr">{record.serial || "—"}</td>
                   <td className="px-4 py-3">
