@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";\nimport { Prisma } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
