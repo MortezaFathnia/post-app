@@ -477,7 +477,7 @@ export async function POST(request: NextRequest) {
     const countFormatRows = countFormat || simpleCountFormat || newFormat
       ? rows.map((row) => {
           const amount = Number(textCell(row, "مبلغ چک").replace(/,/g, "").replace(/[^0-9.-]/g, ""));
-          const amountInOutputUnit = Number.isFinite(amount) ? String(Math.round(amount * 100)) : "";
+          const amountInOutputUnit = Number.isFinite(amount) ? String(Math.round(amount)) : "";
           const dueDate = textCell(row, "تاریخ سررسید");
           const administrativeNumber = textCell(
             row,
