@@ -166,7 +166,7 @@ export default function DebtDiscountingFacilitiesPage() {
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-5">
           <div>
             <h2 className="font-bold text-slate-900">فهرست تسهیلات خرید دین</h2>
-            <p className="mt-1 text-xs text-slate-500">حداکثر ۲۰۰ رکورد آخر نمایش داده می‌شود.</p>
+            <p className="mt-1 text-xs text-slate-500">تمام رکوردها دریافت می‌شوند؛ جستجو، فیلتر و صفحه‌بندی در مرورگر انجام می‌شود.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => void syncRecords()} disabled={syncing || loading} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{syncing ? "در حال همگام‌سازی..." : "بروزرسانی از جداول"}</button>
