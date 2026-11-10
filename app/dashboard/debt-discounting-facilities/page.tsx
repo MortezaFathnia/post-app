@@ -182,14 +182,12 @@ export default function DebtDiscountingFacilitiesPage() {
           <button onClick={()=>{setSearch("");setFilterValue("");setPage(1);}} className="rounded-xl border px-4 py-2 text-sm">پاک کردن</button>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1350px] text-right text-sm">
+          <table className="w-full min-w-[1150px] text-right text-sm">
             <thead className="bg-slate-50 text-slate-600">
               <tr>
                 <th className="px-4 py-3 font-semibold">ردیف</th>
-                <th className="px-4 py-3 font-semibold">شناسه</th>
                 <th className="px-4 py-3 font-semibold">عنوان تسهیلات</th>
                 <th className="px-4 py-3 font-semibold">شماره تسهیلات</th>
-                <th className="px-4 py-3 font-semibold">شناسه قرارداد</th>
                 <th className="px-4 py-3 font-semibold">کد باجه - نام باجه</th>
                 <th className="px-4 py-3 font-semibold">سریال</th>
                 <th className="px-4 py-3 font-semibold">وضعیت</th>
@@ -199,14 +197,12 @@ export default function DebtDiscountingFacilitiesPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {pageRecords.length === 0 ? (
-                <tr><td colSpan={10} className="px-4 py-12 text-center text-slate-500">{loading ? "در حال دریافت اطلاعات..." : "هنوز تسهیلاتی ثبت نشده است."}</td></tr>
+                <tr><td colSpan={8} className="px-4 py-12 text-center text-slate-500">{loading ? "در حال دریافت اطلاعات..." : "هنوز تسهیلاتی ثبت نشده است."}</td></tr>
               ) : pageRecords.map((record, index) => (
                 <tr key={record.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3">{(firstRecord+index).toLocaleString("fa-IR")}</td>
-                  <td className="px-4 py-3">{record.id.toLocaleString("fa-IR")}</td>
                   <td className="px-4 py-3">{record.facilityTitle || record.contract?.facilityTitle || "—"}</td>
                   <td className="px-4 py-3" dir="ltr">{record.facilityNumber || record.contract?.facilityNumber || "—"}</td>
-                  <td className="px-4 py-3">{record.contractId?.toLocaleString("fa-IR") || "—"}</td>
                   <td className="px-4 py-3">{record.counterLabel || "—"}</td>
                   <td className="px-4 py-3" dir="ltr">{record.serial || "—"}</td>
                   <td className="px-4 py-3">
