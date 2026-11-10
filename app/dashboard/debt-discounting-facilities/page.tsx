@@ -46,7 +46,8 @@ export default function DebtDiscountingFacilitiesPage() {
       const response = await fetch(`/api/debt-discounting-facilities?${params}`, {cache:"no-store"});
       const result = await response.json() as ApiResult;
       if (!response.ok || !result.success) throw new Error(result.error || "دریافت اطلاعات ناموفق بود.");
-      setRecords(result.records || []);\n      setTotal(result.total || 0);
+      setRecords(result.records || []);
+      setTotal(result.total || 0);
     } catch (e) {
       setError(e instanceof Error ? e.message : "خطا در دریافت اطلاعات");
     } finally {
