@@ -388,14 +388,14 @@ export async function POST(request: NextRequest) {
 
     const pairRows = new Map<
       string,
-      { serial: string; administrativeNumber: string; sourceRows: number[] }
+      { checkNumber: string; administrativeNumber: string; sourceRows: number[] }
     >();
 
     for (const record of records) {
-      if (!record.serial || !record.administrativeNumber) continue;
-      const key = JSON.stringify([record.serial, record.administrativeNumber]);
+      if (!record.checkNumber || !record.administrativeNumber) continue;
+      const key = JSON.stringify([record.checkNumber, record.administrativeNumber]);
       const pair = pairRows.get(key) ?? {
-        serial: record.serial,
+        checkNumber: record.checkNumber,
         administrativeNumber: record.administrativeNumber,
         sourceRows: [],
       };
@@ -407,7 +407,7 @@ export async function POST(request: NextRequest) {
     for (const pair of pairRows.values()) {
       if (pair.sourceRows.length > 1) {
         conflicts.push(
-          `ترکیب سریال «${pair.serial}» و شماره انتظامی «${pair.administrativeNumber}» در ردیف‌های فایل ${pair.sourceRows.join("، ")} تکراری است.`,
+          `ترکیب شماره چک «${pair.checkNumber}» و شماره انتظامی «${pair.administrativeNumber}» در ردیف‌های فایل ${pair.sourceRows.join("، ")} تکراری است.`,
         );
       }
     }
@@ -417,21 +417,21 @@ export async function POST(request: NextRequest) {
       const existing = await prisma.debtDiscountingRecord.findMany({
         where: {
           OR: pairs.map((pair) => ({
-            serial: pair.serial,
+            checkNumber: pair.checkNumber,
             administrativeNumber: pair.administrativeNumber,
           })),
         },
-        select: { serial: true, administrativeNumber: true },
+        select: { checkNumber: true, administrativeNumber: true },
       });
       const existingKeys = new Set(
-        existing.map((record) => JSON.stringify([record.serial, record.administrativeNumber])),
+        existing.map((record) => JSON.stringify([record.checkNumber, record.administrativeNumber])),
       );
 
       for (const pair of pairs) {
-        const key = JSON.stringify([pair.serial, pair.administrativeNumber]);
+        const key = JSON.stringify([pair.checkNumber, pair.administrativeNumber]);
         if (existingKeys.has(key)) {
           conflicts.push(
-            `ترکیب سریال «${pair.serial}» و شماره انتظامی «${pair.administrativeNumber}» از قبل در جدول اسناد خرید دین ثبت شده است.`,
+            `ترکیب شماره چک «${pair.checkNumber}» و شماره انتظامی «${pair.administrativeNumber}» از قبل در جدول اسناد خرید دین ثبت شده است.`,
           );
         }
       }
@@ -441,7 +441,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "بارگذاری انجام نشد؛ ترکیب سریال سفته / چک و شماره انتظامی باید در کل جدول یکتا باشد.",
+          error: "بارگذاری انجام نشد؛ ترکیب شماره چک و شماره انتظامی باید در کل جدول یکتا باشد.",
           conflicts,
         },
         { status: 409 },
