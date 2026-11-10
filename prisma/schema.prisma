@@ -197,7 +197,7 @@ model Customer {
 
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
-  debtDocuments DebtDocument[]
+
 }
 
 model DebtDocument {
