@@ -51,19 +51,19 @@ export async function POST() {
           endDate: source.endDate || "",
         };
 
-        const existing = await tx.debtDiscountingFacility.findFirst({
+        const existing = await tx.debtDocument.findFirst({
           where: { contractId: source.id },
           select: { id: true },
         });
 
         if (existing) {
-          await tx.debtDiscountingFacility.update({
+          await tx.debtDocument.update({
             where: { id: existing.id },
             data,
           });
           updated++;
         } else {
-          await tx.debtDiscountingFacility.create({
+          await tx.debtDocument.create({
             data: { ...data, contractId: source.id },
           });
           created++;
@@ -80,7 +80,7 @@ export async function POST() {
       message: "همگام‌سازی اطلاعات تسهیلات خرید دین انجام شد.",
     });
   } catch (error) {
-    console.error("Debt discounting facilities sync error:", error);
+    console.error("DebtDocument facilities sync error:", error);
     return NextResponse.json(
       {
         success: false,
