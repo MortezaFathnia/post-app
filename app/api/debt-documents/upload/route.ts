@@ -28,6 +28,46 @@ function textCell(row: Record<string, unknown>, key: string): string {
   return /^[-+]?\d{1,3}(,\d{3})+(\.\d+)?$/.test(cell) ? cell.replace(/,/g, "") : cell;
 }
 
+function addOneDayToShamsiDate(input: string | null): string | null {
+  if (!input) return input;
+
+  const normalized = input
+    .replace(/[۰-۹٠-٩]/g, (digit) => {
+      const persian = "۰۱۲۳۴۵۶۷۸۹";
+      const arabic = "٠١٢٣٤٥٦٧٨٩";
+      const persianIndex = persian.indexOf(digit);
+      return String(persianIndex >= 0 ? persianIndex : arabic.indexOf(digit));
+    })
+    .replace(/\//g, "-");
+  const match = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (!match) return input;
+
+  const [, yearText, monthText, dayText] = match;
+  const target = `${yearText}-${monthText.padStart(2, "0")}-${dayText.padStart(2, "0")}`;
+  const formatter = new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const formattedDate = (date: Date) => {
+    const parts = formatter.formatToParts(date);
+    const part = (type: Intl.DateTimeFormatPartTypes) =>
+      parts.find((item) => item.type === type)?.value ?? "";
+    return `${part("year")}-${part("month")}-${part("day")}`;
+  };
+
+  // Locate the Gregorian day corresponding to the Jalali date, then advance one day.
+  const start = Date.UTC(Number(yearText) + 621, 0, 1, 12);
+  for (let offset = 0; offset < 400; offset += 1) {
+    const date = new Date(start + offset * 86_400_000);
+    if (formattedDate(date) === target) {
+      return formattedDate(new Date(date.getTime() + 86_400_000));
+    }
+  }
+  return input;
+}
+
 function shamsiDateString(date = new Date()): string {
   const parts = new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", {
     timeZone: "Asia/Tehran",
@@ -347,7 +387,7 @@ export async function POST(request: NextRequest) {
           checkNumber,
           checkStatus: "درراه",
           domesticForeign: value(row, "چک داخلی یا خارجی"),
-          dueDate: value(row, "تاریخ سررسید"),
+          dueDate: addOneDayToShamsiDate(value(row, "تاریخ سررسید")),
           paidAmount: value(row, "مبلغ چک"),
           unpaidAmount: null,
           embeddedProfit: null,
@@ -490,7 +530,7 @@ export async function POST(request: NextRequest) {
             dueDate,
             "L",
             "0",
-            dueDate,
+            addOneDayToShamsiDate(dueDate) ?? dueDate,
             "0",
             "0",
             "17",
