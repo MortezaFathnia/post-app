@@ -196,7 +196,9 @@ export default function DebtDocumentsUploadPage() {
       setOutputCustomerNumber("");
 
       if (result.textContent !== undefined) {
-        const blob = new Blob(["\uFEFF", result.textContent], { type: "text/plain;charset=utf-8" });
+        // Normalize every line ending to Windows CRLF and include a UTF-8 BOM for Windows text editors.
+const windowsText = result.textContent.replace(/\r\n|\r|\n/g, "\r\n");
+const blob = new Blob(["\uFEFF", windowsText], { type: "text/plain;charset=utf-8" });
         setOutputFileUrl(URL.createObjectURL(blob));
         setOutputFileName(result.textFileName || "اسناد-خرید-دین.txt");
         setOutputFacilityNumber(facilityNumber.trim());
