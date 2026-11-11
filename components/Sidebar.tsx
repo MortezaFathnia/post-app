@@ -43,6 +43,7 @@ function isActivePath(pathname: string, href: string) {
 export default function Sidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -126,7 +127,7 @@ export default function Sidebar() {
                         </span>
                       </span>
                     </Link>
-                    {"children" in item && active && item.children && (
+                    {"children" in item && (active || expandedMenu === item.href) && item.children && (
                       <ul className="mr-6 mt-1 space-y-1 border-r border-slate-200 pr-3">
                         {item.children.map((child) => {
                           const childActive = isActivePath(pathname, child.href);
@@ -134,7 +135,10 @@ export default function Sidebar() {
                             <li key={child.href}>
                               <Link
                                 href={child.href}
-                                onClick={() => setMobileOpen(false)}
+                                onClick={() => {
+                                  if (item.title === "خرید دین") setExpandedMenu(item.href);
+                                  setMobileOpen(false);
+                                }}
                                 aria-current={childActive ? "page" : undefined}
                                 className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-right text-sm transition ${
                                   childActive
