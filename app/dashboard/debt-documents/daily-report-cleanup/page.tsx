@@ -3,9 +3,11 @@
 import { ChangeEvent, FormEvent, useState } from "react";
 
 type OutputResult = {
+  mode: string;
   label: string;
   rows: number;
   fileName: string;
+  url: string;
 };
 
 const outputModes = [
@@ -19,7 +21,7 @@ function getDownloadName(disposition: string, fallback: string) {
   return encodedName ? decodeURIComponent(encodedName) : fallback;
 }
 
-async function requestOutput(file: File, mode: (typeof outputModes)[number]["mode"]) {
+async function requestOutput(file: File, mode: (typeof outputModes)[number]["mode"]): Promise<OutputResult> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("mode", mode);
@@ -38,19 +40,14 @@ async function requestOutput(file: File, mode: (typeof outputModes)[number]["mod
   const url = URL.createObjectURL(blob);
   const fallback = mode === "fee" ? "کارمزد.xlsx" : mode === "stamp" ? "تمبر.xlsx" : "پاکسازی-واریز-برداشت.xlsx";
   const fileName = getDownloadName(response.headers.get("Content-Disposition") || "", fallback);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = fileName;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 
   return {
+    mode,
     label: outputModes.find((item) => item.mode === mode)?.label || mode,
     rows: Number(response.headers.get(mode === "clean" ? "X-Remaining-Rows" : "X-Matched-Rows") || 0),
     fileName,
-  } satisfies OutputResult;
+    url,
+  };
 }
 
 export default function DailyReportCleanupPage() {
@@ -59,16 +56,21 @@ export default function DailyReportCleanupPage() {
   const [error, setError] = useState("");
   const [results, setResults] = useState<OutputResult[]>([]);
 
+  function clearResults() {
+    results.forEach((result) => URL.revokeObjectURL(result.url));
+    setResults([]);
+  }
+
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    clearResults();
     setFile(event.target.files?.[0] ?? null);
     setError("");
-    setResults([]);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    clearResults();
     setError("");
-    setResults([]);
 
     if (!file) {
       setError("ابتدا فایل گزارش روزانه را انتخاب کنید.");
@@ -122,24 +124,31 @@ export default function DailyReportCleanupPage() {
             disabled={!file || loading}
             className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "در حال تحلیل و ساخت فایل‌ها..." : "تحلیل و دریافت هر سه فایل خروجی"}
+            {loading ? "در حال تحلیل و ساخت فایل‌ها..." : "تحلیل و ساخت هر سه فایل خروجی"}
           </button>
         </form>
       </section>
 
       {results.length > 0 && (
         <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-          <h2 className="font-bold text-emerald-900">فایل‌های خروجی آماده شدند</h2>
+          <h2 className="font-bold text-emerald-900">فایل‌های خروجی آماده دانلود هستند</h2>
           <p className="mt-1 text-sm text-emerald-800">
-            هر فایل پس از آماده‌شدن به‌صورت جداگانه دانلود می‌شود.
+            برای دریافت هر فایل، لینک مربوط به آن را جداگانه انتخاب کنید.
           </p>
           <div className="mt-4 space-y-2">
             {results.map((result) => (
-              <div key={result.fileName} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white p-3">
-                <span className="text-sm font-semibold text-slate-800">{result.label}</span>
-                <span className="text-sm text-slate-600">
-                  {result.rows.toLocaleString("fa-IR")} ردیف
-                </span>
+              <div key={result.mode} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">{result.label}</p>
+                  <p className="mt-1 text-xs text-slate-500">{result.rows.toLocaleString("fa-IR")} ردیف</p>
+                </div>
+                <a
+                  href={result.url}
+                  download={result.fileName}
+                  className="rounded-lg bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                >
+                  دانلود فایل
+                </a>
               </div>
             ))}
           </div>
