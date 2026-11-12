@@ -43,7 +43,7 @@ function findTargetSheet(workbook: XLSX.WorkBook) {
     });
     const headerIndex = rows.findIndex((row) => {
       const headers = row.map(normalizeHeader);
-      return headers.includes("شناسهمرجع") &&
+      return headers.includes("کدمرجع") &&
         headers.includes("واریز") &&
         headers.includes("برداشت");
     });
@@ -53,7 +53,7 @@ function findTargetSheet(workbook: XLSX.WorkBook) {
         sheetName,
         rows: rows.slice(headerIndex),
         headerIndex,
-        referenceIndex: headers.indexOf("شناسهمرجع"),
+        referenceIndex: headers.indexOf("کدمرجع"),
         depositIndex: headers.indexOf("واریز"),
         withdrawalIndex: headers.indexOf("برداشت"),
       };
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
     const target = findTargetSheet(workbook);
     if (!target) {
       return NextResponse.json(
-        { success: false, error: "ستون‌های «شناسه مرجع»، «واریز» و «برداشت» در فایل پیدا نشدند." },
+        { success: false, error: "ستون‌های «کد مرجع»، «واریز» و «برداشت» در فایل پیدا نشدند." },
         { status: 400 },
       );
     }
