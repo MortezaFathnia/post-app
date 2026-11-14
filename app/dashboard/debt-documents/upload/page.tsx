@@ -540,7 +540,7 @@ const blob = new Blob(["\uFEFF", windowsText], { type: "text/plain;charset=utf-8
                 )}
               </div>
             </div>
-            <div className="md:col-span-2">
+            <div>
               <label htmlFor="debtExcelFile" className="mb-2 block text-sm font-semibold text-slate-700">
                 فایل Excel خرید دین
               </label>
