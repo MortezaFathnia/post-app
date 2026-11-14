@@ -19,7 +19,7 @@ const menuItems = [
     ],
   },
   {
-
+    title: "خرید دین",
     href: "/dashboard/debt-discounting-facilities",
     icon: "▣",
     description: "مدیریت اسناد خرید دین",
