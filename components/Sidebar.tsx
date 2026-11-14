@@ -105,7 +105,7 @@ export default function Sidebar() {
             <ul className="space-y-1.5">
               {menuItems.map((item) => {
                 const hasChildren = "children" in item && !!item.children?.length;
-                const childActive = hasChildren && !!item.children?.some((child) => isActivePath(pathname, child.href));
+                const childActive = hasChildren && !!item.children?.some((child) => pathname === child.href);
                 // A parent with child links should not also look selected when one of its children is active.
                 const active = hasChildren
                   ? pathname === item.href && !item.children?.some((child) => child.href === pathname)
@@ -135,7 +135,7 @@ export default function Sidebar() {
                     {"children" in item && (active || childActive || expandedMenu === item.href) && item.children && (
                       <ul className="mr-6 mt-1 space-y-1 border-r border-slate-200 pr-3">
                         {item.children.map((child) => {
-                          const childActive = isActivePath(pathname, child.href);
+                          const childActive = pathname === child.href;
                           return (
                             <li key={child.href}>
                               <Link
