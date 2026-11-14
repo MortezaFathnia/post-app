@@ -11,7 +11,7 @@ const menuItems = [
   { title: "ثبت قرارداد", href: "/dashboard/upload", icon: "+", description: "ثبت از طریق فایل Excel" },
   {
     title: "خرید دین",
-    href: "/dashboard/debt-documents",
+    href: "/dashboard/debt-discounting-facilities",
     icon: "▣",
     description: "مدیریت اسناد خرید دین",
     children: [
