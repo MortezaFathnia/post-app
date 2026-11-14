@@ -198,17 +198,6 @@ export default function Sidebar() {
             <span>{theme === "dark" ? "تم روشن" : "تم تیره"}</span>
             <span aria-hidden="true" className="text-lg">{theme === "dark" ? "☀" : "☾"}</span>
           </button>
-          <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
-            <p className="text-sm font-bold text-slate-800">راهنمای سامانه</p>
-            <p className="mt-1 text-xs leading-6 text-slate-600">برای ایجاد قرارداد، از بخش ثبت قرارداد فایل Excel مربوطه را بارگذاری کنید.</p>
-            <Link
-              href="/dashboard/upload"
-              onClick={() => setMobileOpen(false)}
-              className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-blue-700 hover:text-blue-800"
-            >
-              شروع ثبت قرارداد <span aria-hidden="true">←</span>
-            </Link>
-          </div>
           <p className="mt-4 text-center text-[10px] text-slate-400">سامانه مدیریت قراردادها</p>
         </div>
       </aside>
