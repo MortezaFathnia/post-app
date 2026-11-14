@@ -80,6 +80,7 @@ function removeMatchedAmounts(rows: unknown[][], depositIndex: number, withdrawa
     const withdrawalRows = withdrawals.get(amount) ?? [];
     let withdrawalCursor = 0;
     for (const depositRow of depositRows) {
+      if (removed.has(depositRow)) continue;
       while (
         withdrawalCursor < withdrawalRows.length &&
         (removed.has(withdrawalRows[withdrawalCursor]) || withdrawalRows[withdrawalCursor] === depositRow)
@@ -132,7 +133,6 @@ export async function POST(request: NextRequest) {
     let matchedRows = 0;
     let removedRows = 0;
     let removedPairs = 0;
-    let originalRows = Math.max(0, target.rows.length - 1);
 
     if (mode === "fee" || mode === "stamp") {
       const expectedValue = mode === "fee" ? "کارمزد" : "تمبر";
