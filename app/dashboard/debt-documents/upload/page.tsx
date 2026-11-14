@@ -337,6 +337,12 @@ const blob = new Blob(["\uFEFF", windowsText], { type: "text/plain;charset=utf-8
         </div>
 
         <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4">
+            <h2 className="font-bold text-slate-900">ورود فایل قالب جدید به فهرست اسناد خرید دین</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              نام شخص و شماره تسهیلات را انتخاب کنید، سپس کدباجه و فایل Excel قالب جدید چک‌ها را مشخص کنید.
+            </p>
+          </div>
           <div className="grid gap-5 md:grid-cols-2">
             <div>
               <label htmlFor="facilityName" className="mb-2 block text-sm font-semibold text-slate-700">
