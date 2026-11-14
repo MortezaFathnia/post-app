@@ -6,6 +6,8 @@ import UploadLoadingOverlay from "@/components/UploadLoadingOverlay";
 
 type CounterOption = { id: number; code: string; name: string };
 
+type FacilityPersonOption = { name: string; facilityNumbers: string[] };
+
 type DebtUploadTableRecord = {
   id: number;
   counterLabel: string;
@@ -55,6 +57,11 @@ export default function DebtDocumentsUploadPage() {
   const [counterLoading, setCounterLoading] = useState(false);
   const [counterError, setCounterError] = useState("");
   const [facilityNumber, setFacilityNumber] = useState("");
+  const [facilityPeople, setFacilityPeople] = useState<FacilityPersonOption[]>([]);
+  const [facilityName, setFacilityName] = useState("");
+  const [facilityOpen, setFacilityOpen] = useState(false);
+  const [loadingFacilities, setLoadingFacilities] = useState(false);
+  const [facilitySearchError, setFacilitySearchError] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -141,6 +148,49 @@ export default function DebtDocumentsUploadPage() {
   useEffect(() => {
     void loadCounters();
   }, []);
+
+  useEffect(() => {
+    const query = facilityName.trim();
+    if (query.length < 2) {
+      setFacilityPeople([]);
+      setFacilitySearchError("");
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(async () => {
+      setLoadingFacilities(true);
+      setFacilitySearchError("");
+      try {
+        const response = await fetch(`/api/debt-discounting-facilities/search?q=${encodeURIComponent(query)}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const result = (await response.json()) as {
+          success?: boolean;
+          people?: FacilityPersonOption[];
+          error?: string;
+        };
+        if (!response.ok || !result.success) {
+          throw new Error(result.error ?? "جست‌وجوی نام شخص ناموفق بود.");
+        }
+        setFacilityPeople(Array.isArray(result.people) ? result.people : []);
+      } catch (searchError) {
+        if (!controller.signal.aborted) {
+          setFacilitySearchError(searchError instanceof Error ? searchError.message : "جست‌وجوی نام شخص ناموفق بود.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoadingFacilities(false);
+      }
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [facilityName]);
+
+  const selectedFacilityPerson = facilityPeople.find((person) => person.name === facilityName.trim());
 
   useEffect(() => {
     const controller = new AbortController();
@@ -289,6 +339,110 @@ const blob = new Blob(["\uFEFF", windowsText], { type: "text/plain;charset=utf-8
         <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="grid gap-5 md:grid-cols-2">
             <div>
+              <label htmlFor="facilityName" className="mb-2 block text-sm font-semibold text-slate-700">
+                نام شخص
+              </label>
+              <div className="relative">
+                <input
+                  id="facilityName"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded={facilityOpen}
+                  aria-controls="upload-facility-person-options"
+                  value={facilityName}
+                  onFocus={() => setFacilityOpen(true)}
+                  onChange={(event) => {
+                    setFacilityName(event.target.value);
+                    setFacilityNumber("");
+                    setFacilityOpen(true);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") setFacilityOpen(false);
+                    if (event.key === "Enter" && facilityOpen) {
+                      const first = facilityPeople.find((person) =>
+                        person.name.toLocaleLowerCase().includes(facilityName.trim().toLocaleLowerCase())
+                      );
+                      if (first) {
+                        event.preventDefault();
+                        setFacilityName(first.name);
+                        setFacilityNumber(first.facilityNumbers.length === 1 ? first.facilityNumbers[0] : "");
+                        setFacilityOpen(false);
+                      }
+                    }
+                  }}
+                  disabled={loading}
+                  placeholder="نام شخص را جست‌وجو کنید..."
+                  autoComplete="off"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+                {facilityOpen && facilityName.trim().length >= 2 && !loading && (
+                  <div
+                    id="upload-facility-person-options"
+                    role="listbox"
+                    className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+                  >
+                    {loadingFacilities ? (
+                      <p className="px-3 py-4 text-center text-sm text-slate-500">در حال جست‌وجو...</p>
+                    ) : facilitySearchError ? (
+                      <p className="px-3 py-3 text-sm text-red-600">{facilitySearchError}</p>
+                    ) : (
+                      facilityPeople
+                        .filter((person) => person.name.toLocaleLowerCase().includes(facilityName.trim().toLocaleLowerCase()))
+                        .slice(0, 50)
+                        .map((person) => (
+                          <button
+                            key={person.name}
+                            type="button"
+                            role="option"
+                            aria-selected={facilityName.trim() === person.name}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              setFacilityName(person.name);
+                              setFacilityNumber(person.facilityNumbers.length === 1 ? person.facilityNumbers[0] : "");
+                              setFacilityOpen(false);
+                            }}
+                            className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-right text-sm text-slate-700 transition hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                          >
+                            <span className="font-medium">{person.name}</span>
+                            {facilityName.trim() === person.name && (
+                              <span className="text-xs text-blue-600">انتخاب‌شده</span>
+                            )}
+                          </button>
+                        ))
+                    )}
+                    {!loadingFacilities && !facilitySearchError && facilityPeople.filter((person) =>
+                      person.name.toLocaleLowerCase().includes(facilityName.trim().toLocaleLowerCase())
+                    ).length === 0 && (
+                      <p className="px-3 py-4 text-center text-sm text-slate-500">موردی پیدا نشد.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-slate-500">
+                {loadingFacilities ? "در حال جست‌وجو..." : facilityName.trim().length < 2 ? "برای جست‌وجو حداقل دو حرف وارد کنید." : selectedFacilityPerson ? "نام شخص انتخاب شد." : "نام شخص را از فهرست پیشنهادها انتخاب کنید."}
+              </p>
+            </div>
+            {selectedFacilityPerson && selectedFacilityPerson.facilityNumbers.length > 1 && (
+              <div>
+                <label htmlFor="facilityNumber" className="mb-2 block text-sm font-semibold text-slate-700">
+                  انتخاب شماره تسهیلات
+                </label>
+                <select
+                  id="facilityNumber"
+                  required
+                  value={facilityNumber}
+                  onChange={(event) => setFacilityNumber(event.target.value)}
+                  disabled={loading}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">انتخاب شماره تسهیلات</option>
+                  {selectedFacilityPerson.facilityNumbers.map((number) => (
+                    <option key={number} value={number}>{number}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div>
               <label htmlFor="counterLabel" className="mb-2 block text-sm font-semibold text-slate-700">
                 کدباجه - نام باجه
               </label>
@@ -385,19 +539,6 @@ const blob = new Blob(["\uFEFF", windowsText], { type: "text/plain;charset=utf-8
                   </div>
                 )}
               </div>
-            </div>
-            <div>
-              <label htmlFor="facilityNumber" className="mb-2 block text-sm font-semibold text-slate-700">
-                کد تسهیلات خرید دین
-              </label>
-              <input
-                id="facilityNumber"
-                value={facilityNumber}
-                onChange={(event) => setFacilityNumber(event.target.value)}
-                disabled={loading}
-                placeholder="کد تسهیلات را وارد کنید"
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              />
             </div>
             <div className="md:col-span-2">
               <label htmlFor="debtExcelFile" className="mb-2 block text-sm font-semibold text-slate-700">
