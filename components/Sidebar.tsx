@@ -118,7 +118,11 @@ export default function Sidebar() {
                       onClick={() => {
                         setMobileOpen(false);
                         if (hasChildren) {
-                          setCollapsedMenus((current) => current.includes(item.href) ? current : [...current, item.href]);
+                          setCollapsedMenus((current) =>
+                            current.includes(item.href)
+                              ? current.filter((href) => href !== item.href)
+                              : [...current, item.href]
+                          );
                         }
                       }}
                       aria-current={pathname === item.href ? "page" : undefined}
