@@ -10,7 +10,16 @@ const menuItems = [
   { title: "قراردادها", href: "/dashboard/contracts", icon: "▤", description: "مشاهده قراردادهای ثبت‌شده" },
   { title: "ثبت قرارداد", href: "/dashboard/upload", icon: "+", description: "ثبت از طریق فایل Excel" },
   {
-    title: "خرید دین",
+    title: "ضمانتنامه",
+    href: "/dashboard/guarantees/extension",
+    icon: "▣",
+    description: "مدیریت ضمانت‌نامه‌ها",
+    children: [
+      { title: "تمدید ضمانتنامه", href: "/dashboard/guarantees/extension", icon: "↻", description: "تکمیل و چاپ فرم تمدید ضمانت‌نامه" },
+    ],
+  },
+  {
+
     href: "/dashboard/debt-discounting-facilities",
     icon: "▣",
     description: "مدیریت اسناد خرید دین",
