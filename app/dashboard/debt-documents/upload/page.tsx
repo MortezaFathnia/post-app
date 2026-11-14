@@ -422,26 +422,26 @@ const blob = new Blob(["\uFEFF", windowsText], { type: "text/plain;charset=utf-8
                 {loadingFacilities ? "در حال جست‌وجو..." : facilityName.trim().length < 2 ? "برای جست‌وجو حداقل دو حرف وارد کنید." : selectedFacilityPerson ? "نام شخص انتخاب شد." : "نام شخص را از فهرست پیشنهادها انتخاب کنید."}
               </p>
             </div>
-            {selectedFacilityPerson && selectedFacilityPerson.facilityNumbers.length > 1 && (
-              <div>
-                <label htmlFor="facilityNumber" className="mb-2 block text-sm font-semibold text-slate-700">
-                  انتخاب شماره تسهیلات
-                </label>
-                <select
-                  id="facilityNumber"
-                  required
-                  value={facilityNumber}
-                  onChange={(event) => setFacilityNumber(event.target.value)}
-                  disabled={loading}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                >
-                  <option value="">انتخاب شماره تسهیلات</option>
-                  {selectedFacilityPerson.facilityNumbers.map((number) => (
-                    <option key={number} value={number}>{number}</option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <div>
+              <label htmlFor="facilityNumber" className="mb-2 block text-sm font-semibold text-slate-700">
+                انتخاب شماره تسهیلات
+              </label>
+              <select
+                id="facilityNumber"
+                required
+                value={facilityNumber}
+                onChange={(event) => setFacilityNumber(event.target.value)}
+                disabled={loading || !selectedFacilityPerson || selectedFacilityPerson.facilityNumbers.length === 0}
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+              >
+                <option value="">
+                  {selectedFacilityPerson ? "شماره تسهیلات را انتخاب کنید" : "ابتدا نام شخص را انتخاب کنید"}
+                </option>
+                {(selectedFacilityPerson?.facilityNumbers ?? []).map((number) => (
+                  <option key={number} value={number}>{number}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label htmlFor="counterLabel" className="mb-2 block text-sm font-semibold text-slate-700">
                 کدباجه - نام باجه
