@@ -104,8 +104,12 @@ export default function Sidebar() {
           <nav aria-label="منوی اصلی">
             <ul className="space-y-1.5">
               {menuItems.map((item) => {
-                const active = isActivePath(pathname, item.href) ||
-                  ("children" in item && !!item.children?.some((child) => isActivePath(pathname, child.href)));
+                const hasChildren = "children" in item && !!item.children?.length;
+                const childActive = hasChildren && !!item.children?.some((child) => isActivePath(pathname, child.href));
+                // A parent with child links should not also look selected when one of its children is active.
+                const active = hasChildren
+                  ? pathname === item.href && !item.children?.some((child) => child.href === pathname)
+                  : isActivePath(pathname, item.href);
                 return (
                   <li key={item.href}>
                     <Link
@@ -128,7 +132,7 @@ export default function Sidebar() {
                         </span>
                       </span>
                     </Link>
-                    {"children" in item && (active || expandedMenu === item.href) && item.children && (
+                    {"children" in item && (active || childActive || expandedMenu === item.href) && item.children && (
                       <ul className="mr-6 mt-1 space-y-1 border-r border-slate-200 pr-3">
                         {item.children.map((child) => {
                           const childActive = isActivePath(pathname, child.href);
