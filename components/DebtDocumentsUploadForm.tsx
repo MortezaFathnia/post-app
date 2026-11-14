@@ -153,8 +153,8 @@ export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
       if (downloadUrl) URL.revokeObjectURL(downloadUrl);
       setDownloadUrl("");
       if (result.textContent !== undefined) {
-        const windowsText = result.textContent.replace(/\\r\\n|\\r|\\n/g, "\\r\\n");
-        const blob = new Blob(["\\uFEFF", windowsText], { type: "text/plain;charset=utf-8" });
+        const windowsText = result.textContent.replace(/\r\n|\r|\n/g, "\r\n");
+        const blob = new Blob(["\uFEFF", windowsText], { type: "text/plain;charset=utf-8" });
         setDownloadUrl(URL.createObjectURL(blob));
         setDownloadFileName(result.textFileName || "اسناد-خرید-دین.txt");
         setSuccess(`${result.count ?? 0} ردیف ثبت شد و فایل خروجی متنی آماده دریافت است.`);
