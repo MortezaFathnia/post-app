@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 
 type CounterOption = { id: number; code: string; name: string };
 type BankOption = { id: number; bankId: string; name: string };
+type FacilityPersonOption = { name: string; facilityNumbers: string[] };
 
 type ApiResult = {
   success: boolean;
@@ -17,6 +18,9 @@ const inputClass = "w-full rounded-xl border border-slate-300 bg-white px-4 py-3
 export default function AddDebtCheckPage() {
   const [counters, setCounters] = useState<CounterOption[]>([]);
   const [banks, setBanks] = useState<BankOption[]>([]);
+  const [facilityPeople, setFacilityPeople] = useState<FacilityPersonOption[]>([]);
+  const [facilityName, setFacilityName] = useState("");
+  const [loadingFacilities, setLoadingFacilities] = useState(false);
   const [loadingBanks, setLoadingBanks] = useState(true);
   const [counterLabel, setCounterLabel] = useState("");
   const [facilityNumber, setFacilityNumber] = useState("");
@@ -74,6 +78,47 @@ export default function AddDebtCheckPage() {
     return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    const query = facilityName.trim();
+    if (query.length < 2) {
+      setFacilityPeople([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(async () => {
+      setLoadingFacilities(true);
+      try {
+        const response = await fetch(`/api/debt-discounting-facilities/search?q=${encodeURIComponent(query)}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const result = (await response.json()) as {
+          success?: boolean;
+          people?: FacilityPersonOption[];
+          error?: string;
+        };
+        if (!response.ok || !result.success) {
+          throw new Error(result.error ?? "جست‌وجوی نام تسهیلات ناموفق بود.");
+        }
+        setFacilityPeople(Array.isArray(result.people) ? result.people : []);
+      } catch (loadError) {
+        if (!controller.signal.aborted) {
+          setError(loadError instanceof Error ? loadError.message : "جست‌وجوی نام تسهیلات ناموفق بود.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoadingFacilities(false);
+      }
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [facilityName]);
+
+  const selectedFacilityPerson = facilityPeople.find((person) => person.name === facilityName.trim());
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
@@ -98,6 +143,7 @@ export default function AddDebtCheckPage() {
       const result = (await response.json()) as ApiResult;
       if (!response.ok || !result.success) throw new Error(result.error ?? "ثبت چک جدید ناموفق بود.");
       setSuccess(`چک با موفقیت ثبت شد. وضعیت اولیه: ${result.record?.checkStatus ?? "درراه"}`);
+      setFacilityName("");
       setFacilityNumber("");
       setSerial("");
       setDueDate("");
@@ -137,8 +183,44 @@ export default function AddDebtCheckPage() {
           </div>
 
           <div>
+            <label htmlFor="facilityName" className="mb-2 block text-sm font-semibold text-slate-700">نام شخص</label>
+            <input
+              id="facilityName"
+              required
+              list="debt-facility-person-options"
+              value={facilityName}
+              onChange={(event) => {
+                setFacilityName(event.target.value);
+                setFacilityNumber("");
+              }}
+              disabled={saving}
+              placeholder="نام شخص را جست‌وجو کنید"
+              className={inputClass}
+              autoComplete="off"
+            />
+            <datalist id="debt-facility-person-options">
+              {facilityPeople.map((person) => <option key={person.name} value={person.name} />)}
+            </datalist>
+            <p className="mt-1 text-xs text-slate-500">
+              {loadingFacilities ? "در حال جست‌وجو..." : facilityName.trim().length < 2 ? "برای جست‌وجو حداقل دو حرف وارد کنید." : facilityPeople.length === 0 ? "شخصی با این نام پیدا نشد." : "نام شخص را از فهرست پیشنهادها انتخاب کنید."}
+            </p>
+          </div>
+
+          <div>
             <label htmlFor="facilityNumber" className="mb-2 block text-sm font-semibold text-slate-700">کد تسهیلات خرید دین</label>
-            <input id="facilityNumber" required value={facilityNumber} onChange={(event) => setFacilityNumber(event.target.value)} disabled={saving} placeholder="کد تسهیلات را وارد کنید" className={inputClass} />
+            <select
+              id="facilityNumber"
+              required
+              value={facilityNumber}
+              onChange={(event) => setFacilityNumber(event.target.value)}
+              disabled={saving || !selectedFacilityPerson || selectedFacilityPerson.facilityNumbers.length === 0}
+              className={inputClass}
+            >
+              <option value="">انتخاب کد تسهیلات</option>
+              {selectedFacilityPerson?.facilityNumbers.map((number) => (
+                <option key={number} value={number}>{number}</option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -210,6 +292,8 @@ export default function AddDebtCheckPage() {
           </button>
           <button type="button" disabled={saving} onClick={() => {
             setCounterLabel("");
+            setFacilityName("");
+            setFacilityPeople([]);
             setFacilityNumber("");
             setSerial("");
             setDueDate("");
