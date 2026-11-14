@@ -214,8 +214,8 @@ export default function DebtDocumentsUploadPage() {
     setError("");
     setSuccess("");
 
-    if (!counterLabel.trim() || !facilityNumber.trim()) {
-      setError("کدباجه - نام باجه و کد تسهیلات خرید دین را وارد کنید.");
+    if (!counterLabel.trim() || !facilityName.trim() || !facilityNumber.trim()) {
+      setError("نام شخص، کدباجه - نام باجه و شماره تسهیلات را انتخاب کنید.");
       return;
     }
     if (!file) {
