@@ -8,7 +8,11 @@ export async function POST() {
     const sourceFacilities = await prisma.debtDiscountingRecord.findMany({
       where: { facilityNumber: { not: "" } },
       distinct: ["facilityNumber"],
-      select: { facilityNumber: true },
+      select: {
+        facilityNumber: true,
+        counterLabel: true,
+        serial: true,
+      },
     });
 
     const facilityNumbers = sourceFacilities
@@ -34,6 +38,13 @@ export async function POST() {
         endDate: true,
       },
     });
+
+    const matchedFacilityNumbers = new Set(
+      sourceRecords.map((record) => record.facilityNumber).filter(Boolean),
+    );
+    const unmatchedFacilities = sourceFacilities.filter(
+      (item) => item.facilityNumber && !matchedFacilityNumbers.has(item.facilityNumber),
+    );
 
     let created = 0;
     let updated = 0;
@@ -69,9 +80,36 @@ export async function POST() {
           created++;
         }
       }
+
+      // Some facility numbers exist in the debt-discounting records but have no
+      // corresponding BayeganiRecord. Keep them in the facilities list using
+      // the fields that are actually available from the source records.
+      for (const source of unmatchedFacilities) {
+        const data = {
+          facilityNumber: source.facilityNumber,
+          counterLabel: source.counterLabel || null,
+          serial: source.serial || null,
+        };
+
+        const existing = await tx.debtDocument.findFirst({
+          where: { facilityNumber: source.facilityNumber, contractId: null },
+          select: { id: true },
+        });
+
+        if (existing) {
+          await tx.debtDocument.update({
+            where: { id: existing.id },
+            data,
+          });
+          updated++;
+        } else {
+          await tx.debtDocument.create({ data });
+          created++;
+        }
+      }
     });
 
-    const skipped = Math.max(0, sourceFacilities.length - sourceRecords.length);
+    const skipped = 0;
     return NextResponse.json({
       success: true,
       created,
