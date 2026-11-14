@@ -21,6 +21,7 @@ export default function AddDebtCheckPage() {
   const [facilityPeople, setFacilityPeople] = useState<FacilityPersonOption[]>([]);
   const [facilityName, setFacilityName] = useState("");
   const [loadingFacilities, setLoadingFacilities] = useState(false);
+  const [facilityOpen, setFacilityOpen] = useState(false);
   const [loadingBanks, setLoadingBanks] = useState(true);
   const [counterLabel, setCounterLabel] = useState("");
   const [facilityNumber, setFacilityNumber] = useState("");
@@ -184,23 +185,77 @@ export default function AddDebtCheckPage() {
 
           <div>
             <label htmlFor="facilityName" className="mb-2 block text-sm font-semibold text-slate-700">نام شخص</label>
-            <input
-              id="facilityName"
-              required
-              list="debt-facility-person-options"
-              value={facilityName}
-              onChange={(event) => {
-                setFacilityName(event.target.value);
-                setFacilityNumber("");
-              }}
-              disabled={saving}
-              placeholder="نام شخص را جست‌وجو کنید"
-              className={inputClass}
-              autoComplete="off"
-            />
-            <datalist id="debt-facility-person-options">
-              {facilityPeople.map((person) => <option key={person.name} value={person.name} />)}
-            </datalist>
+            <div className="relative">
+              <input
+                id="facilityName"
+                required
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded={facilityOpen}
+                aria-controls="debt-facility-person-options"
+                value={facilityName}
+                onFocus={() => setFacilityOpen(true)}
+                onChange={(event) => {
+                  setFacilityName(event.target.value);
+                  setFacilityNumber("");
+                  setFacilityOpen(true);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") setFacilityOpen(false);
+                  if (event.key === "Enter" && facilityOpen) {
+                    const first = facilityPeople.filter((person) =>
+                      person.name.toLocaleLowerCase().includes(facilityName.trim().toLocaleLowerCase())
+                    )[0];
+                    if (first) {
+                      event.preventDefault();
+                      setFacilityName(first.name);
+                      setFacilityNumber("");
+                      setFacilityOpen(false);
+                    }
+                  }
+                }}
+                disabled={saving}
+                placeholder="نام شخص را جست‌وجو کنید"
+                className={inputClass}
+                autoComplete="off"
+              />
+              {facilityOpen && facilityName.trim().length >= 2 && (
+                <div
+                  id="debt-facility-person-options"
+                  role="listbox"
+                  className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+                >
+                  {facilityPeople
+                    .filter((person) => person.name.toLocaleLowerCase().includes(facilityName.trim().toLocaleLowerCase()))
+                    .slice(0, 50)
+                    .map((person) => (
+                      <button
+                        key={person.name}
+                        type="button"
+                        role="option"
+                        aria-selected={facilityName.trim() === person.name}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => {
+                          setFacilityName(person.name);
+                          setFacilityNumber("");
+                          setFacilityOpen(false);
+                        }}
+                        className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-right text-sm text-slate-700 transition hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                      >
+                        <span className="font-medium">{person.name}</span>
+                        {facilityName.trim() === person.name && (
+                          <span className="text-xs text-blue-600">انتخاب‌شده</span>
+                        )}
+                      </button>
+                    ))}
+                  {!loadingFacilities && facilityPeople.filter((person) =>
+                    person.name.toLocaleLowerCase().includes(facilityName.trim().toLocaleLowerCase())
+                  ).length === 0 && (
+                    <p className="px-3 py-4 text-center text-sm text-slate-500">موردی پیدا نشد.</p>
+                  )}
+                </div>
+              )}
+            </div>
             <p className="mt-1 text-xs text-slate-500">
               {loadingFacilities ? "در حال جست‌وجو..." : facilityName.trim().length < 2 ? "برای جست‌وجو حداقل دو حرف وارد کنید." : facilityPeople.length === 0 ? "شخصی با این نام پیدا نشد." : "نام شخص را از فهرست پیشنهادها انتخاب کنید."}
             </p>
