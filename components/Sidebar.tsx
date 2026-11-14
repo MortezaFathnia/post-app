@@ -45,6 +45,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
+  const [collapsedMenus, setCollapsedMenus] = useState<string[]>([]);
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -114,7 +115,12 @@ export default function Sidebar() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      onClick={() => setMobileOpen(false)}
+                      onClick={() => {
+                        setMobileOpen(false);
+                        if (hasChildren) {
+                          setCollapsedMenus((current) => current.includes(item.href) ? current : [...current, item.href]);
+                        }
+                      }}
                       aria-current={pathname === item.href ? "page" : undefined}
                       className={`group flex items-center gap-3 rounded-xl px-3 py-3 text-right transition ${
                         active
@@ -132,7 +138,7 @@ export default function Sidebar() {
                         </span>
                       </span>
                     </Link>
-                    {"children" in item && (active || childActive || expandedMenu === item.href) && item.children && (
+                    {"children" in item && !collapsedMenus.includes(item.href) && (active || childActive || expandedMenu === item.href) && item.children && (
                       <ul className="mr-6 mt-1 space-y-1 border-r border-slate-200 pr-3">
                         {item.children.map((child) => {
                           const childActive = pathname === child.href;
@@ -141,7 +147,10 @@ export default function Sidebar() {
                               <Link
                                 href={child.href}
                                 onClick={() => {
-                                  if (item.title === "خرید دین") setExpandedMenu(item.href);
+                                  if (item.title === "خرید دین") {
+                                    setExpandedMenu(item.href);
+                                    setCollapsedMenus((current) => current.filter((href) => href !== item.href));
+                                  }
                                   setMobileOpen(false);
                                 }}
                                 aria-current={childActive ? "page" : undefined}
