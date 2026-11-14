@@ -133,6 +133,7 @@ export async function POST(request: NextRequest) {
     let matchedRows = 0;
     let removedRows = 0;
     let removedPairs = 0;
+    const originalRows = Math.max(0, target.rows.length - 1);
 
     if (mode === "fee" || mode === "stamp") {
       const expectedValue = mode === "fee" ? "کارمزد" : "تمبر";
