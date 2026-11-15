@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import PersianDatePicker from "@/components/PersianDatePicker";
 
 type FormValues = {
   formDate: string;
@@ -25,6 +26,14 @@ type FormValues = {
   otherGuarantees: string;
   branch: string;
 };
+
+const dateFieldKeys = new Set<keyof FormValues>([
+  "formDate",
+  "requestDate",
+  "extensionUntil",
+  "lastMaturityDate",
+  "issueDate",
+]);
 
 const initialValues: FormValues = {
   formDate: "", formNumber: "", company: "", requestNumber: "", requestDate: "",
@@ -113,11 +122,20 @@ export default function GuaranteeExtensionPage() {
           {fields.map((field) => (
             <label key={field.key} className="block">
               <span className="mb-1.5 block text-xs font-semibold text-slate-600">{field.label}</span>
-              <input
-                value={values[field.key]}
-                onChange={(event) => update(field.key, event.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-              />
+              {dateFieldKeys.has(field.key) ? (
+                <PersianDatePicker
+                  value={values[field.key]}
+                  onChange={(value) => update(field.key, value)}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                  placeholder="انتخاب تاریخ"
+                />
+              ) : (
+                <input
+                  value={values[field.key]}
+                  onChange={(event) => update(field.key, event.target.value)}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                />
+              )}
             </label>
           ))}
         </div>
@@ -134,21 +152,43 @@ export default function GuaranteeExtensionPage() {
           className="absolute inset-0 h-full w-full object-fill"
         />
         {positions.map((position) => (
-          <input
-            key={position.key}
-            aria-label={fields.find((field) => field.key === position.key)?.label}
-            title={fields.find((field) => field.key === position.key)?.label}
-            value={values[position.key]}
-            onChange={(event) => update(position.key, event.target.value)}
-            className="guarantee-overlay absolute z-10 min-w-0 border-b border-dashed border-slate-500/50 bg-white/20 px-1 py-0 text-[clamp(7px,0.85vw,12px)] leading-tight text-slate-950 outline-none focus:bg-white/75 focus:ring-1 focus:ring-emerald-600"
-            style={{
-              left: position.left,
-              top: position.top,
-              width: position.width,
-              height: "1.45%",
-              textAlign: position.align || "right",
-            }}
-          />
+          {dateFieldKeys.has(position.key) ? (
+            <PersianDatePicker
+              key={position.key}
+              value={values[position.key]}
+              onChange={(value) => update(position.key, value)}
+              aria-label={fields.find((field) => field.key === position.key)?.label}
+              className="guarantee-overlay min-w-0 border-b border-dashed border-slate-500/50 bg-white/20 px-1 py-0 text-[clamp(7px,0.85vw,12px)] leading-tight text-slate-950 outline-none focus:bg-white/75 focus:ring-1 focus:ring-emerald-600"
+              containerClassName="absolute z-20"
+              containerStyle={{
+                left: position.left,
+                top: position.top,
+                width: position.width,
+                height: "1.45%",
+              }}
+              style={{
+                width: "100%",
+                height: "100%",
+                textAlign: position.align || "right",
+              }}
+            />
+          ) : (
+            <input
+              key={position.key}
+              aria-label={fields.find((field) => field.key === position.key)?.label}
+              title={fields.find((field) => field.key === position.key)?.label}
+              value={values[position.key]}
+              onChange={(event) => update(position.key, event.target.value)}
+              className="guarantee-overlay absolute z-10 min-w-0 border-b border-dashed border-slate-500/50 bg-white/20 px-1 py-0 text-[clamp(7px,0.85vw,12px)] leading-tight text-slate-950 outline-none focus:bg-white/75 focus:ring-1 focus:ring-emerald-600"
+              style={{
+                left: position.left,
+                top: position.top,
+                width: position.width,
+                height: "1.45%",
+                textAlign: position.align || "right",
+              }}
+            />
+          )}
         ))}
       </section>
 
