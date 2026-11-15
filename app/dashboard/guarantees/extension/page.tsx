@@ -152,7 +152,7 @@ export default function GuaranteeExtensionPage() {
           className="absolute inset-0 h-full w-full object-fill"
         />
         {positions.map((position) => (
-          {dateFieldKeys.has(position.key) ? (
+          dateFieldKeys.has(position.key) ? (
             <PersianDatePicker
               key={position.key}
               value={values[position.key]}
