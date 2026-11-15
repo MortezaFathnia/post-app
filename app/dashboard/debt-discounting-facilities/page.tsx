@@ -1,4 +1,5 @@
 "use client";
+import PersianDatePicker from "@/components/PersianDatePicker";
 
 import { useEffect, useState } from "react";
 
@@ -209,7 +210,11 @@ export default function DebtDiscountingFacilitiesPage() {
           <select value={filterType} onChange={e=>{setFilterType(e.target.value);setPage(1);}} className="rounded-xl border bg-white px-3 py-2 text-sm">
             <option value="facilityTitle">عنوان تسهیلات</option><option value="facilityNumber">شماره تسهیلات</option><option value="contractId">شناسه قرارداد</option><option value="counterLabel">کد باجه - نام باجه</option><option value="serial">سریال</option><option value="status">وضعیت</option><option value="startDate">تاریخ شروع</option><option value="endDate">تاریخ پایان</option>
           </select>
-          <input value={filterValue} onChange={e=>{setFilterValue(e.target.value);setPage(1);}} placeholder="مقدار فیلتر..." className="min-w-40 flex-1 rounded-xl border px-3 py-2 text-sm" />
+          {filterType === "startDate" || filterType === "endDate" ? (
+            <PersianDatePicker value={filterValue} onChange={(value) => { setFilterValue(value); setPage(1); }} placeholder="انتخاب تاریخ" className="min-w-40 flex-1 rounded-xl border px-3 py-2 text-sm" />
+          ) : (
+            <input value={filterValue} onChange={e=>{setFilterValue(e.target.value);setPage(1);}} placeholder="مقدار فیلتر..." className="min-w-40 flex-1 rounded-xl border px-3 py-2 text-sm" />
+          )}
           <button onClick={()=>{setSearch("");setFilterValue("");setMismatchFilter("all");setPage(1);}} className="rounded-xl border px-4 py-2 text-sm">پاک کردن</button>
         </div>
         <div className="overflow-x-auto">
