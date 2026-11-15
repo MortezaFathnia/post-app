@@ -44,7 +44,6 @@ export async function GET() {
     }
 
     const primaryRecords = Array.from(primaryByFacility.values());
-    const sourceIds = primaryRecords.map((item) => item.id);
     const facilityNumbers = primaryRecords
       .map((item) => item.facilityNumber)
       .filter((item): item is string => Boolean(item));
