@@ -55,13 +55,14 @@ export async function GET() {
       .filter((number) => !matchedNumbers.has(number)).length;
     const totalBayeganiFacilities = allBayeganiByFacility.size;
     const primaryRecords = Array.from(primaryByFacility.values());
+    const allFacilityNumbers = Array.from(allBayeganiByFacility.keys());
     const facilityNumbers = primaryRecords
       .map((item) => item.facilityNumber)
       .filter((item): item is string => Boolean(item));
 
-    const documents = facilityNumbers.length
+    const documents = allFacilityNumbers.length
       ? await prisma.debtDocument.findMany({
-          where: { facilityNumber: { in: facilityNumbers } },
+          where: { facilityNumber: { in: allFacilityNumbers } },
           orderBy: { updatedAt: "desc" },
         })
       : [];
@@ -96,7 +97,46 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ success: true, records, totalBayeganiFacilities, missingDebtDiscountingCount });
+    const missingActiveRecords = Array.from(allBayeganiByFacility.values())
+      .filter((source) => {
+        const document = source.facilityNumber
+          ? documentByFacility.get(source.facilityNumber)
+          : undefined;
+        return Boolean(source.facilityNumber && !matchedNumbers.has(source.facilityNumber) &&
+          (document?.status || "فعال") === "فعال");
+      })
+      .map((source) => {
+        const document = source.facilityNumber
+          ? documentByFacility.get(source.facilityNumber)
+          : undefined;
+        return {
+          id: source.id,
+          contractId: source.id,
+          documentId: document?.id ?? null,
+          facilityNumber: source.facilityNumber,
+          facilityTitle: source.facilityTitle,
+          counterLabel: source.counterLabel,
+          serial: source.serial,
+          status: document?.status || "فعال",
+          startDate: document?.startDate || source.startDate || "",
+          endDate: document?.endDate || source.endDate || "",
+          contract: {
+            id: source.id,
+            facilityNumber: source.facilityNumber,
+            facilityTitle: source.facilityTitle,
+            customerNumber: null,
+          },
+        };
+      });
+
+    return NextResponse.json({
+      success: true,
+      records,
+      missingActiveRecords,
+      totalBayeganiFacilities,
+      missingDebtDiscountingCount,
+      missingActiveCount: missingActiveRecords.length,
+    });
   } catch (error) {
     console.error("Debt discounting facilities list error:", error);
     return NextResponse.json(
