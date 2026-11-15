@@ -27,6 +27,8 @@ type ApiResult = {
   success: boolean;
   error?: string;
   records?: FacilityRecord[];
+  totalBayeganiFacilities?: number;
+  missingDebtDiscountingCount?: number;
 };
 
 function normalizeDigits(value: string) {
@@ -38,6 +40,8 @@ function normalizeDigits(value: string) {
 
 export default function DebtDiscountingFacilitiesPage() {
   const [records, setRecords] = useState<FacilityRecord[]>([]);
+  const [missingDebtDiscountingCount, setMissingDebtDiscountingCount] = useState(0);
+  const [totalBayeganiFacilities, setTotalBayeganiFacilities] = useState(0);
   const [search,setSearch]=useState("");
   const [filterType,setFilterType]=useState("facilityNumber");
   const [filterValue,setFilterValue]=useState("");
@@ -104,6 +108,8 @@ export default function DebtDiscountingFacilitiesPage() {
       const result = await response.json() as ApiResult;
       if (!response.ok || !result.success) throw new Error(result.error || "دریافت اطلاعات ناموفق بود.");
       setRecords(result.records || []);
+      setMissingDebtDiscountingCount(result.missingDebtDiscountingCount || 0);
+      setTotalBayeganiFacilities(result.totalBayeganiFacilities || 0);
       setPage(1);
     } catch (e) {
       setError(e instanceof Error ? e.message : "خطا در دریافت اطلاعات");
@@ -172,6 +178,20 @@ export default function DebtDiscountingFacilitiesPage() {
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => void syncRecords()} disabled={syncing || loading} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{syncing ? "در حال همگام‌سازی..." : "بروزرسانی اطلاعات تسهیلات"}</button>
             <button type="button" onClick={() => void loadRecords()} disabled={loading || syncing} className="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50">{loading ? "در حال دریافت..." : "بارگذاری مجدد"}</button>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-3 border-b border-slate-100 p-4 sm:grid-cols-3">
+          <div className="rounded-xl bg-slate-50 p-4">
+            <p className="text-xs text-slate-500">کل تسهیلات یکتای بایگانی (1538.340.)</p>
+            <p className="mt-1 text-xl font-bold text-slate-900">{totalBayeganiFacilities.toLocaleString("fa-IR")}</p>
+          </div>
+          <div className="rounded-xl bg-slate-50 p-4">
+            <p className="text-xs text-slate-500">تسهیلات دارای تطبیق در اسناد خرید دین</p>
+            <p className="mt-1 text-xl font-bold text-slate-900">{records.length.toLocaleString("fa-IR")}</p>
+          </div>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-xs text-amber-800">تسهیلات موجود در بایگانی ولی ناموجود در اسناد خرید دین</p>
+            <p className="mt-1 text-xl font-bold text-amber-900">{missingDebtDiscountingCount.toLocaleString("fa-IR")}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2 border-b border-slate-100 p-4">
