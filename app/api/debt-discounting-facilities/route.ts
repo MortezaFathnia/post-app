@@ -20,6 +20,7 @@ export async function GET() {
           facilityTitle: true,
           counterLabel: true,
           serial: true,
+          status: true,
           startDate: true,
           endDate: true,
         },
@@ -85,7 +86,7 @@ export async function GET() {
         facilityTitle: source.facilityTitle,
         counterLabel: source.counterLabel,
         serial: source.serial,
-        status: document?.status || "فعال",
+        status: source.status || "فعال",
         startDate: document?.startDate || source.startDate || "",
         endDate: document?.endDate || source.endDate || "",
         contract: {
@@ -103,7 +104,7 @@ export async function GET() {
           ? documentByFacility.get(source.facilityNumber)
           : undefined;
         return Boolean(source.facilityNumber && !matchedNumbers.has(source.facilityNumber) &&
-          (document?.status || "فعال") === "فعال");
+          (source.status || "فعال") === "فعال");
       })
       .map((source) => {
         const document = source.facilityNumber
@@ -117,7 +118,7 @@ export async function GET() {
           facilityTitle: source.facilityTitle,
           counterLabel: source.counterLabel,
           serial: source.serial,
-          status: document?.status || "فعال",
+          status: source.status || "فعال",
           startDate: document?.startDate || source.startDate || "",
           endDate: document?.endDate || source.endDate || "",
           contract: {
