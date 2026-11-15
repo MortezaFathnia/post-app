@@ -355,6 +355,12 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                   value={key === "مبلغ مصوب" ? formatAmount(value) : value}
                   readOnly={key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد"}
                   onChange={(event) => changeField(key, event.target.value)}
+                  onKeyDown={(event) => {
+                    if (key === "مبلغ مصوب" && event.key === "*") {
+                      event.preventDefault();
+                      changeField(key, `${normalizeAmount(fields["مبلغ مصوب"])}000`);
+                    }
+                  }}
                   className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
                   placeholder={key}
                 />
