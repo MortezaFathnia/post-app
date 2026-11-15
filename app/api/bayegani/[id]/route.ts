@@ -86,7 +86,19 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ success: false, error: "شناسه نامعتبر است." }, { status: 400 });
     }
 
-    const body = await request.json() as { rawData?: unknown };
+    const body = await request.json() as { rawData?: unknown; status?: string };
+    if (body.status !== undefined) {
+      if (!["فعال", "غیرفعال"].includes(body.status)) {
+        return NextResponse.json({ success: false, error: "وضعیت باید فعال یا غیرفعال باشد." }, { status: 400 });
+      }
+      const existing = await prisma.bayeganiRecord.findUnique({ where: { id: recordId }, select: { id: true, rawData: true } });
+      if (!existing) return NextResponse.json({ success: false, error: "رکورد پیدا نشد." }, { status: 404 });
+      const rawData = existing.rawData && typeof existing.rawData === "object" && !Array.isArray(existing.rawData)
+        ? { ...(existing.rawData as Record<string, unknown>) } : {};
+      rawData["وضعیت کنونی"] = body.status;
+      const updated = await prisma.bayeganiRecord.update({ where: { id: recordId }, data: { status: body.status, rawData: rawData as never } });
+      return NextResponse.json({ success: true, record: serializeRecord(updated) });
+    }
     if (!body.rawData || typeof body.rawData !== "object" || Array.isArray(body.rawData)) {
       return NextResponse.json({ success: false, error: "اطلاعات ویرایش‌شده معتبر نیست." }, { status: 400 });
     }
