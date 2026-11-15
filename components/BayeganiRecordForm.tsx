@@ -83,6 +83,7 @@ async function readApiResponse(response: Response) {
 export default function BayeganiRecordForm({ recordId }: Props) {
   const router = useRouter();
   const [fields, setFields] = useState<Record<string, string>>(initialFields);
+  const [originalFields, setOriginalFields] = useState<Record<string, string>>(initialFields);
   const [loading, setLoading] = useState(Boolean(recordId));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -112,10 +113,9 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const result = await readApiResponse(res);
         if (!res.ok || !result.success) throw new Error(result.error || "دریافت سریال بعدی ناموفق بود.");
         if (active) {
-          setFields((current) => ({
-            ...current,
-            "سریال": result.nextSerial || "1",
-          }));
+          const next = { ...initialFields, "سریال": result.nextSerial || "1" };
+          setFields(next);
+          setOriginalFields(next);
         }
       })
       .catch((e: unknown) => {
@@ -153,6 +153,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         delete next["کد بایگانی جدید"];
         if (active) {
           setFields(next);
+          setOriginalFields(next);
           setCounterQuery([next["کد باجه"], next["نام باجه"]].filter(Boolean).join("-"));
         }
       })
@@ -229,6 +230,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
     ? completeCounters
     : [...completeCounters, currentCounter];
   const entries = Object.entries(fields).filter(([key]) => key !== "مبلغ" && !isHiddenField(key));
+  const hasChanges = JSON.stringify(fields) !== JSON.stringify(originalFields);
   return (
     <div dir="rtl" className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -380,7 +382,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         {success && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{success}</p>}
         <div className="mt-6 flex flex-wrap gap-3 border-t border-slate-100 pt-5">
-          <button type="submit" disabled={saving} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60">{saving ? "در حال ذخیره..." : "ذخیره اطلاعات"}</button>
+          <button type="submit" disabled={saving || !hasChanges} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60">{saving ? "در حال ذخیره..." : "ذخیره اطلاعات"}</button>
           <Link href="/dashboard/bayegani" className="rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">انصراف</Link>
         </div>
       </form>
