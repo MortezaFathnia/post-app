@@ -188,7 +188,7 @@ export default function GuaranteeExtensionPage() {
                 textAlign: position.align || "right",
               }}
             />
-          )}
+          )
         ))}
       </section>
 
