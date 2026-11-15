@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import PersianDatePicker from "@/components/PersianDatePicker";
 import { FormEvent, useEffect, useState } from "react";
 
 type CounterOption = { id: number; code: string; name: string };
@@ -290,7 +291,7 @@ export default function AddDebtCheckPage() {
 
           <div>
             <label htmlFor="dueDate" className="mb-2 block text-sm font-semibold text-slate-700">تاریخ سررسید</label>
-            <input id="dueDate" required value={dueDate} onChange={(event) => setDueDate(event.target.value)} disabled={saving} placeholder="مثلاً ۱۴۰۵/۰۷/۰۴" className={inputClass} />
+            <PersianDatePicker inputId="dueDate" required value={dueDate} onChange={setDueDate} disabled={saving} placeholder="مثلاً ۱۴۰۵/۰۷/۰۴" className={inputClass} />
           </div>
 
           <div>
