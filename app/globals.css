@@ -82,11 +82,54 @@ html.dark .hover\:bg-slate-50\/80:hover { background-color: #1f2937 !important; 
 html.dark .template-toolbar { background: #111827; color: #e5e7eb; border-color: #374151; }
 
 
-/* Persian datepicker: follow the application's active light/dark theme. */
+/* Persian datepicker: explicit white (light) theme by default. */
 .persian-datepicker-theme .rmdp-wrapper,
-.persian-datepicker-theme .rmdp-calendar {
+.persian-datepicker-theme .rmdp-calendar,
+.persian-datepicker-theme .rmdp-month-picker,
+.persian-datepicker-theme .rmdp-year-picker,
+.persian-datepicker-theme .rmdp-time-picker {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+  border-color: #e5e7eb !important;
   border-radius: 12px;
 }
+.persian-datepicker-theme .rmdp-header,
+.persian-datepicker-theme .rmdp-panel,
+.persian-datepicker-theme .rmdp-week,
+.persian-datepicker-theme .rmdp-day,
+.persian-datepicker-theme .rmdp-ym {
+  background-color: transparent !important;
+  color: #1f2937 !important;
+}
+.persian-datepicker-theme .rmdp-week-day { color: #475569 !important; }
+.persian-datepicker-theme .rmdp-day span { color: #1f2937 !important; }
+.persian-datepicker-theme .rmdp-day:not(.rmdp-disabled):not(.rmdp-day-hidden) span:hover,
+.persian-datepicker-theme .rmdp-arrow-container:hover {
+  background-color: #f1f5f9 !important;
+}
+.persian-datepicker-theme .rmdp-day.rmdp-selected span,
+.persian-datepicker-theme .rmdp-day.rmdp-range.start,
+.persian-datepicker-theme .rmdp-day.rmdp-range.end {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+.persian-datepicker-theme .rmdp-day.rmdp-today span {
+  background-color: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+.persian-datepicker-theme .rmdp-day.rmdp-deactive span,
+.persian-datepicker-theme .rmdp-day.rmdp-disabled span {
+  color: #9ca3af !important;
+}
+.persian-datepicker-theme .rmdp-arrow { border-color: #475569 !important; }
+.persian-datepicker-theme .rmdp-header-values,
+.persian-datepicker-theme .rmdp-ym,
+.persian-datepicker-theme .rmdp-ym span { color: #1f2937 !important; }
+.persian-datepicker-theme .rmdp-shadow {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .14) !important;
+}
+
+/* Dark theme overrides when the application has html.dark enabled. */
 html.dark .persian-datepicker-theme,
 html.dark .persian-datepicker-theme .rmdp-wrapper,
 html.dark .persian-datepicker-theme .rmdp-calendar,
