@@ -3,31 +3,15 @@ import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
+const facilityPrefix = "1538.340.";
+
 export async function POST() {
   try {
-    const sourceFacilities = await prisma.debtDiscountingRecord.findMany({
-      where: { facilityNumber: { not: "" } },
-      distinct: ["facilityNumber"],
-      select: {
-        facilityNumber: true,
-        counterLabel: true,
-        serial: true,
-      },
-    });
-
-    const facilityNumbers = sourceFacilities
-      .map((item) => item.facilityNumber)
-      .filter(Boolean);
-
-    if (facilityNumbers.length === 0) {
-      return NextResponse.json({
-        success: true, created: 0, updated: 0, skipped: 0,
-        message: "هیچ شماره تسهیلاتی در جدول اسناد خرید دین وجود ندارد.",
-      });
-    }
-
-    const sourceRecords = await prisma.bayeganiRecord.findMany({
-      where: { facilityNumber: { in: facilityNumbers } },
+    // Start with BayeganiRecord; DebtDiscountingRecord is only the matching
+    // source that determines which Bayegani facilities belong in this list.
+    const bayeganiRecords = await prisma.bayeganiRecord.findMany({
+      where: { facilityNumber: { startsWith: facilityPrefix } },
+      orderBy: [{ facilityNumber: "asc" }, { id: "asc" }],
       select: {
         id: true,
         facilityNumber: true,
@@ -39,20 +23,43 @@ export async function POST() {
       },
     });
 
-    const matchedFacilityNumbers = new Set(
-      sourceRecords.map((record) => record.facilityNumber).filter(Boolean),
-    );
-    const unmatchedFacilities = sourceFacilities.filter(
-      (item) => item.facilityNumber && !matchedFacilityNumbers.has(item.facilityNumber),
-    );
+    const facilityNumbers = Array.from(new Set(
+      bayeganiRecords
+        .map((item) => item.facilityNumber)
+        .filter((item): item is string => Boolean(item)),
+    ));
+
+    if (facilityNumbers.length === 0) {
+      return NextResponse.json({
+        success: true, created: 0, updated: 0, skipped: 0,
+        message: "هیچ تسهیلاتی با پیش‌شماره 1538.340. در جدول بایگانی پیدا نشد.",
+      });
+    }
+
+    const debtRecords = await prisma.debtDiscountingRecord.findMany({
+      where: { facilityNumber: { in: facilityNumbers } },
+      distinct: ["facilityNumber"],
+      select: { facilityNumber: true },
+    });
+    const matchedNumbers = new Set(debtRecords.map((item) => item.facilityNumber));
+
+    const primaryByFacility = new Map<string, (typeof bayeganiRecords)[number]>();
+    for (const source of bayeganiRecords) {
+      const number = source.facilityNumber;
+      if (!number || !matchedNumbers.has(number)) continue;
+      const current = primaryByFacility.get(number);
+      if (!current || (!current.serial && source.serial)) {
+        primaryByFacility.set(number, source);
+      }
+    }
 
     let created = 0;
     let updated = 0;
+    const skipped = facilityNumbers.filter((number) => !matchedNumbers.has(number)).length;
 
     await prisma.$transaction(async (tx) => {
-      for (const source of sourceRecords) {
+      for (const source of primaryByFacility.values()) {
         if (!source.facilityNumber) continue;
-
         const data = {
           facilityNumber: source.facilityNumber,
           facilityTitle: source.facilityTitle,
@@ -62,60 +69,27 @@ export async function POST() {
           endDate: source.endDate || "",
         };
 
-        const existing = await tx.debtDocument.findFirst({
+        const existing = await tx.debtDocument.findUnique({
           where: { contractId: source.id },
           select: { id: true },
         });
 
         if (existing) {
-          await tx.debtDocument.update({
-            where: { id: existing.id },
-            data,
-          });
+          await tx.debtDocument.update({ where: { id: existing.id }, data });
           updated++;
         } else {
-          await tx.debtDocument.create({
-            data: { ...data, contractId: source.id },
-          });
-          created++;
-        }
-      }
-
-      // Some facility numbers exist in the debt-discounting records but have no
-      // corresponding BayeganiRecord. Keep them in the facilities list using
-      // the fields that are actually available from the source records.
-      for (const source of unmatchedFacilities) {
-        const data = {
-          facilityNumber: source.facilityNumber,
-          counterLabel: source.counterLabel || null,
-          serial: source.serial || null,
-        };
-
-        const existing = await tx.debtDocument.findFirst({
-          where: { facilityNumber: source.facilityNumber, contractId: null },
-          select: { id: true },
-        });
-
-        if (existing) {
-          await tx.debtDocument.update({
-            where: { id: existing.id },
-            data,
-          });
-          updated++;
-        } else {
-          await tx.debtDocument.create({ data });
+          await tx.debtDocument.create({ data: { ...data, contractId: source.id } });
           created++;
         }
       }
     });
 
-    const skipped = 0;
     return NextResponse.json({
       success: true,
       created,
       updated,
       skipped,
-      message: "همگام‌سازی اطلاعات تسهیلات خرید دین انجام شد.",
+      message: "همگام‌سازی تسهیلات بر اساس بایگانی و تطبیق با اسناد خرید دین انجام شد.",
     });
   } catch (error) {
     console.error("DebtDocument facilities sync error:", error);
