@@ -40,6 +40,7 @@ export default function PersianDatePicker({
         onChange={(date) => onChange(date ? date.format("YYYY/MM/DD") : "")}
         calendar={persian}
         locale={persian_fa}
+        className="persian-datepicker-theme"
         calendarPosition="bottom-right"
         format="YYYY/MM/DD"
         inputClass={className}
