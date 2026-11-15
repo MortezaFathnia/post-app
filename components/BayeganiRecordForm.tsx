@@ -190,7 +190,12 @@ export default function BayeganiRecordForm({ recordId }: Props) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(""); setSuccess(""); setSaving(true);
+    setError(""); setSuccess("");
+    if (fields["کد ملی"] && !/^[0-9]{10}$/.test(fields["کد ملی"])) {
+      setError("کد ملی باید دقیقاً شامل ۱۰ رقم انگلیسی باشد.");
+      return;
+    }
+    setSaving(true);
     try {
       const response = recordId
         ? await fetch(`/api/bayegani/${recordId}`, {
@@ -353,6 +358,10 @@ export default function BayeganiRecordForm({ recordId }: Props) {
               ) : (
                 <input
                   value={key === "مبلغ مصوب" ? formatAmount(value) : value}
+                  pattern={key === "کد ملی" ? "[0-9]{10}" : undefined}
+                  maxLength={key === "کد ملی" ? 10 : undefined}
+                  inputMode={key === "کد ملی" ? "numeric" : undefined}
+                  title={key === "کد ملی" ? "کد ملی باید دقیقاً ۱۰ رقم انگلیسی باشد." : undefined}
                   readOnly={key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد"}
                   onChange={(event) => changeField(key, event.target.value)}
                   onKeyDown={(event) => {
