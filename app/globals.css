@@ -82,6 +82,64 @@ html.dark .hover\:bg-slate-50\/80:hover { background-color: #1f2937 !important; 
 html.dark .template-toolbar { background: #111827; color: #e5e7eb; border-color: #374151; }
 
 
+/* Persian datepicker: follow the application's active light/dark theme. */
+.persian-datepicker-theme .rmdp-wrapper,
+.persian-datepicker-theme .rmdp-calendar {
+  border-radius: 12px;
+}
+html.dark .persian-datepicker-theme,
+html.dark .persian-datepicker-theme .rmdp-wrapper,
+html.dark .persian-datepicker-theme .rmdp-calendar,
+html.dark .persian-datepicker-theme .rmdp-month-picker,
+html.dark .persian-datepicker-theme .rmdp-year-picker,
+html.dark .persian-datepicker-theme .rmdp-time-picker {
+  background-color: #111827 !important;
+  color: #e5e7eb !important;
+  border-color: #374151 !important;
+}
+html.dark .persian-datepicker-theme .rmdp-header,
+html.dark .persian-datepicker-theme .rmdp-panel,
+html.dark .persian-datepicker-theme .rmdp-week,
+html.dark .persian-datepicker-theme .rmdp-day,
+html.dark .persian-datepicker-theme .rmdp-ym {
+  background-color: transparent !important;
+  color: #e5e7eb !important;
+}
+html.dark .persian-datepicker-theme .rmdp-week-day { color: #93c5fd !important; }
+html.dark .persian-datepicker-theme .rmdp-day span { color: #e5e7eb !important; }
+html.dark .persian-datepicker-theme .rmdp-day:not(.rmdp-disabled):not(.rmdp-day-hidden) span:hover,
+html.dark .persian-datepicker-theme .rmdp-arrow-container:hover {
+  background-color: #374151 !important;
+}
+html.dark .persian-datepicker-theme .rmdp-day.rmdp-selected span,
+html.dark .persian-datepicker-theme .rmdp-day.rmdp-range.start,
+html.dark .persian-datepicker-theme .rmdp-day.rmdp-range.end {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+html.dark .persian-datepicker-theme .rmdp-day.rmdp-today span {
+  background-color: #1e3a8a !important;
+  color: #bfdbfe !important;
+}
+html.dark .persian-datepicker-theme .rmdp-day.rmdp-deactive span,
+html.dark .persian-datepicker-theme .rmdp-day.rmdp-disabled span {
+  color: #6b7280 !important;
+}
+html.dark .persian-datepicker-theme .rmdp-arrow {
+  border-color: #d1d5db !important;
+}
+html.dark .persian-datepicker-theme .rmdp-header-values,
+html.dark .persian-datepicker-theme .rmdp-ym,
+html.dark .persian-datepicker-theme .rmdp-ym span {
+  color: #f9fafb !important;
+}
+html.dark .persian-datepicker-theme .rmdp-day.rmdp-selected span:hover {
+  background-color: #1d4ed8 !important;
+}
+html.dark .persian-datepicker-theme .rmdp-shadow {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .4) !important;
+}
+
 /* Consistent typography for HTML contract previews injected into app pages. */
 .contract-preview,
 .document,
