@@ -27,6 +27,8 @@ type ApiResult = {
   success: boolean;
   error?: string;
   records?: FacilityRecord[];
+  missingActiveRecords?: FacilityRecord[];
+  missingActiveCount?: number;
   totalBayeganiFacilities?: number;
   missingDebtDiscountingCount?: number;
 };
@@ -40,6 +42,7 @@ function normalizeDigits(value: string) {
 
 export default function DebtDiscountingFacilitiesPage() {
   const [records, setRecords] = useState<FacilityRecord[]>([]);
+  const [missingActiveRecords, setMissingActiveRecords] = useState<FacilityRecord[]>([]);
   const [missingDebtDiscountingCount, setMissingDebtDiscountingCount] = useState(0);
   const [totalBayeganiFacilities, setTotalBayeganiFacilities] = useState(0);
   const [search,setSearch]=useState("");
@@ -108,6 +111,7 @@ export default function DebtDiscountingFacilitiesPage() {
       const result = await response.json() as ApiResult;
       if (!response.ok || !result.success) throw new Error(result.error || "دریافت اطلاعات ناموفق بود.");
       setRecords(result.records || []);
+      setMissingActiveRecords(result.missingActiveRecords || []);
       setMissingDebtDiscountingCount(result.missingDebtDiscountingCount || 0);
       setTotalBayeganiFacilities(result.totalBayeganiFacilities || 0);
       setPage(1);
@@ -192,6 +196,32 @@ export default function DebtDiscountingFacilitiesPage() {
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
             <p className="text-xs text-amber-800">تسهیلات موجود در بایگانی ولی ناموجود در اسناد خرید دین</p>
             <p className="mt-1 text-xl font-bold text-amber-900">{missingDebtDiscountingCount.toLocaleString("fa-IR")}</p>
+          </div>
+        </div>
+        <div className="border-b border-slate-100 p-5">
+          <h3 className="font-bold text-slate-900">تسهیلات فعالِ نامنطبق با اسناد خرید دین</h3>
+          <p className="mt-1 text-xs text-slate-500">این فهرست فقط تسهیلاتی را نشان می‌دهد که در BayeganiRecord وجود دارند، در DebtDiscountingRecord تطبیق ندارند و وضعیت آن‌ها فعال است.</p>
+          <p className="mt-2 text-sm font-semibold text-amber-800">تعداد: {missingActiveRecords.length.toLocaleString("fa-IR")}</p>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full min-w-[850px] text-right text-sm">
+              <thead className="bg-slate-50 text-slate-600"><tr>
+                <th className="px-3 py-2">ردیف</th><th className="px-3 py-2">عنوان تسهیلات</th><th className="px-3 py-2">شماره تسهیلات</th><th className="px-3 py-2">کد باجه - نام باجه</th><th className="px-3 py-2">سریال</th><th className="px-3 py-2">وضعیت</th>
+              </tr></thead>
+              <tbody className="divide-y divide-slate-100">
+                {missingActiveRecords.length === 0 ? (
+                  <tr><td colSpan={6} className="px-3 py-6 text-center text-slate-500">مورد نامنطبقِ فعالی وجود ندارد.</td></tr>
+                ) : missingActiveRecords.map((record, index) => (
+                  <tr key={record.id}>
+                    <td className="px-3 py-2">{(index + 1).toLocaleString("fa-IR")}</td>
+                    <td className="px-3 py-2">{record.facilityTitle || "—"}</td>
+                    <td className="px-3 py-2" dir="ltr">{record.facilityNumber || "—"}</td>
+                    <td className="px-3 py-2">{record.counterLabel || "—"}</td>
+                    <td className="px-3 py-2" dir="ltr">{record.serial || "—"}</td>
+                    <td className="px-3 py-2">{record.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
         <div className="flex flex-wrap gap-2 border-b border-slate-100 p-4">
