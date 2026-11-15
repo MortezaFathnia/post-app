@@ -34,15 +34,26 @@ export async function GET() {
     const matchedNumbers = new Set(debtRecords.map((item) => item.facilityNumber));
     const primaryByFacility = new Map<string, (typeof bayeganiRecords)[number]>();
 
+    // Count unique facilities in BayeganiRecord that have no exact facilityNumber
+    // match in DebtDiscountingRecord. Duplicate archive rows count as one facility.
+    const allBayeganiByFacility = new Map<string, (typeof bayeganiRecords)[number]>();
     for (const source of bayeganiRecords) {
       const number = source.facilityNumber;
-      if (!number || !matchedNumbers.has(number)) continue;
-      const current = primaryByFacility.get(number);
+      if (!number) continue;
+      const current = allBayeganiByFacility.get(number);
       if (!current || (!current.serial && source.serial)) {
+        allBayeganiByFacility.set(number, source);
+      }
+      if (!matchedNumbers.has(number)) continue;
+      const matchedCurrent = primaryByFacility.get(number);
+      if (!matchedCurrent || (!matchedCurrent.serial && source.serial)) {
         primaryByFacility.set(number, source);
       }
     }
 
+    const missingDebtDiscountingCount = Array.from(allBayeganiByFacility.keys())
+      .filter((number) => !matchedNumbers.has(number)).length;
+    const totalBayeganiFacilities = allBayeganiByFacility.size;
     const primaryRecords = Array.from(primaryByFacility.values());
     const facilityNumbers = primaryRecords
       .map((item) => item.facilityNumber)
@@ -85,7 +96,7 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ success: true, records });
+    return NextResponse.json({ success: true, records, totalBayeganiFacilities, missingDebtDiscountingCount });
   } catch (error) {
     console.error("Debt discounting facilities list error:", error);
     return NextResponse.json(
