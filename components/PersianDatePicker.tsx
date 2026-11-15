@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import DatePicker from "react-multi-date-picker";
 
 type PersianDatePickerProps = {
@@ -10,8 +11,8 @@ type PersianDatePickerProps = {
   disabled?: boolean;
   required?: boolean;
   containerClassName?: string;
-  containerStyle?: React.CSSProperties;
-  style?: React.CSSProperties;
+  containerStyle?: CSSProperties;
+  style?: CSSProperties;
   inputId?: string;
   "aria-label"?: string;
 };
