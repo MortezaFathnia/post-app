@@ -185,7 +185,7 @@ export default function DebtDiscountingFacilitiesPage() {
             <p className="mt-1 text-xs text-slate-500">تمام تسهیلات یکتای بایگانی با پیش‌شماره 1538.340. نمایش داده می‌شوند؛ وضعیت از بایگانی تسهیلات خوانده می‌شود.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => void syncRecords()} disabled={syncing || loading} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{syncing ? "در حال همگام‌سازی..." : "بروزرسانی اطلاعات تسهیلات"}</button>
+            <button type="button" onClick={() => void syncRecords()} disabled={syncing || loading} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{syncing ? "در حال همگام‌سازی..." : "بروزرسانی جدول تسهیلات"}</button>
             <button type="button" onClick={() => void loadRecords()} disabled={loading || syncing} className="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50">{loading ? "در حال دریافت..." : "بارگذاری مجدد"}</button>
           </div>
         </div>
