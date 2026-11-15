@@ -192,7 +192,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(""); setSuccess("");
-    if (!hasAllRequiredFields) {
+    if (!recordId && !hasAllRequiredFields) {
       setError("لطفاً تمام فیلدهای الزامی را تکمیل کنید. فقط تعداد اقساط و توضیحات اختیاری هستند.");
       return;
     }
@@ -237,6 +237,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   const hasChanges = JSON.stringify(fields) !== JSON.stringify(originalFields);
   const requiredFields = Object.keys(initialFields).filter((key) => key !== "تعداد اقساط" && key !== "توضیحات");
   const hasAllRequiredFields = requiredFields.every((key) => String(fields[key] ?? "").trim().length > 0);
+  const canSave = hasChanges && (Boolean(recordId) || hasAllRequiredFields);
   return (
     <div dir="rtl" className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -388,7 +389,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         {success && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{success}</p>}
         <div className="mt-6 flex flex-wrap gap-3 border-t border-slate-100 pt-5">
-          <button type="submit" disabled={saving || !hasChanges || !hasAllRequiredFields} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600 disabled:opacity-100">{saving ? "در حال ذخیره..." : "ذخیره اطلاعات"}</button>
+          <button type="submit" disabled={saving || !canSave} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600 disabled:opacity-100">{saving ? "در حال ذخیره..." : "ذخیره اطلاعات"}</button>
           <Link href="/dashboard/bayegani" className="rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">انصراف</Link>
         </div>
       </form>
