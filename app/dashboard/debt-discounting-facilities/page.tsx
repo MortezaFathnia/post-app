@@ -12,6 +12,7 @@ type ContractOption = {
 type FacilityRecord = {
   id: number;
   contractId: number | null;
+  documentId?: number | null;
   facilityNumber: string | null;
   facilityTitle: string | null;
   counterLabel: string | null;
@@ -140,7 +141,7 @@ export default function DebtDiscountingFacilitiesPage() {
       const response = await fetch("/api/debt-discounting-facilities", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, status: nextStatus }),
+        body: JSON.stringify({ contractId: id, status: nextStatus }),
       });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || "تغییر وضعیت ناموفق بود.");
@@ -156,7 +157,7 @@ export default function DebtDiscountingFacilitiesPage() {
     <div dir="rtl" className="space-y-6">
       <header>
         <h1 className="text-2xl font-bold text-slate-900">تسهیلات خرید دین</h1>
-        <p className="mt-2 text-sm text-slate-500">اطلاعات تسهیلات از جدول DebtDocument دریافت می‌شود.</p>
+        <p className="mt-2 text-sm text-slate-500">اطلاعات اصلی از بایگانی تسهیلات با پیش‌شماره 1538.340. دریافت و با اسناد خرید دین تطبیق داده می‌شود.</p>
       </header>
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -166,7 +167,7 @@ export default function DebtDiscountingFacilitiesPage() {
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-5">
           <div>
             <h2 className="font-bold text-slate-900">فهرست تسهیلات خرید دین</h2>
-            <p className="mt-1 text-xs text-slate-500">تمام رکوردها دریافت می‌شوند؛ جستجو، فیلتر و صفحه‌بندی در مرورگر انجام می‌شود.</p>
+            <p className="mt-1 text-xs text-slate-500">فقط تسهیلات دارای پیش‌شماره 1538.340. که در اسناد خرید دین نیز وجود دارند نمایش داده می‌شوند؛ اطلاعات بایگانی اولویت دارد.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => void syncRecords()} disabled={syncing || loading} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{syncing ? "در حال همگام‌سازی..." : "بروزرسانی اطلاعات تسهیلات"}</button>
