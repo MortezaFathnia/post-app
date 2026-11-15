@@ -1,4 +1,5 @@
 "use client";
+import PersianDatePicker from "@/components/PersianDatePicker";
 
 import Link from "next/link";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
@@ -637,7 +638,11 @@ const blob = new Blob(["\uFEFF", windowsText], { type: "text/plain;charset=utf-8
               <option value="dueDate">تاریخ سررسید</option>
               <option value="bankAgent">بانک عامل</option>
             </select>
-            <input value={filterValue} onChange={(event) => { setFilterValue(event.target.value); setPage(1); }} placeholder="مقدار موردنظر برای فیلتر..." aria-label="مقدار فیلتر" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
+            {filterType === "dueDate" ? (
+              <PersianDatePicker value={filterValue} onChange={(value) => { setFilterValue(value); setPage(1); }} placeholder="انتخاب تاریخ سررسید" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
+            ) : (
+              <input value={filterValue} onChange={(event) => { setFilterValue(event.target.value); setPage(1); }} placeholder="مقدار موردنظر برای فیلتر..." aria-label="مقدار فیلتر" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
+            )}
             <button type="button" onClick={() => { setFilterValue(""); setPage(1); }} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100">پاک کردن</button>
           </div>
         </div>
