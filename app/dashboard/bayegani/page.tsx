@@ -1,4 +1,5 @@
 "use client";
+import PersianDatePicker from "@/components/PersianDatePicker";
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
@@ -192,7 +193,11 @@ export default function BayeganiPage() {
             <option value="serialNull">سریال خالی (null)</option>
             <option value="facilityNumberNull">شماره تسهیلات خالی (NULL)</option>
           </select>
-          <input value={filterValue} onChange={(e) => { setFilterValue(e.target.value); setPage(1); }} disabled={filterType === "serialNull" || filterType === "facilityNumberNull"} placeholder={filterType === "serialNull" ? "فقط رکوردهای بدون سریال" : filterType === "facilityNumberNull" ? "فقط رکوردهای بدون شماره تسهیلات" : "مقدار موردنظر برای فیلتر..."} aria-label="مقدار فیلتر" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm disabled:bg-slate-100 disabled:text-slate-500" />
+          {filterType === "startDate" || filterType === "endDate" ? (
+            <PersianDatePicker value={filterValue} onChange={(value) => { setFilterValue(value); setPage(1); }} placeholder="انتخاب تاریخ" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
+          ) : (
+            <input value={filterValue} onChange={(e) => { setFilterValue(e.target.value); setPage(1); }} disabled={filterType === "serialNull" || filterType === "facilityNumberNull"} placeholder={filterType === "serialNull" ? "فقط رکوردهای بدون سریال" : filterType === "facilityNumberNull" ? "فقط رکوردهای بدون شماره تسهیلات" : "مقدار موردنظر برای فیلتر..."} aria-label="مقدار فیلتر" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm disabled:bg-slate-100 disabled:text-slate-500" />
+          )}
           <button type="button" onClick={() => { setFilterValue(""); setPage(1); }} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100">پاک کردن</button>
         </div>
       </div>
