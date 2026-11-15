@@ -100,9 +100,9 @@ export default function DebtDiscountingFacilitiesPage() {
   );
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [updatingStatuses, setUpdatingStatuses] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [editingStatuses, setEditingStatuses] = useState(false);
 
   async function loadRecords() {
     setLoading(true);
@@ -163,22 +163,7 @@ export default function DebtDiscountingFacilitiesPage() {
     }
   }
 
-  async function updateAllFacilityStatuses() {
-    setError("");
-    setMessage("");
-    setUpdatingStatuses(true);
-    try {
-      const response = await fetch("/api/debt-discounting-facilities/update-status", { method: "POST" });
-      const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || "بروزرسانی وضعیت تسهیلات ناموفق بود.");
-      setMessage("وضعیت " + Number(result.updated || 0).toLocaleString("fa-IR") + " تسهیلات در جدول اسناد خرید دین بروزرسانی شد.");
-      await loadRecords();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "خطا در بروزرسانی وضعیت تسهیلات");
-    } finally {
-      setUpdatingStatuses(false);
-    }
-  }
+
 
   return (
     <div dir="rtl" className="space-y-6">
@@ -193,12 +178,11 @@ export default function DebtDiscountingFacilitiesPage() {
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-5">
           <div>
-            <h2 className="font-bold text-slate-900">فهرست تسهیلات خرید دین</h2>
+            <div className="flex flex-wrap items-center gap-3"><h2 className="font-bold text-slate-900">فهرست تسهیلات خرید دین</h2><button type="button" onClick={() => setEditingStatuses((current) => !current)} className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${editingStatuses ? "bg-slate-200 text-slate-700 hover:bg-slate-300" : "bg-emerald-600 text-white hover:bg-emerald-700"}`}>{editingStatuses ? "پایان ویرایش وضعیت" : "ویرایش وضعیت تسهیلات"}</button></div>
             <p className="mt-1 text-xs text-slate-500">تمام تسهیلات یکتای بایگانی با پیش‌شماره 1538.340. نمایش داده می‌شوند؛ وضعیت از بایگانی تسهیلات خوانده می‌شود.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => void syncRecords()} disabled={syncing || loading || updatingStatuses} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{syncing ? "در حال همگام‌سازی..." : "بروزرسانی اطلاعات تسهیلات"}</button>
-            <button type="button" onClick={() => void updateAllFacilityStatuses()} disabled={updatingStatuses || loading || syncing} className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">{updatingStatuses ? "در حال بروزرسانی وضعیت..." : "بروزرسانی وضعیت تسهیلات"}</button>
+            <button type="button" onClick={() => void syncRecords()} disabled={syncing || loading} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{syncing ? "در حال همگام‌سازی..." : "بروزرسانی اطلاعات تسهیلات"}</button>
             <button type="button" onClick={() => void loadRecords()} disabled={loading || syncing} className="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50">{loading ? "در حال دریافت..." : "بارگذاری مجدد"}</button>
           </div>
         </div>
@@ -250,10 +234,14 @@ export default function DebtDiscountingFacilitiesPage() {
                   <td className="px-4 py-3">{record.counterLabel || "—"}</td>
                   <td className="px-4 py-3" dir="ltr">{record.serial || "—"}</td>
                   <td className="px-4 py-3">
-                    <select aria-label={`وضعیت تسهیلات ${record.id}`} value={record.status} onChange={(e) => void updateStatus(record.id, e.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm">
-                      <option value="فعال">فعال</option>
-                      <option value="غیرفعال">غیرفعال</option>
-                    </select>
+                    {editingStatuses ? (
+                      <select aria-label={`وضعیت تسهیلات ${record.id}`} value={record.status} onChange={(e) => void updateStatus(record.id, e.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm">
+                        <option value="فعال">فعال</option>
+                        <option value="غیرفعال">غیرفعال</option>
+                      </select>
+                    ) : (
+                      <span className={record.status === "فعال" ? "font-medium text-emerald-700" : "font-medium text-slate-500"}>{record.status}</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">{record.startDate}</td>
                   <td className="px-4 py-3">{record.endDate}</td>
