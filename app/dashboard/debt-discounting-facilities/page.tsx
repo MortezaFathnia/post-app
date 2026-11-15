@@ -46,12 +46,14 @@ export default function DebtDiscountingFacilitiesPage() {
   const [missingDebtDiscountingCount, setMissingDebtDiscountingCount] = useState(0);
   const [totalBayeganiFacilities, setTotalBayeganiFacilities] = useState(0);
   const [search,setSearch]=useState("");
+  const [mismatchFilter, setMismatchFilter] = useState("all");
   const [filterType,setFilterType]=useState("facilityNumber");
   const [filterValue,setFilterValue]=useState("");
   const [page,setPage]=useState(1);
   const [pageSize,setPageSize]=useState(20);
 
-  const filteredRecords = records.filter((record) => {
+  const sourceRecords = mismatchFilter === "activeMismatch" ? missingActiveRecords : records;
+  const filteredRecords = sourceRecords.filter((record) => {
     const values = [
       record.id,
       record.contractId,
@@ -151,7 +153,7 @@ export default function DebtDiscountingFacilitiesPage() {
       const response = await fetch("/api/debt-discounting-facilities", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contractId: id, status: nextStatus }),
+        body: JSON.stringify({ status: nextStatus }),
       });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || "تغییر وضعیت ناموفق بود.");
@@ -217,7 +219,7 @@ export default function DebtDiscountingFacilitiesPage() {
                     <td className="px-3 py-2" dir="ltr">{record.facilityNumber || "—"}</td>
                     <td className="px-3 py-2">{record.counterLabel || "—"}</td>
                     <td className="px-3 py-2" dir="ltr">{record.serial || "—"}</td>
-                    <td className="px-3 py-2">{record.status}</td>
+                    <td className="px-3 py-2"><select aria-label={`وضعیت تسهیلات ${record.id}`} value={record.status} onChange={(e) => void updateStatus(record.id, e.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm"><option value="فعال">فعال</option><option value="غیرفعال">غیرفعال</option></select></td>
                   </tr>
                 ))}
               </tbody>
@@ -259,7 +261,7 @@ export default function DebtDiscountingFacilitiesPage() {
                   <td className="px-4 py-3">
                     <select aria-label={`وضعیت تسهیلات ${record.id}`} value={record.status} onChange={(e) => void updateStatus(record.id, e.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm">
                       <option value="فعال">فعال</option>
-                      <option value="تسویه شده">تسویه شده</option>
+                      <option value="غیرفعال">غیرفعال</option>
                     </select>
                   </td>
                   <td className="px-4 py-3">{record.startDate}</td>
