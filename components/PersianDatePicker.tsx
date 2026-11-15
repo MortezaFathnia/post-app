@@ -2,6 +2,8 @@
 
 import type { CSSProperties } from "react";
 import DatePicker from "react-multi-date-picker";
+import persian from "react-date-object/calendars/persian";
+import persian_fa from "react-date-object/locales/persian_fa";
 
 type PersianDatePickerProps = {
   value: string;
@@ -36,8 +38,8 @@ export default function PersianDatePicker({
         id={inputId}
         value={value || ""}
         onChange={(date) => onChange(date ? date.format("YYYY/MM/DD") : "")}
-        calendar="persian"
-        locale="fa"
+        calendar={persian}
+        locale={persian_fa}
         calendarPosition="bottom-right"
         format="YYYY/MM/DD"
         inputClass={className}
