@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
-const allowedStatuses = ["فعال", "تسویه شده"];
 const facilityPrefix = "1538.340.";
 
 export async function GET() {
@@ -33,7 +32,6 @@ export async function GET() {
     ]);
 
     const matchedNumbers = new Set(debtRecords.map((item) => item.facilityNumber));
-    const primaryByFacility = new Map<string, (typeof bayeganiRecords)[number]>();
 
     // Count unique facilities in BayeganiRecord that have no exact facilityNumber
     // match in DebtDiscountingRecord. Duplicate archive rows count as one facility.
@@ -45,21 +43,12 @@ export async function GET() {
       if (!current || (!current.serial && source.serial)) {
         allBayeganiByFacility.set(number, source);
       }
-      if (!matchedNumbers.has(number)) continue;
-      const matchedCurrent = primaryByFacility.get(number);
-      if (!matchedCurrent || (!matchedCurrent.serial && source.serial)) {
-        primaryByFacility.set(number, source);
-      }
     }
 
     const missingDebtDiscountingCount = Array.from(allBayeganiByFacility.keys())
       .filter((number) => !matchedNumbers.has(number)).length;
     const totalBayeganiFacilities = allBayeganiByFacility.size;
-    const primaryRecords = Array.from(primaryByFacility.values());
     const allFacilityNumbers = Array.from(allBayeganiByFacility.keys());
-    const facilityNumbers = primaryRecords
-      .map((item) => item.facilityNumber)
-      .filter((item): item is string => Boolean(item));
 
     const documents = allFacilityNumbers.length
       ? await prisma.debtDocument.findMany({
@@ -74,7 +63,7 @@ export async function GET() {
       }
     }
 
-    const records = primaryRecords.map((source) => {
+    const records = Array.from(allBayeganiByFacility.values()).map((source) => {
       const document = source.facilityNumber
         ? documentByFacility.get(source.facilityNumber)
         : undefined;
@@ -87,6 +76,7 @@ export async function GET() {
         counterLabel: source.counterLabel,
         serial: source.serial,
         status: source.status || "فعال",
+        hasDebtDiscountingRecord: Boolean(source.facilityNumber && matchedNumbers.has(source.facilityNumber)),
         startDate: document?.startDate || source.startDate || "",
         endDate: document?.endDate || source.endDate || "",
         contract: {
@@ -98,45 +88,11 @@ export async function GET() {
       };
     });
 
-    const missingActiveRecords = Array.from(allBayeganiByFacility.values())
-      .filter((source) => {
-        const document = source.facilityNumber
-          ? documentByFacility.get(source.facilityNumber)
-          : undefined;
-        return Boolean(source.facilityNumber && !matchedNumbers.has(source.facilityNumber) &&
-          (source.status || "فعال") === "فعال");
-      })
-      .map((source) => {
-        const document = source.facilityNumber
-          ? documentByFacility.get(source.facilityNumber)
-          : undefined;
-        return {
-          id: source.id,
-          contractId: source.id,
-          documentId: document?.id ?? null,
-          facilityNumber: source.facilityNumber,
-          facilityTitle: source.facilityTitle,
-          counterLabel: source.counterLabel,
-          serial: source.serial,
-          status: source.status || "فعال",
-          startDate: document?.startDate || source.startDate || "",
-          endDate: document?.endDate || source.endDate || "",
-          contract: {
-            id: source.id,
-            facilityNumber: source.facilityNumber,
-            facilityTitle: source.facilityTitle,
-            customerNumber: null,
-          },
-        };
-      });
-
     return NextResponse.json({
       success: true,
       records,
-      missingActiveRecords,
       totalBayeganiFacilities,
       missingDebtDiscountingCount,
-      missingActiveCount: missingActiveRecords.length,
     });
   } catch (error) {
     console.error("Debt discounting facilities list error:", error);
