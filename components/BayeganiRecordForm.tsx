@@ -388,7 +388,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         {success && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{success}</p>}
         <div className="mt-6 flex flex-wrap gap-3 border-t border-slate-100 pt-5">
-          <button type="submit" disabled={saving || !hasChanges || !hasAllRequiredFields} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60">{saving ? "در حال ذخیره..." : "ذخیره اطلاعات"}</button>
+          <button type="submit" disabled={saving || !hasChanges || !hasAllRequiredFields} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600 disabled:opacity-100">{saving ? "در حال ذخیره..." : "ذخیره اطلاعات"}</button>
           <Link href="/dashboard/bayegani" className="rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">انصراف</Link>
         </div>
       </form>
