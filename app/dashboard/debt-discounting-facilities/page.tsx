@@ -102,7 +102,7 @@ export default function DebtDiscountingFacilitiesPage() {
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [editingStatuses, setEditingStatuses] = useState(false);
+  const [updatingRecordId, setUpdatingRecordId] = useState<number | null>(null);
 
   async function loadRecords() {
     setLoading(true);
@@ -147,6 +147,7 @@ export default function DebtDiscountingFacilitiesPage() {
   async function updateStatus(id: number, nextStatus: string) {
     setError("");
     setMessage("");
+    setUpdatingRecordId(id);
     try {
       const response = await fetch(`/api/bayegani/${id}`, {
         method: "PATCH",
@@ -160,6 +161,8 @@ export default function DebtDiscountingFacilitiesPage() {
       ));
     } catch (e) {
       setError(e instanceof Error ? e.message : "خطا در تغییر وضعیت");
+    } finally {
+      setUpdatingRecordId(null);
     }
   }
 
@@ -178,7 +181,7 @@ export default function DebtDiscountingFacilitiesPage() {
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-5">
           <div>
-            <div className="flex flex-wrap items-center gap-3"><h2 className="font-bold text-slate-900">فهرست تسهیلات خرید دین</h2><button type="button" onClick={() => setEditingStatuses((current) => !current)} className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${editingStatuses ? "bg-slate-200 text-slate-700 hover:bg-slate-300" : "bg-emerald-600 text-white hover:bg-emerald-700"}`}>{editingStatuses ? "پایان ویرایش وضعیت" : "ویرایش وضعیت تسهیلات"}</button></div>
+            <h2 className="font-bold text-slate-900">فهرست تسهیلات خرید دین</h2>
             <p className="mt-1 text-xs text-slate-500">تمام تسهیلات یکتای بایگانی با پیش‌شماره 1538.340. نمایش داده می‌شوند؛ وضعیت از بایگانی تسهیلات خوانده می‌شود.</p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -221,11 +224,12 @@ export default function DebtDiscountingFacilitiesPage() {
                 <th className="px-4 py-3 font-semibold">وضعیت</th>
                 <th className="px-4 py-3 font-semibold">تاریخ شروع</th>
                 <th className="px-4 py-3 font-semibold">تاریخ پایان</th>
+                <th className="px-4 py-3 font-semibold">عملیات</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {pageRecords.length === 0 ? (
-                <tr><td colSpan={8} className="px-4 py-12 text-center text-slate-500">{loading ? "در حال دریافت اطلاعات..." : "هنوز تسهیلاتی ثبت نشده است."}</td></tr>
+                <tr><td colSpan={9} className="px-4 py-12 text-center text-slate-500">{loading ? "در حال دریافت اطلاعات..." : "هنوز تسهیلاتی ثبت نشده است."}</td></tr>
               ) : pageRecords.map((record, index) => (
                 <tr key={record.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3">{(firstRecord+index).toLocaleString("fa-IR")}</td>
@@ -234,17 +238,20 @@ export default function DebtDiscountingFacilitiesPage() {
                   <td className="px-4 py-3">{record.counterLabel || "—"}</td>
                   <td className="px-4 py-3" dir="ltr">{record.serial || "—"}</td>
                   <td className="px-4 py-3">
-                    {editingStatuses ? (
-                      <select aria-label={`وضعیت تسهیلات ${record.id}`} value={record.status} onChange={(e) => void updateStatus(record.id, e.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm">
-                        <option value="فعال">فعال</option>
-                        <option value="غیرفعال">غیرفعال</option>
-                      </select>
-                    ) : (
-                      <span className={record.status === "فعال" ? "font-medium text-emerald-700" : "font-medium text-slate-500"}>{record.status}</span>
-                    )}
+                    <span className={record.status === "فعال" ? "font-medium text-emerald-700" : "font-medium text-slate-500"}>{record.status}</span>
                   </td>
                   <td className="px-4 py-3">{record.startDate}</td>
                   <td className="px-4 py-3">{record.endDate}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => void updateStatus(record.id, record.status === "فعال" ? "غیرفعال" : "فعال")}
+                      disabled={updatingRecordId === record.id}
+                      className="whitespace-nowrap rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {updatingRecordId === record.id ? "در حال بروزرسانی..." : record.status === "فعال" ? "غیرفعال کردن" : "فعال کردن"}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
