@@ -18,6 +18,7 @@ type FacilityRecord = {
   counterLabel: string | null;
   serial: string | null;
   status: string;
+  hasDebtDiscountingRecord: boolean;
   startDate: string;
   endDate: string;
   contract: ContractOption | null;
@@ -27,8 +28,6 @@ type ApiResult = {
   success: boolean;
   error?: string;
   records?: FacilityRecord[];
-  missingActiveRecords?: FacilityRecord[];
-  missingActiveCount?: number;
   totalBayeganiFacilities?: number;
   missingDebtDiscountingCount?: number;
 };
@@ -42,7 +41,6 @@ function normalizeDigits(value: string) {
 
 export default function DebtDiscountingFacilitiesPage() {
   const [records, setRecords] = useState<FacilityRecord[]>([]);
-  const [missingActiveRecords, setMissingActiveRecords] = useState<FacilityRecord[]>([]);
   const [missingDebtDiscountingCount, setMissingDebtDiscountingCount] = useState(0);
   const [totalBayeganiFacilities, setTotalBayeganiFacilities] = useState(0);
   const [search,setSearch]=useState("");
@@ -52,8 +50,8 @@ export default function DebtDiscountingFacilitiesPage() {
   const [page,setPage]=useState(1);
   const [pageSize,setPageSize]=useState(20);
 
-  const sourceRecords = mismatchFilter === "activeMismatch" ? missingActiveRecords : records;
-  const filteredRecords = sourceRecords.filter((record) => {
+  const filteredRecords = records.filter((record) => {
+    if (mismatchFilter === "activeMismatch" && !(record.status === "فعال" && !record.hasDebtDiscountingRecord)) return false;
     const values = [
       record.id,
       record.contractId,
@@ -102,6 +100,7 @@ export default function DebtDiscountingFacilitiesPage() {
   );
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [updatingStatuses, setUpdatingStatuses] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -113,7 +112,6 @@ export default function DebtDiscountingFacilitiesPage() {
       const result = await response.json() as ApiResult;
       if (!response.ok || !result.success) throw new Error(result.error || "دریافت اطلاعات ناموفق بود.");
       setRecords(result.records || []);
-      setMissingActiveRecords(result.missingActiveRecords || []);
       setMissingDebtDiscountingCount(result.missingDebtDiscountingCount || 0);
       setTotalBayeganiFacilities(result.totalBayeganiFacilities || 0);
       setPage(1);
@@ -150,7 +148,7 @@ export default function DebtDiscountingFacilitiesPage() {
     setError("");
     setMessage("");
     try {
-      const response = await fetch("/api/debt-discounting-facilities", {
+      const response = await fetch(`/api/bayegani/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: nextStatus }),
@@ -162,6 +160,23 @@ export default function DebtDiscountingFacilitiesPage() {
       ));
     } catch (e) {
       setError(e instanceof Error ? e.message : "خطا در تغییر وضعیت");
+    }
+  }
+
+  async function updateAllFacilityStatuses() {
+    setError("");
+    setMessage("");
+    setUpdatingStatuses(true);
+    try {
+      const response = await fetch("/api/debt-discounting-facilities/update-status", { method: "POST" });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || "بروزرسانی وضعیت تسهیلات ناموفق بود.");
+      setMessage("وضعیت " + Number(result.updated || 0).toLocaleString("fa-IR") + " تسهیلات در جدول اسناد خرید دین بروزرسانی شد.");
+      await loadRecords();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "خطا در بروزرسانی وضعیت تسهیلات");
+    } finally {
+      setUpdatingStatuses(false);
     }
   }
 
@@ -179,10 +194,11 @@ export default function DebtDiscountingFacilitiesPage() {
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-5">
           <div>
             <h2 className="font-bold text-slate-900">فهرست تسهیلات خرید دین</h2>
-            <p className="mt-1 text-xs text-slate-500">فقط تسهیلات دارای پیش‌شماره 1538.340. که در اسناد خرید دین نیز وجود دارند نمایش داده می‌شوند؛ اطلاعات بایگانی اولویت دارد.</p>
+            <p className="mt-1 text-xs text-slate-500">تمام تسهیلات یکتای بایگانی با پیش‌شماره 1538.340. نمایش داده می‌شوند؛ وضعیت از بایگانی تسهیلات خوانده می‌شود.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => void syncRecords()} disabled={syncing || loading} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{syncing ? "در حال همگام‌سازی..." : "بروزرسانی اطلاعات تسهیلات"}</button>
+            <button type="button" onClick={() => void syncRecords()} disabled={syncing || loading || updatingStatuses} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{syncing ? "در حال همگام‌سازی..." : "بروزرسانی اطلاعات تسهیلات"}</button>
+            <button type="button" onClick={() => void updateAllFacilityStatuses()} disabled={updatingStatuses || loading || syncing} className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">{updatingStatuses ? "در حال بروزرسانی وضعیت..." : "بروزرسانی وضعیت تسهیلات"}</button>
             <button type="button" onClick={() => void loadRecords()} disabled={loading || syncing} className="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50">{loading ? "در حال دریافت..." : "بارگذاری مجدد"}</button>
           </div>
         </div>
@@ -200,39 +216,14 @@ export default function DebtDiscountingFacilitiesPage() {
             <p className="mt-1 text-xl font-bold text-amber-900">{missingDebtDiscountingCount.toLocaleString("fa-IR")}</p>
           </div>
         </div>
-        <div className="border-b border-slate-100 p-5">
-          <h3 className="font-bold text-slate-900">تسهیلات فعالِ نامنطبق با اسناد خرید دین</h3>
-          <p className="mt-1 text-xs text-slate-500">این فهرست فقط تسهیلاتی را نشان می‌دهد که در BayeganiRecord وجود دارند، در DebtDiscountingRecord تطبیق ندارند و وضعیت آن‌ها فعال است.</p>
-          <p className="mt-2 text-sm font-semibold text-amber-800">تعداد: {missingActiveRecords.length.toLocaleString("fa-IR")}</p>
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[850px] text-right text-sm">
-              <thead className="bg-slate-50 text-slate-600"><tr>
-                <th className="px-3 py-2">ردیف</th><th className="px-3 py-2">عنوان تسهیلات</th><th className="px-3 py-2">شماره تسهیلات</th><th className="px-3 py-2">کد باجه - نام باجه</th><th className="px-3 py-2">سریال</th><th className="px-3 py-2">وضعیت</th>
-              </tr></thead>
-              <tbody className="divide-y divide-slate-100">
-                {missingActiveRecords.length === 0 ? (
-                  <tr><td colSpan={6} className="px-3 py-6 text-center text-slate-500">مورد نامنطبقِ فعالی وجود ندارد.</td></tr>
-                ) : missingActiveRecords.map((record, index) => (
-                  <tr key={record.id}>
-                    <td className="px-3 py-2">{(index + 1).toLocaleString("fa-IR")}</td>
-                    <td className="px-3 py-2">{record.facilityTitle || "—"}</td>
-                    <td className="px-3 py-2" dir="ltr">{record.facilityNumber || "—"}</td>
-                    <td className="px-3 py-2">{record.counterLabel || "—"}</td>
-                    <td className="px-3 py-2" dir="ltr">{record.serial || "—"}</td>
-                    <td className="px-3 py-2"><select aria-label={`وضعیت تسهیلات ${record.id}`} value={record.status} onChange={(e) => void updateStatus(record.id, e.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm"><option value="فعال">فعال</option><option value="غیرفعال">غیرفعال</option></select></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
         <div className="flex flex-wrap gap-2 border-b border-slate-100 p-4">
+          <select value={mismatchFilter} onChange={e=>{setMismatchFilter(e.target.value);setPage(1);}} className="rounded-xl border bg-white px-3 py-2 text-sm"><option value="all">همه تسهیلات</option><option value="activeMismatch">تسهیلات فعال نامنطبق</option></select>
           <input value={search} onChange={e=>{setSearch(e.target.value);setPage(1);}} placeholder="جستجوی عمومی..." className="min-w-48 flex-1 rounded-xl border px-3 py-2 text-sm" />
           <select value={filterType} onChange={e=>{setFilterType(e.target.value);setPage(1);}} className="rounded-xl border bg-white px-3 py-2 text-sm">
             <option value="facilityTitle">عنوان تسهیلات</option><option value="facilityNumber">شماره تسهیلات</option><option value="contractId">شناسه قرارداد</option><option value="counterLabel">کد باجه - نام باجه</option><option value="serial">سریال</option><option value="status">وضعیت</option><option value="startDate">تاریخ شروع</option><option value="endDate">تاریخ پایان</option>
           </select>
           <input value={filterValue} onChange={e=>{setFilterValue(e.target.value);setPage(1);}} placeholder="مقدار فیلتر..." className="min-w-40 flex-1 rounded-xl border px-3 py-2 text-sm" />
-          <button onClick={()=>{setSearch("");setFilterValue("");setPage(1);}} className="rounded-xl border px-4 py-2 text-sm">پاک کردن</button>
+          <button onClick={()=>{setSearch("");setFilterValue("");setMismatchFilter("all");setPage(1);}} className="rounded-xl border px-4 py-2 text-sm">پاک کردن</button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1150px] text-right text-sm">
