@@ -8,10 +8,25 @@ type CounterOption = { id: number; code: string; name: string };
 type BankOption = { id: number; bankId: string; name: string };
 type FacilityPersonOption = { name: string; facilityNumbers: string[] };
 
+type AddedCheck = {
+  id: number;
+  counterLabel: string;
+  facilityNumber: string;
+  serial: string | null;
+  dueDate: string | null;
+  bankAgent: string | null;
+  checkBranch: string | null;
+  description: string | null;
+  paidAmount: string | null;
+  administrativeNumber: string | null;
+  checkStatus: string;
+};
+
 type ApiResult = {
   success: boolean;
   error?: string;
   record?: { id: number; checkStatus: string };
+  records?: AddedCheck[];
 };
 
 const inputClass = "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
@@ -37,6 +52,66 @@ export default function AddDebtCheckPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [addedChecks, setAddedChecks] = useState<AddedCheck[]>([]);
+  const [loadingChecks, setLoadingChecks] = useState(true);
+  const [exporting, setExporting] = useState(false);
+
+  async function loadAddedChecks() {
+    setLoadingChecks(true);
+    try {
+      const response = await fetch("/api/debt-documents/checks", { cache: "no-store" });
+      const result = (await response.json()) as ApiResult;
+      if (!response.ok || !result.success) throw new Error(result.error ?? "دریافت فهرست چک‌ها ناموفق بود.");
+      setAddedChecks(Array.isArray(result.records) ? result.records : []);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "دریافت فهرست چک‌ها ناموفق بود.");
+    } finally {
+      setLoadingChecks(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadAddedChecks();
+  }, []);
+
+  function exportChecks() {
+    if (!addedChecks.length) return;
+    setExporting(true);
+    try {
+      const rows = addedChecks.map((record) => {
+        const dueDate = (record.dueDate ?? "").replace(/-/g, "/");
+        const cells = [
+          record.serial ?? "",
+          (record.paidAmount ?? "").replace(/,/g, ""),
+          record.administrativeNumber ?? "",
+          dueDate,
+          "L",
+          "0",
+          "",
+          "0",
+          "0",
+          "17",
+          "8881",
+          "TRUE",
+          "",
+          record.administrativeNumber ?? "",
+        ];
+        return cells.map((cell) => /[",\\r\\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell).join(",");
+      });
+      const content = "\\uFEFF" + rows.join("\\r\\n") + "\\r\\n";
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "چک‌های-ثبت‌شده.txt";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
+    }
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -145,6 +220,7 @@ export default function AddDebtCheckPage() {
       const result = (await response.json()) as ApiResult;
       if (!response.ok || !result.success) throw new Error(result.error ?? "ثبت چک جدید ناموفق بود.");
       setSuccess(`چک با موفقیت ثبت شد. وضعیت اولیه: ${result.record?.checkStatus ?? "درراه"}`);
+      await loadAddedChecks();
       setFacilityName("");
       setFacilityNumber("");
       setSerial("");
@@ -365,6 +441,49 @@ export default function AddDebtCheckPage() {
           </button>
         </div>
       </form>
+
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-col justify-between gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-center">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">فهرست چک‌های ثبت‌شده</h2>
+            <p className="mt-1 text-sm text-slate-500">تعداد چک‌های ثبت دستی: {addedChecks.length.toLocaleString("fa-IR")}</p>
+          </div>
+          <button type="button" onClick={exportChecks} disabled={!addedChecks.length || exporting || loadingChecks} className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600">
+            {exporting ? "در حال آماده‌سازی..." : "خروجی چک‌ها به فایل متنی"}
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200 text-right text-sm">
+            <thead className="bg-slate-50 text-slate-600">
+              <tr>
+                {["ردیف", "کدباجه - نام باجه", "کد تسهیلات", "سریال چک", "شماره انتظامی", "تاریخ سررسید", "مبلغ", "بانک عامل", "شعبه چک", "وضعیت"].map((heading) => (
+                  <th key={heading} className="whitespace-nowrap px-4 py-3 font-semibold">{heading}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loadingChecks ? (
+                <tr><td colSpan={10} className="px-4 py-8 text-center text-slate-500">در حال دریافت چک‌های ثبت‌شده...</td></tr>
+              ) : addedChecks.length === 0 ? (
+                <tr><td colSpan={10} className="px-4 py-8 text-center text-slate-500">هنوز چکی ثبت نشده است.</td></tr>
+              ) : addedChecks.map((record, index) => (
+                <tr key={record.id} className="hover:bg-slate-50">
+                  <td className="whitespace-nowrap px-4 py-3">{(index + 1).toLocaleString("fa-IR")}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{record.counterLabel}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{record.facilityNumber}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{record.serial || "—"}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{record.administrativeNumber || "—"}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{record.dueDate || "—"}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{record.paidAmount || "—"}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{record.bankAgent || "—"}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{record.checkBranch || "—"}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{record.checkStatus}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }
