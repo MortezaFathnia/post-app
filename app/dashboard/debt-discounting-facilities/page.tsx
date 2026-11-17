@@ -145,21 +145,22 @@ export default function DebtDiscountingFacilitiesPage() {
     }
   }
 
-  async function updateStatus(id: number, nextStatus: string) {
+  async function updateStatus(id: number) {
     setError("");
     setMessage("");
     setUpdatingRecordId(id);
     try {
-      const response = await fetch(`/api/bayegani/${id}`, {
+      const response = await fetch("/api/debt-discounting-facilities", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: nextStatus }),
+        body: JSON.stringify({ contractId: id, status: "تسویه شده" }),
       });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || "تغییر وضعیت ناموفق بود.");
       setRecords((current) => current.map((record) =>
-        record.id === id ? { ...record, status: nextStatus } : record
+        record.id === id ? { ...record, status: "تسویه شده" } : record
       ));
+      setMessage("وضعیت تسهیلات در هر دو جدول بایگانی و تسهیلات خرید دین به «تسویه شده» تغییر کرد.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "خطا در تغییر وضعیت");
     } finally {
@@ -250,11 +251,11 @@ export default function DebtDiscountingFacilitiesPage() {
                   <td className="px-4 py-3">
                     <button
                       type="button"
-                      onClick={() => void updateStatus(record.id, record.status === "فعال" ? "غیرفعال" : "فعال")}
-                      disabled={updatingRecordId === record.id}
+                      onClick={() => void updateStatus(record.id)}
+                      disabled={updatingRecordId === record.id || record.status === "تسویه شده"}
                       className="whitespace-nowrap rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {updatingRecordId === record.id ? "در حال بروزرسانی..." : record.status === "فعال" ? "غیرفعال کردن" : "فعال کردن"}
+                      {updatingRecordId === record.id ? "در حال بروزرسانی..." : "تسویه شده"}
                     </button>
                   </td>
                 </tr>
