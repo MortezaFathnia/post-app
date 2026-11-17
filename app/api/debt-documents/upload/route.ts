@@ -40,7 +40,7 @@ function addOneDayToShamsiDate(input: string | null): string | null {
     })
     .replace(/\//g, "-");
   const match = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-  if (!match) return input;
+  if (!match) return input.replace(/-/g, "/");
 
   const [, yearText, monthText, dayText] = match;
   const target = `${yearText}-${monthText.padStart(2, "0")}-${dayText.padStart(2, "0")}`;
@@ -54,7 +54,7 @@ function addOneDayToShamsiDate(input: string | null): string | null {
     const parts = formatter.formatToParts(date);
     const part = (type: Intl.DateTimeFormatPartTypes) =>
       parts.find((item) => item.type === type)?.value ?? "";
-    return `${part("year")}-${part("month")}-${part("day")}`;
+    return `${part("year")}/${part("month")}/${part("day")}`;
   };
 
   // Locate the Gregorian day corresponding to the Jalali date, then advance one day.
@@ -412,7 +412,7 @@ export async function POST(request: NextRequest) {
         serial: value(row, "سریال سفته/ چک"),
         checkNumber: value(row, "شماره سفته / چک"),
         checkStatus: value(row, "وضعیت سفته / چک"),
-        dueDate: value(row, "تاريخ سررسيد"),
+        dueDate: value(row, "تاريخ سررسيد")?.replace(/-/g, "/") ?? null,
         paidAmount: value(row, "پرداخت شده"),
         unpaidAmount: value(row, "پرداخت نشده"),
         embeddedProfit: value(row, "سود/کارمزد مستتر"),
@@ -518,7 +518,7 @@ export async function POST(request: NextRequest) {
       ? rows.map((row) => {
           const amount = Number(textCell(row, "مبلغ چک").replace(/,/g, "").replace(/[^0-9.-]/g, ""));
           const amountInOutputUnit = Number.isFinite(amount) ? String(Math.round(amount)) : "";
-          const dueDate = textCell(row, "تاریخ سررسید");
+          const dueDate = textCell(row, "تاریخ سررسید").replace(/-/g, "/");
           const administrativeNumber = textCell(
             row,
             countFormat || simpleCountFormat ? "شماره انتظامی(سری)" : "شماره انتظامی",
