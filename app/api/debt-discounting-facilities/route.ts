@@ -160,7 +160,8 @@ export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json() as { id?: number | string; contractId?: number | string; status?: string };
     const contractId = Number(body.contractId ?? body.id);
-    if (!Number.isInteger(contractId) || contractId <= 0 || !body.status || !allowedStatuses.includes(body.status)) {
+    const status = String(body.status || "").trim();
+    if (!Number.isInteger(contractId) || contractId <= 0 || status !== "تسویه شده") {
       return NextResponse.json(
         { success: false, error: "شناسه یا وضعیت تسهیلات معتبر نیست." },
         { status: 400 },
@@ -182,22 +183,19 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: "تسهیلات موردنظر در بایگانی پیدا نشد." }, { status: 404 });
     }
 
-    const record = await prisma.debtDocument.upsert({
-      where: { contractId },
-      create: {
-        contractId,
-        facilityNumber: source.facilityNumber,
-        facilityTitle: source.facilityTitle,
-        counterLabel: source.counterLabel,
-        serial: source.serial,
-        status: body.status,
-        startDate: source.startDate || "",
-        endDate: source.endDate || "",
-      },
-      update: { status: body.status },
-      select: { id: true, status: true },
+    const result = await prisma.$transaction(async (tx) => {
+      const bayegani = await tx.bayeganiRecord.updateMany({
+        where: { facilityNumber: source.facilityNumber },
+        data: { status },
+      });
+      const facilities = await tx.debtDiscountingFacility.updateMany({
+        where: { facilityNumber: source.facilityNumber },
+        data: { status },
+      });
+      return { bayeganiUpdated: bayegani.count, facilitiesUpdated: facilities.count };
     });
-    return NextResponse.json({ success: true, record });
+
+    return NextResponse.json({ success: true, status, ...result });
   } catch (error) {
     console.error("Debt discounting facility status update error:", error);
     return NextResponse.json(
