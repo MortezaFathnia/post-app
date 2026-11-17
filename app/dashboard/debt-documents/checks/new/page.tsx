@@ -96,9 +96,9 @@ export default function AddDebtCheckPage() {
           "",
           record.administrativeNumber ?? "",
         ];
-        return cells.map((cell) => /[",\\r\\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell).join(",");
+        return cells.map((cell) => /[",\r\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell).join(",");
       });
-      const content = "\\uFEFF" + rows.join("\\r\\n") + "\\r\\n";
+      const content = "\uFEFF" + rows.join("\r\n") + "\r\n";
       const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
