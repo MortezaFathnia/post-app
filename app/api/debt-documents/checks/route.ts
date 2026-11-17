@@ -12,6 +12,36 @@ function clean(value: unknown): string | null {
   return result || null;
 }
 
+
+export async function GET() {
+  try {
+    const records = await prisma.debtDiscountingRecord.findMany({
+      where: { sheetName: "ثبت دستی" },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        counterLabel: true,
+        facilityNumber: true,
+        serial: true,
+        dueDate: true,
+        bankAgent: true,
+        checkBranch: true,
+        description: true,
+        paidAmount: true,
+        administrativeNumber: true,
+        checkStatus: true,
+      },
+    });
+    return NextResponse.json({ success: true, records });
+  } catch (error) {
+    console.error("Manual debt checks list error:", error);
+    return NextResponse.json(
+      { success: false, error: "دریافت فهرست چک‌های ثبت‌شده ناموفق بود." },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {
