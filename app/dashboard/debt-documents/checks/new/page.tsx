@@ -67,6 +67,7 @@ export default function AddDebtCheckPage() {
   const [bankOpenId,setBankOpenId] = useState<string | null>(null);
   const [facilityPeople,setFacilityPeople] = useState<FacilityPersonOption[]>([]);
   const [counterLabel,setCounterLabel] = useState("");
+  const [counterOpen,setCounterOpen] = useState(false);
   const [facilityName,setFacilityName] = useState("");
   const [facilityNumber,setFacilityNumber] = useState("");
   const [facilityOpen,setFacilityOpen] = useState(false);
@@ -116,6 +117,11 @@ export default function AddDebtCheckPage() {
   const duplicate = rows.some((row,index)=>row.checkNumber.trim() && rows.findIndex(other=>other.checkNumber.trim()===row.checkNumber.trim())!==index);
   const pendingRows = rows.filter(row=>!row.saved);
   const validPending = pendingRows.filter(row=>row.valid && !row.violation && row.checkNumber.trim() && row.serial.trim() && row.bankCode && row.accountNumber.trim());
+  const filteredCounters = counters.filter(counter => {
+    const query = counterLabel.trim().toLocaleLowerCase();
+    return !query || `${counter.code} ${counter.name}`.toLocaleLowerCase().includes(query)
+      || `${counter.code}-${counter.name}`.toLocaleLowerCase().includes(query);
+  });
   const canSaveAll = !saving && !!counterLabel && !!facilityNumber && pendingRows.length > 0 && validPending.length === pendingRows.length && !duplicate && !totalViolation && !pendingRows.some(row=>row.violation);
 
   function recalculate(source: CheckRow[], settings = {baseDay,baseMonth,baseYear,profitRate,maxMonths}) {
@@ -250,12 +256,6 @@ export default function AddDebtCheckPage() {
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-4 text-lg font-bold text-slate-900">اطلاعات تسهیلات و تنظیمات محاسبه</h2>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <label className="space-y-2 text-sm font-semibold text-slate-700">کدباجه - نام باجه
-            <select className={inputClass} value={counterLabel} onChange={e=>setCounterLabel(e.target.value)} disabled={loadingOptions}>
-              <option value="">{loadingOptions?"در حال دریافت...":"انتخاب باجه"}</option>
-              {counters.map(c=><option key={c.id} value={`${c.code}-${c.name}`}>{c.code}-{c.name}</option>)}
-            </select>
-          </label>
           <div className="relative space-y-2 text-sm font-semibold text-slate-700">
             <label htmlFor="facility-person">نام شخص</label>
             <input id="facility-person" className={inputClass} value={facilityName} placeholder="جست‌وجوی نام شخص" autoComplete="off" onFocus={()=>setFacilityOpen(true)} onChange={e=>{setFacilityName(e.target.value);setFacilityNumber("");setFacilityOpen(true);}} onKeyDown={e=>{if(e.key==="Escape")setFacilityOpen(false);if(e.key==="Enter"&&facilityPeople[0]){e.preventDefault();setFacilityName(facilityPeople[0].name);setFacilityNumber("");setFacilityOpen(false);}}}/>
@@ -270,6 +270,63 @@ export default function AddDebtCheckPage() {
               {facilityPeople.find(p=>p.name===facilityName.trim())?.facilityNumbers.map(n=><option key={n} value={n}>{n}</option>)}
             </select>
           </label>
+          <div className="relative space-y-2 text-sm font-semibold text-slate-700">
+            <label htmlFor="check-calculator-counter">کدباجه - نام باجه</label>
+            <input
+              id="check-calculator-counter"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={counterOpen}
+              aria-controls="check-calculator-counter-options"
+              value={counterLabel}
+              onFocus={() => setCounterOpen(true)}
+              onChange={event => {
+                setCounterLabel(event.target.value);
+                setCounterOpen(true);
+              }}
+              onKeyDown={event => {
+                if (event.key === "Escape") setCounterOpen(false);
+                if (event.key === "Enter" && counterOpen) {
+                  const first = filteredCounters[0];
+                  if (first) {
+                    event.preventDefault();
+                    setCounterLabel(`${first.code}-${first.name}`);
+                    setCounterOpen(false);
+                  }
+                }
+              }}
+              disabled={loadingOptions}
+              placeholder={loadingOptions ? "در حال دریافت فهرست باجه‌ها..." : "کد یا نام باجه را جستجو کنید..."}
+              autoComplete="off"
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+            {counterOpen && !loadingOptions && (
+              <div id="check-calculator-counter-options" role="listbox" className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+                {counters.length === 0 ? (
+                  <p className="px-3 py-4 text-center text-sm text-slate-500">هیچ باجه‌ای در فهرست ثبت نشده است.</p>
+                ) : filteredCounters.length === 0 ? (
+                  <p className="px-3 py-4 text-center text-sm text-slate-500">موردی پیدا نشد.</p>
+                ) : (
+                  filteredCounters.slice(0, 50).map(counter => (
+                    <button
+                      key={counter.id}
+                      type="button"
+                      role="option"
+                      aria-selected={counterLabel === `${counter.code}-${counter.name}`}
+                      onMouseDown={event => event.preventDefault()}
+                      onClick={() => {
+                        setCounterLabel(`${counter.code}-${counter.name}`);
+                        setCounterOpen(false);
+                      }}
+                      className="w-full rounded-lg px-3 py-2.5 text-right text-sm text-slate-700 transition hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                    >
+                      {counter.code}-{counter.name}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
           <label className="space-y-2 text-sm font-semibold text-slate-700">تاریخ مبنا محاسبه
             <PersianDatePicker
               value={baseYear + "/" + String(numberValue(baseMonth)).padStart(2,"0") + "/" + String(numberValue(baseDay)).padStart(2,"0")}
