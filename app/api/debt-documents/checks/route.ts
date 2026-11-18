@@ -12,6 +12,11 @@ function clean(value: unknown): string | null {
   return result || null;
 }
 
+function normalizeJalaliDate(value: string | null): string | null {
+  if (!value) return null;
+  return value.trim().replace(/[.-]/g, "/");
+}
+
 
 export async function GET() {
   try {
@@ -157,7 +162,7 @@ export async function POST(request: NextRequest) {
     const counterLabel = clean(body.counterLabel);
     const facilityNumber = clean(body.facilityNumber);
     const serial = clean(body.serial);
-    const dueDate = clean(body.dueDate);
+    const dueDate = normalizeJalaliDate(clean(body.dueDate));
     const bankAgent = clean(body.bankAgent);
     const checkBranch = clean(body.checkBranch);
     const description = clean(body.description);
