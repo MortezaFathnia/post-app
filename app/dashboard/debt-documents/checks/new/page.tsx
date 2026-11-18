@@ -28,7 +28,7 @@ type CheckRow = {
 };
 type ApiResult = { success?: boolean; error?: string; createdCount?: number; duplicateCheckNumbers?: string[] };
 
-const inputClass = "w-full min-w-[72px] rounded-lg border border-slate-300 bg-white px-2 py-2 text-center text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100";
+const inputClass = "w-full min-w-[72px] rounded-lg border border-slate-300 bg-white px-2 py-2 text-right text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100";
 const digits = (value: string) => value.replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
 const numberValue = (value: string) => Number(digits(value).replace(/[^0-9]/g, "")) || 0;
 const formatAmount = (value: string) => {
@@ -339,7 +339,7 @@ export default function AddDebtCheckPage() {
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-[1340px] w-full border-collapse text-center text-sm">
-            <thead className="bg-slate-50 text-slate-700"><tr>{["وضعیت","ردیف","شماره چک","مبلغ چک (ریال)","روز","ماه","سال","سری چک","بانک (کد - نام)","شماره حساب","تعداد روز","مبلغ کسرشده","مبلغ پرداختی","عملیات"].map(h=><th key={h} className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
+            <thead className="bg-slate-50 text-slate-700"><tr>{["","ردیف","شماره چک","مبلغ چک (ریال)","روز","ماه","سال","سری چک","بانک (کد - نام)","شماره حساب","تعداد روز","مبلغ کسرشده","مبلغ پرداختی","عملیات"].map(h=><th key={h} className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
             <tbody>
               {rows.map((row,index)=><tr key={row.id} className={`${row.violation?"bg-red-50":index%2?"bg-slate-50":"bg-white"} border-b border-slate-100 transition-colors hover:bg-slate-100/70`}>
                 <td className="px-2 py-2">
