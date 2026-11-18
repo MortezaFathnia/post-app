@@ -14,7 +14,45 @@ function clean(value: unknown): string | null {
 
 function normalizeJalaliDate(value: string | null): string | null {
   if (!value) return null;
-  return value.trim().replace(/[.-]/g, "/");
+  const ascii = value.trim().replace(/[۰-۹٠-٩]/g, digit => {
+    const persian = "۰۱۲۳۴۵۶۷۸۹";
+    const arabic = "٠١٢٣٤٥٦٧٨٩";
+    const index = persian.indexOf(digit);
+    return String(index >= 0 ? index : arabic.indexOf(digit));
+  });
+  const match = ascii.match(/^(\\d{4})[./-](\\d{1,2})[./-](\\d{1,2})$/);
+  if (!match) return ascii.replace(/[.-]/g, "/");
+  return `${match[1]}/${match[2].padStart(2, "0")}/${match[3].padStart(2, "0")}`;
+}
+
+function addOneDayToJalaliDate(year: number, month: number, day: number): string {
+  const target = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const formatter = new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", {
+    timeZone: "UTC", year: "numeric", month: "2-digit", day: "2-digit",
+  });
+  const formatted = (date: Date) => {
+    const parts = formatter.formatToParts(date);
+    const part = (type: Intl.DateTimeFormatPartTypes) => parts.find(item => item.type === type)?.value ?? "";
+    return `${part("year")}-${part("month")}-${part("day")}`;
+  };
+  const start = Date.UTC(year + 621, 0, 1, 12);
+  for (let offset = 0; offset < 400; offset += 1) {
+    const date = new Date(start + offset * 86_400_000);
+    if (formatted(date) === target) return formatted(new Date(date.getTime() + 86_400_000));
+  }
+  return target;
+}
+
+function textCsvCell(input: string): string {
+  return /[",\\r\\n]/.test(input) ? `"${input.replace(/"/g, '""')}"` : input;
+}
+
+function shamsiFileDate(): string {
+  const parts = new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", {
+    timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date());
+  const part = (type: string) => parts.find(item => item.type === type)?.value ?? "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
 
@@ -104,7 +142,9 @@ export async function POST(request: NextRequest) {
             !Number.isInteger(day) || !Number.isInteger(month) || !Number.isInteger(year)) {
           return NextResponse.json({ success: false, error: `اطلاعات چک ردیف ${index + 1} کامل نیست.` }, { status: 400 });
         }
-        const dueDate = `${year}/${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}`;
+        const inputDueDate = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const outputDueDate = inputDueDate;
+        const dueDate = normalizeJalaliDate(addOneDayToJalaliDate(year, month, day));
         const existing = await prisma.debtDiscountingRecord.findFirst({
           where: { checkNumber, administrativeNumber: serial },
           select: { id: true },
@@ -122,7 +162,7 @@ export async function POST(request: NextRequest) {
             facilityNumber,
             customerNumber: customerNumberFromFacility(facilityNumber),
             checkNumber,
-            serial,
+            serial: checkNumber,
             administrativeNumber: serial,
             checkStatus: "درراه",
             dueDate,
@@ -149,11 +189,43 @@ export async function POST(request: NextRequest) {
         created.push(record);
       }
 
+      const savedRows = rows.filter(row => {
+        const checkNumber = clean(row.checkNumber);
+        const serial = clean(row.serial);
+        return checkNumber && serial && !duplicates.includes(checkNumber);
+      });
+      const textContent = savedRows.map(row => {
+        const year = Number(row.year), month = Number(row.month), day = Number(row.day);
+        const dueDate = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const nextDate = addOneDayToJalaliDate(year, month, day);
+        const serial = clean(row.serial) || "0";
+        const cells = [
+          clean(row.checkNumber) || "0",
+          String(Math.round(Number(clean(row.amount)?.replace(/,/g, "")) || 0)),
+          serial,
+          dueDate,
+          "L",
+          "0",
+          nextDate,
+          "0",
+          "0",
+          "17",
+          "8881",
+          "TRUE",
+          clean(row.accountNumber) || "0",
+          serial,
+        ];
+        return cells.map(textCsvCell).join(",");
+      }).join("\\r\\n") + (savedRows.length ? "\\r\\n" : "");
+      const safeFacility = facilityNumber.replace(/[<>:"/\\\\|?*\\x00-\\x1F]/g, "_");
+
       return NextResponse.json({
         success: true,
         createdCount: created.length,
         duplicateCheckNumbers: duplicates,
         records: created,
+        textContent,
+        textFileName: `${safeFacility}-${shamsiFileDate()}.txt`,
       });
     }
 
