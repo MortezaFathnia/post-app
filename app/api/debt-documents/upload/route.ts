@@ -36,8 +36,9 @@ function normalizeStoredJalaliDate(input: string | null): string | null {
     const index = persian.indexOf(digit);
     return String(index >= 0 ? index : arabic.indexOf(digit));
   });
-  const match = ascii.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
-  if (!match) return ascii.replace(/-/g, "/");
+  // Accept dates with either separator and ignore a time suffix if Excel includes one.
+  const match = ascii.match(/^(\d{4})[./-](\d{1,2})[./-](\d{1,2})(?:[ T].*)?$/);
+  if (!match) return ascii.replace(/[.-]/g, "/");
   return `${match[1]}/${match[2].padStart(2, "0")}/${match[3].padStart(2, "0")}`;
 }
 
@@ -439,10 +440,11 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    // Enforce the database date representation for both upload formats.
-    for (const record of records) {
-      record.dueDate = normalizeStoredJalaliDate(record.dueDate);
-    }
+    // Persist the due date as Jalali YYYY/MM/DD, regardless of the source Excel format.
+    const databaseRecords = records.map((record) => ({
+      ...record,
+      dueDate: normalizeStoredJalaliDate(record.dueDate),
+    }));
 
     const pairRows = new Map<
       string,
@@ -506,7 +508,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await prisma.debtDiscountingRecord.createMany({ data: records });
+    await prisma.debtDiscountingRecord.createMany({ data: databaseRecords });
 
     const countFormatOutputHeaders = [
       "شماره چک",
@@ -569,7 +571,7 @@ export async function POST(request: NextRequest) {
       count: records.length,
       counterLabel,
       facilityNumber,
-      uploadedRecords: records.map((record, index) => ({
+      uploadedRecords: databaseRecords.map((record, index) => ({
         id: index + 1,
         counterLabel: record.counterLabel,
         facilityNumber: record.facilityNumber,
