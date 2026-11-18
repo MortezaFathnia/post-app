@@ -65,7 +65,7 @@ function addOneDayToJalaliDate(year: number, month: number, day: number) {
   return target;
 }
 function downloadText(content: string, fileName: string) {
-  const blob = new Blob(["\\uFEFF", content], { type: "text/plain;charset=utf-8" });
+  const blob = new Blob(["\uFEFF", content], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
