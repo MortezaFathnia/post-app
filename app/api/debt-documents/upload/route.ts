@@ -28,6 +28,19 @@ function textCell(row: Record<string, unknown>, key: string): string {
   return /^[-+]?\d{1,3}(,\d{3})+(\.\d+)?$/.test(cell) ? cell.replace(/,/g, "") : cell;
 }
 
+function normalizeStoredJalaliDate(input: string | null): string | null {
+  if (!input) return input;
+  const ascii = input.trim().replace(/[۰-۹٠-٩]/g, (digit) => {
+    const persian = "۰۱۲۳۴۵۶۷۸۹";
+    const arabic = "٠١٢٣٤٥٦٧٨٩";
+    const index = persian.indexOf(digit);
+    return String(index >= 0 ? index : arabic.indexOf(digit));
+  });
+  const match = ascii.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
+  if (!match) return ascii.replace(/-/g, "/");
+  return `${match[1]}/${match[2].padStart(2, "0")}/${match[3].padStart(2, "0")}`;
+}
+
 function addOneDayToShamsiDate(input: string | null): string | null {
   if (!input) return input;
 
@@ -425,6 +438,11 @@ export async function POST(request: NextRequest) {
         rawData: row as Prisma.InputJsonObject,
       };
     });
+
+    // Enforce the database date representation for both upload formats.
+    for (const record of records) {
+      record.dueDate = normalizeStoredJalaliDate(record.dueDate);
+    }
 
     const pairRows = new Map<
       string,
