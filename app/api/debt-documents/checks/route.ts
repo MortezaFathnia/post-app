@@ -20,6 +20,7 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
+        checkNumber: true,
         counterLabel: true,
         facilityNumber: true,
         serial: true,
