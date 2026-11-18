@@ -44,6 +44,33 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const body = (await request.json()) as {
+      mode?: string;
+      records?: Array<{
+        checkNumber?: string;
+        amount?: string;
+        day?: number | string;
+        month?: number | string;
+        year?: number | string;
+        serial?: string;
+        bankCode?: string;
+        bankName?: string;
+        branchCode?: string;
+        accountNumber?: string;
+        days?: number;
+        deduction?: number;
+        payment?: number;
+      }>;
+      counterLabel?: string;
+      facilityNumber?: string;
+      serial?: string;
+      dueDate?: string;
+      bankAgent?: string;
+      checkBranch?: string;
+      description?: string;
+      amount?: string;
+      administrativeNumber?: string;
+    };
     if (body.mode === "discount-calculator") {
       const counterLabel = clean(body.counterLabel);
       const facilityNumber = clean(body.facilityNumber);
@@ -124,34 +151,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const body = (await request.json()) as {
-      mode?: string;
-      records?: Array<{
-        checkNumber?: string;
-        amount?: string;
-        day?: number | string;
-        month?: number | string;
-        year?: number | string;
-        serial?: string;
-        bankCode?: string;
-        bankName?: string;
-        branchCode?: string;
-        accountNumber?: string;
-        days?: number;
-        deduction?: number;
-        payment?: number;
-      }>;
-      counterLabel?: string;
-      facilityNumber?: string;
-      facilityNumber?: string;
-      serial?: string;
-      dueDate?: string;
-      bankAgent?: string;
-      checkBranch?: string;
-      description?: string;
-      amount?: string;
-      administrativeNumber?: string;
-    };
+
 
     const counterLabel = clean(body.counterLabel);
     const facilityNumber = clean(body.facilityNumber);
