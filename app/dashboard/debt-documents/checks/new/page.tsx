@@ -270,99 +270,94 @@ export default function AddDebtCheckPage() {
       </div>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 text-lg font-bold text-slate-900">اطلاعات تسهیلات و تنظیمات محاسبه</h2>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <div className="relative space-y-2 text-sm font-semibold text-slate-700">
-            <label htmlFor="facility-person">نام شخص</label>
-            <input id="facility-person" className={inputClass} value={facilityName} placeholder="جست‌وجوی نام شخص" autoComplete="off" onFocus={()=>setFacilityOpen(true)} onChange={e=>{setFacilityName(e.target.value);setFacilityNumber("");setFacilityOpen(true);}} onKeyDown={e=>{if(e.key==="Escape")setFacilityOpen(false);if(e.key==="Enter"&&facilityPeople[0]){e.preventDefault();setFacilityName(facilityPeople[0].name);setFacilityNumber("");setFacilityOpen(false);}}}/>
-            {facilityOpen && facilityName.trim().length>=2 && <div className="absolute inset-x-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
-              {facilityPeople.map(person=><button type="button" key={person.name} onClick={()=>{setFacilityName(person.name);setFacilityNumber("");setFacilityOpen(false);}} className="block w-full rounded-lg px-3 py-2 text-right text-sm hover:bg-indigo-50">{person.name}</button>)}
-              {loadingFacilities&&<p className="p-2 text-xs text-slate-500">در حال جست‌وجو...</p>}
-            </div>}
-          </div>
-          <label className="space-y-2 text-sm font-semibold text-slate-700">کد تسهیلات خرید دین
-            <select className={inputClass} value={facilityNumber} onChange={e=>setFacilityNumber(e.target.value)} disabled={!facilityPeople.some(p=>p.name===facilityName.trim())}>
-              <option value="">انتخاب کد تسهیلات</option>
-              {facilityPeople.find(p=>p.name===facilityName.trim())?.facilityNumbers.map(n=><option key={n} value={n}>{n}</option>)}
-            </select>
-          </label>
-          <div className="relative space-y-2 text-sm font-semibold text-slate-700">
-            <label htmlFor="check-calculator-counter">کدباجه - نام باجه</label>
-            <input
-              id="check-calculator-counter"
-              role="combobox"
-              aria-autocomplete="list"
-              aria-expanded={counterOpen}
-              aria-controls="check-calculator-counter-options"
-              value={counterLabel}
-              onFocus={() => setCounterOpen(true)}
-              onChange={event => {
-                setCounterLabel(event.target.value);
-                setCounterOpen(true);
-              }}
-              onKeyDown={event => {
-                if (event.key === "Escape") setCounterOpen(false);
-                if (event.key === "Enter" && counterOpen) {
-                  const first = filteredCounters[0];
-                  if (first) {
-                    event.preventDefault();
-                    setCounterLabel(`${first.code}-${first.name}`);
-                    setCounterOpen(false);
+        <div className="mb-4">
+          <h2 className="font-bold text-slate-900">اطلاعات تسهیلات و تنظیمات محاسبه</h2>
+          <p className="mt-1 text-xs text-slate-500">نام شخص، شماره تسهیلات و کدباجه را انتخاب کنید و سپس تنظیمات محاسبه را وارد کنید.</p>
+        </div>
+        <div className="grid gap-5 md:grid-cols-2">
+          <div>
+            <label htmlFor="facility-person" className="mb-2 block text-sm font-semibold text-slate-700">نام شخص</label>
+            <div className="relative">
+              <input id="facility-person" role="combobox" aria-autocomplete="list" aria-expanded={facilityOpen} aria-controls="check-calculator-facility-options" value={facilityName}
+                onFocus={() => setFacilityOpen(true)}
+                onChange={event => { setFacilityName(event.target.value); setFacilityNumber(""); setFacilityOpen(true); }}
+                onKeyDown={event => {
+                  if (event.key === "Escape") setFacilityOpen(false);
+                  if (event.key === "Enter" && facilityOpen) {
+                    const first = facilityPeople.find(person => person.name.toLocaleLowerCase().includes(facilityName.trim().toLocaleLowerCase()));
+                    if (first) { event.preventDefault(); setFacilityName(first.name); setFacilityNumber(first.facilityNumbers.length === 1 ? first.facilityNumbers[0] : ""); setFacilityOpen(false); }
                   }
-                }
-              }}
-              disabled={loadingOptions}
-              placeholder={loadingOptions ? "در حال دریافت فهرست باجه‌ها..." : "کد یا نام باجه را جستجو کنید..."}
-              autoComplete="off"
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            />
-            {counterOpen && !loadingOptions && (
-              <div id="check-calculator-counter-options" role="listbox" className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
-                {counters.length === 0 ? (
-                  <p className="px-3 py-4 text-center text-sm text-slate-500">هیچ باجه‌ای در فهرست ثبت نشده است.</p>
-                ) : filteredCounters.length === 0 ? (
-                  <p className="px-3 py-4 text-center text-sm text-slate-500">موردی پیدا نشد.</p>
-                ) : (
-                  filteredCounters.slice(0, 50).map(counter => (
-                    <button
-                      key={counter.id}
-                      type="button"
-                      role="option"
-                      aria-selected={counterLabel === `${counter.code}-${counter.name}`}
-                      onMouseDown={event => event.preventDefault()}
-                      onClick={() => {
-                        setCounterLabel(`${counter.code}-${counter.name}`);
-                        setCounterOpen(false);
-                      }}
-                      className="w-full rounded-lg px-3 py-2.5 text-right text-sm text-slate-700 transition hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
-                    >
-                      {counter.code}-{counter.name}
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
+                }}
+                disabled={loadingOptions} placeholder="نام شخص را جست‌وجو کنید..." autoComplete="off"
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+              />
+              {facilityOpen && facilityName.trim().length >= 2 && !loadingOptions && (
+                <div id="check-calculator-facility-options" role="listbox" className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+                  {loadingFacilities ? <p className="px-3 py-4 text-center text-sm text-slate-500">در حال جست‌وجو...</p> :
+                    facilityPeople.filter(person => person.name.toLocaleLowerCase().includes(facilityName.trim().toLocaleLowerCase())).length ? (
+                      facilityPeople.filter(person => person.name.toLocaleLowerCase().includes(facilityName.trim().toLocaleLowerCase())).slice(0, 50).map(person => (
+                        <button key={person.name} type="button" role="option" aria-selected={facilityName.trim() === person.name} onMouseDown={event => event.preventDefault()} onClick={() => { setFacilityName(person.name); setFacilityNumber(person.facilityNumbers.length === 1 ? person.facilityNumbers[0] : ""); setFacilityOpen(false); }} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-right text-sm text-slate-700 transition hover:bg-blue-50 focus:bg-blue-50 focus:outline-none">
+                          <span className="font-medium">{person.name}</span>{facilityName.trim() === person.name && <span className="text-xs text-blue-600">انتخاب‌شده</span>}
+                        </button>
+                      ))
+                    ) : <p className="px-3 py-4 text-center text-sm text-slate-500">موردی پیدا نشد.</p>}
+                </div>
+              )}
+            </div>
+            <p className="mt-1 text-xs text-slate-500">{loadingFacilities ? "در حال جست‌وجو..." : facilityName.trim().length < 2 ? "برای جست‌وجو حداقل دو حرف وارد کنید." : facilityPeople.some(person => person.name === facilityName.trim()) ? "نام شخص انتخاب شد." : "نام شخص را از فهرست پیشنهادها انتخاب کنید."}</p>
           </div>
-          <label className="space-y-2 text-sm font-semibold text-slate-700">تاریخ مبنا محاسبه
-            <PersianDatePicker
-              value={baseYear + "/" + String(numberValue(baseMonth)).padStart(2,"0") + "/" + String(numberValue(baseDay)).padStart(2,"0")}
-              onChange={value=>{
-                const parts=value.split("/");
-                if(parts.length===3) updateSettings({baseYear:parts[0],baseMonth:String(Number(parts[1])),baseDay:String(Number(parts[2]))});
-                else updateSettings({baseYear:"",baseMonth:"",baseDay:""});
-              }}
-              className={inputClass + " text-right"}
-              placeholder="انتخاب تاریخ مبنا"
-              inputId="calculation-base-date"
-              aria-label="تاریخ مبنا محاسبه"
-            />
-          </label>
-          <label className="space-y-2 text-sm font-semibold text-slate-700">درصد سود سالانه (٪)
-            <input className={inputClass} type="number" min="0" step="0.001" value={profitRate} onChange={e=>updateSettings({profitRate:e.target.value})}/>
-          </label>
-          <label className="space-y-2 text-sm font-semibold text-slate-700">حداکثر جمع مبلغ چک (ریال)
-            <input className={inputClass} inputMode="numeric" value={maxAmount} onChange={e=>setMaxAmount(formatAmount(e.target.value))}/>
-          </label>
+          <div>
+            <label htmlFor="check-calculator-facility-number" className="mb-2 block text-sm font-semibold text-slate-700">انتخاب شماره تسهیلات</label>
+            <select id="check-calculator-facility-number" required value={facilityNumber} onChange={event => setFacilityNumber(event.target.value)}
+              disabled={loadingOptions || !facilityPeople.some(person => person.name === facilityName.trim()) || !(facilityPeople.find(person => person.name === facilityName.trim())?.facilityNumbers.length)}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500">
+              <option value="">{facilityPeople.some(person => person.name === facilityName.trim()) ? "شماره تسهیلات را انتخاب کنید" : "ابتدا نام شخص را انتخاب کنید"}</option>
+              {facilityPeople.find(person => person.name === facilityName.trim())?.facilityNumbers.map(number => <option key={number} value={number}>{number}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="check-calculator-counter" className="mb-2 block text-sm font-semibold text-slate-700">کدباجه - نام باجه</label>
+            <div className="relative">
+              <input id="check-calculator-counter" role="combobox" aria-autocomplete="list" aria-expanded={counterOpen} aria-controls="check-calculator-counter-options" value={counterLabel}
+                onFocus={() => setCounterOpen(true)}
+                onChange={event => { setCounterLabel(event.target.value); setCounterOpen(true); }}
+                onKeyDown={event => {
+                  if (event.key === "Escape") setCounterOpen(false);
+                  if (event.key === "Enter" && counterOpen) {
+                    const first = filteredCounters[0];
+                    if (first) { event.preventDefault(); setCounterLabel(`${first.code}-${first.name}`); setCounterOpen(false); }
+                  }
+                }}
+                disabled={loadingOptions} placeholder="کد یا نام باجه را جستجو کنید..." autoComplete="off"
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+              />
+              {counterOpen && !loadingOptions && (
+                <div id="check-calculator-counter-options" role="listbox" className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+                  {counters.length === 0 ? <p className="px-3 py-4 text-center text-sm text-slate-500">هیچ باجه‌ای در فهرست ثبت نشده است.</p> :
+                    filteredCounters.length === 0 ? <p className="px-3 py-4 text-center text-sm text-slate-500">موردی پیدا نشد.</p> :
+                    filteredCounters.slice(0, 50).map(counter => (
+                      <button key={counter.id} type="button" role="option" aria-selected={counterLabel === `${counter.code}-${counter.name}`} onMouseDown={event => event.preventDefault()} onClick={() => { setCounterLabel(`${counter.code}-${counter.name}`); setCounterOpen(false); }} className="w-full rounded-lg px-3 py-2.5 text-right text-sm text-slate-700 transition hover:bg-blue-50 focus:bg-blue-50 focus:outline-none">
+                        {counter.code}-{counter.name}
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <div>
+            <label htmlFor="calculation-base-date" className="mb-2 block text-sm font-semibold text-slate-700">تاریخ مبنا محاسبه</label>
+            <PersianDatePicker value={baseYear + "/" + String(numberValue(baseMonth)).padStart(2,"0") + "/" + String(numberValue(baseDay)).padStart(2,"0")}
+              onChange={value => { const parts = value.split("/"); if (parts.length === 3) updateSettings({baseYear:parts[0],baseMonth:String(Number(parts[1])),baseDay:String(Number(parts[2]))}); else updateSettings({baseYear:"",baseMonth:"",baseDay:""}); }}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-right outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="انتخاب تاریخ مبنا" inputId="calculation-base-date" aria-label="تاریخ مبنا محاسبه" />
+          </div>
+          <div>
+            <label htmlFor="check-profit-rate" className="mb-2 block text-sm font-semibold text-slate-700">درصد سود سالانه (٪)</label>
+            <input id="check-profit-rate" className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-right outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" type="number" min="0" step="0.001" value={profitRate} onChange={event => updateSettings({profitRate:event.target.value})}/>
+          </div>
+          <div>
+            <label htmlFor="check-max-amount" className="mb-2 block text-sm font-semibold text-slate-700">حداکثر جمع مبلغ چک (ریال)</label>
+            <input id="check-max-amount" className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-right outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" inputMode="numeric" value={maxAmount} onChange={event => setMaxAmount(formatAmount(event.target.value))}/>
+          </div>
         </div>
         {!baseValid && <p className="mt-3 text-sm text-red-600">تاریخ مبنا معتبر نیست.</p>}
       </section>
