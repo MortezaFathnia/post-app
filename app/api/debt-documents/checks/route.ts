@@ -16,7 +16,7 @@ function clean(value: unknown): string | null {
 export async function GET() {
   try {
     const records = await prisma.debtDiscountingRecord.findMany({
-      where: { sheetName: "ثبت دستی" },
+      where: { sheetName: { in: ["ثبت دستی", "تنزیل چک (خرید دین)"] } },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -233,5 +233,27 @@ export async function POST(request: NextRequest) {
       { success: false, error: "ثبت چک جدید ناموفق بود. لطفاً دوباره تلاش کنید." },
       { status: 500 },
     );
+  }
+}
+
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const id = Number(new URL(request.url).searchParams.get("id"));
+    if (!Number.isInteger(id) || id <= 0) {
+      return NextResponse.json({ success: false, error: "شناسه چک معتبر نیست." }, { status: 400 });
+    }
+    const record = await prisma.debtDiscountingRecord.findFirst({
+      where: { id, sheetName: { in: ["ثبت دستی", "تنزیل چک (خرید دین)"] } },
+      select: { id: true },
+    });
+    if (!record) {
+      return NextResponse.json({ success: false, error: "چک موردنظر پیدا نشد." }, { status: 404 });
+    }
+    await prisma.debtDiscountingRecord.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Manual debt check deletion error:", error);
+    return NextResponse.json({ success: false, error: "حذف چک ناموفق بود." }, { status: 500 });
   }
 }
