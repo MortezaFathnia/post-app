@@ -191,7 +191,11 @@ export async function POST(request: NextRequest) {
       const savedRows = rows.filter(row => {
         const checkNumber = clean(row.checkNumber);
         const serial = clean(row.serial);
-        return Boolean(checkNumber && serial && createdPairs.has(JSON.stringify([checkNumber, serial])));
+        if (!checkNumber || !serial) return false;
+        const pair = JSON.stringify([checkNumber, serial]);
+        if (!createdPairs.has(pair)) return false;
+        createdPairs.delete(pair);
+        return true;
       });
       const textContent = savedRows.map(row => {
         const year = Number(row.year), month = Number(row.month), day = Number(row.day);
