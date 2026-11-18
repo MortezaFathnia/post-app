@@ -518,7 +518,7 @@ export async function POST(request: NextRequest) {
       ? rows.map((row) => {
           const amount = Number(textCell(row, "مبلغ چک").replace(/,/g, "").replace(/[^0-9.-]/g, ""));
           const amountInOutputUnit = Number.isFinite(amount) ? String(Math.round(amount)) : "";
-          const dueDate = textCell(row, "تاریخ سررسید").replace(/-/g, "/");
+          const dueDate = textCell(row, "تاریخ سررسید").replace(/[/-]/g, "-");
           const administrativeNumber = textCell(
             row,
             countFormat || simpleCountFormat ? "شماره انتظامی(سری)" : "شماره انتظامی",
@@ -530,7 +530,7 @@ export async function POST(request: NextRequest) {
             dueDate,
             "L",
             "0",
-            addOneDayToShamsiDate(dueDate) ?? dueDate,
+            (addOneDayToShamsiDate(dueDate) ?? dueDate).replaceAll("/", "-"),
             "0",
             "0",
             "17",
