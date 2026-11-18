@@ -26,7 +26,7 @@ type CheckRow = {
   valid: boolean;
   violation: boolean;
 };
-type ApiResult = { success?: boolean; error?: string; createdCount?: number; duplicateCheckNumbers?: string[] };
+type ApiResult = { success?: boolean; error?: string; createdCount?: number; duplicateCheckNumbers?: string[]; textContent?: string; textFileName?: string };
 
 const inputClass = "w-full min-w-[72px] rounded-lg border border-slate-300 bg-white px-2 py-2 text-right text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100";
 const digits = (value: string) => value.replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
@@ -47,6 +47,32 @@ function todayJalali() {
   return { year: get("year"), month: get("month"), day: get("day") };
 }
 function newId() { return `row-${Date.now()}-${Math.random().toString(36).slice(2)}`; }
+function addOneDayToJalaliDate(year: number, month: number, day: number) {
+  const target = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const formatter = new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", {
+    timeZone: "UTC", year: "numeric", month: "2-digit", day: "2-digit",
+  });
+  const formatted = (date: Date) => {
+    const parts = formatter.formatToParts(date);
+    const part = (type: Intl.DateTimeFormatPartTypes) => parts.find(item => item.type === type)?.value ?? "";
+    return `${part("year")}-${part("month")}-${part("day")}`;
+  };
+  const start = Date.UTC(year + 621, 0, 1, 12);
+  for (let offset = 0; offset < 400; offset += 1) {
+    const date = new Date(start + offset * 86_400_000);
+    if (formatted(date) === target) return formatted(new Date(date.getTime() + 86_400_000));
+  }
+  return target;
+}
+function downloadText(content: string, fileName: string) {
+  const blob = new Blob(["\\uFEFF", content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
 function blankRow(base: {year:number;month:number;day:number}): CheckRow {
   let year = base.year, month = base.month + 1;
   if (month > 12) { month = 1; year += 1; }
@@ -207,6 +233,7 @@ export default function AddDebtCheckPage() {
       const result=(await response.json()) as ApiResult;
       if(!response.ok || !result.success) throw new Error(result.error || "ذخیره چک‌ها ناموفق بود.");
       const savedCount=result.createdCount || 0;
+      if (result.textContent) downloadText(result.textContent, result.textFileName || "تنزیل_چک.txt");
       const duplicateNumbers=new Set(result.duplicateCheckNumbers||[]);
       setRows(current=>current.map(row=>!row.saved && validPending.some(saved=>saved.id===row.id) && !duplicateNumbers.has(row.checkNumber) ? {...row,saved:true} : row));
       const duplicates=result.duplicateCheckNumbers?.length ? ` شماره‌های تکراری رد شدند: ${result.duplicateCheckNumbers.join("، ")}.` : "";
