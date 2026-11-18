@@ -25,10 +25,9 @@ type CheckRow = {
   valid: boolean;
   violation: boolean;
 };
-type SavedCheck = { id:number; checkNumber:string|null; counterLabel:string; facilityNumber:string; serial:string|null; dueDate:string|null; bankAgent:string|null; checkBranch:string|null; description:string|null; paidAmount:string|null; administrativeNumber:string|null; checkStatus:string };
-type ApiResult = { success?: boolean; error?: string; createdCount?: number; duplicateCheckNumbers?: string[]; records?: SavedCheck[] };
+type ApiResult = { success?: boolean; error?: string; createdCount?: number; duplicateCheckNumbers?: string[] };
 
-const inputClass = "w-full min-w-[72px] rounded-lg border border-slate-300 bg-white px-2 py-2 text-center text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
+const inputClass = "w-full min-w-[72px] rounded-lg border border-slate-300 bg-white px-2 py-2 text-center text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100";
 const bankNames: Record<string, string> = {
   "61":"بانک شهر","18":"بانک تجارت","56":"بانک سامان","15":"بانک سپه ایران","19":"بانک صادرات ایران",
   "54":"بانک پارسیان","55":"بانک اقتصاد نوین","17":"بانک ملی ایران","12":"بانک ملت ایران","13":"بانک رفاه کارگران",
@@ -82,35 +81,6 @@ export default function AddDebtCheckPage() {
   const [saving,setSaving] = useState(false);
   const [error,setError] = useState("");
   const [message,setMessage] = useState("");
-  const [savedChecks,setSavedChecks] = useState<SavedCheck[]>([]);
-  const [loadingSaved,setLoadingSaved] = useState(true);
-  const [deletingId,setDeletingId] = useState<number|null>(null);
-
-  async function loadSavedChecks() {
-    setLoadingSaved(true);
-    try {
-      const response=await fetch("/api/debt-documents/checks",{cache:"no-store"});
-      const result=(await response.json()) as ApiResult;
-      if(!response.ok||!result.success) throw new Error(result.error||"دریافت چک‌های ذخیره‌شده ناموفق بود.");
-      setSavedChecks(result.records||[]);
-    } catch(e) { setError(e instanceof Error?e.message:"دریافت چک‌های ذخیره‌شده ناموفق بود."); }
-    finally { setLoadingSaved(false); }
-  }
-  useEffect(() => { void loadSavedChecks(); }, []);
-
-  async function deleteSavedCheck(id:number) {
-    if(!window.confirm("آیا از حذف این چک از پایگاه داده مطمئن هستید؟")) return;
-    setDeletingId(id); setError(""); setMessage("");
-    try {
-      const response=await fetch(`/api/debt-documents/checks?id=${id}`,{method:"DELETE"});
-      const result=(await response.json()) as ApiResult;
-      if(!response.ok||!result.success) throw new Error(result.error||"حذف چک ناموفق بود.");
-      setSavedChecks(current=>current.filter(record=>record.id!==id));
-      setMessage("چک از پایگاه داده حذف شد.");
-    } catch(e) { setError(e instanceof Error?e.message:"حذف چک ناموفق بود."); }
-    finally { setDeletingId(null); }
-  }
-
   useEffect(() => {
     const controller = new AbortController();
     Promise.all([
@@ -243,7 +213,6 @@ export default function AddDebtCheckPage() {
       const savedCount=result.createdCount || 0;
       const duplicateNumbers=new Set(result.duplicateCheckNumbers||[]);
       setRows(current=>current.map(row=>row.selected && !row.saved && validSelected.some(saved=>saved.id===row.id) && !duplicateNumbers.has(row.checkNumber) ? {...row,saved:true,selected:false} : row));
-      await loadSavedChecks();
       const duplicates=result.duplicateCheckNumbers?.length ? ` شماره‌های تکراری رد شدند: ${result.duplicateCheckNumbers.join("، ")}.` : "";
       setMessage(`${savedCount.toLocaleString("fa-IR")} چک در پایگاه داده ذخیره شد.${duplicates}`);
     } catch(e) { setError(e instanceof Error ? e.message : "ذخیره چک‌ها ناموفق بود."); }
@@ -256,7 +225,7 @@ export default function AddDebtCheckPage() {
     <div dir="rtl" className="space-y-6">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <p className="text-sm font-medium text-blue-700">خرید دین</p>
+          <p className="text-sm font-medium text-indigo-700">خرید دین</p>
           <h1 className="mt-1 text-2xl font-extrabold text-slate-900">تنزیل چک (خرید دین)</h1>
           <p className="mt-2 text-sm text-slate-500">محاسبه مبلغ کسرشده و مبلغ پرداختی؛ ذخیره در پایگاه داده فقط با انتخاب چک‌ها انجام می‌شود.</p>
         </div>
@@ -276,7 +245,7 @@ export default function AddDebtCheckPage() {
             <label htmlFor="facility-person">نام شخص</label>
             <input id="facility-person" className={inputClass} value={facilityName} placeholder="جست‌وجوی نام شخص" autoComplete="off" onFocus={()=>setFacilityOpen(true)} onChange={e=>{setFacilityName(e.target.value);setFacilityNumber("");setFacilityOpen(true);}} onKeyDown={e=>{if(e.key==="Escape")setFacilityOpen(false);if(e.key==="Enter"&&facilityPeople[0]){e.preventDefault();setFacilityName(facilityPeople[0].name);setFacilityNumber("");setFacilityOpen(false);}}}/>
             {facilityOpen && facilityName.trim().length>=2 && <div className="absolute inset-x-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
-              {facilityPeople.map(person=><button type="button" key={person.name} onClick={()=>{setFacilityName(person.name);setFacilityNumber("");setFacilityOpen(false);}} className="block w-full rounded-lg px-3 py-2 text-right text-sm hover:bg-blue-50">{person.name}</button>)}
+              {facilityPeople.map(person=><button type="button" key={person.name} onClick={()=>{setFacilityName(person.name);setFacilityNumber("");setFacilityOpen(false);}} className="block w-full rounded-lg px-3 py-2 text-right text-sm hover:bg-indigo-50">{person.name}</button>)}
               {loadingFacilities&&<p className="p-2 text-xs text-slate-500">در حال جست‌وجو...</p>}
             </div>}
           </div>
@@ -312,18 +281,16 @@ export default function AddDebtCheckPage() {
         <div className="flex flex-col justify-between gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-center">
           <div><h2 className="text-lg font-bold text-slate-900">فهرست چک‌ها</h2><p className="mt-1 text-xs text-slate-500">تیک هر ردیف را فعال کنید تا هنگام ذخیره، آن چک به پایگاه داده اضافه شود.</p></div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={addRow} disabled={!baseValid||duplicate||amountViolation||rows.some(r=>r.violation)} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300">افزودن چک</button>
-            <button type="button" onClick={importTxt} className="rounded-xl bg-slate-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-600">ورود از TXT</button>
-            <button type="button" onClick={exportTxt} disabled={!rows.length} className="rounded-xl bg-slate-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-40">خروجی TXT</button>
-            <button type="button" onClick={saveSelected} disabled={saving||!selectedRows.length||!counterLabel||!facilityNumber} className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-300">{saving?"در حال ذخیره...":`ذخیره چک‌های انتخاب‌شده (${selectedRows.length})`}</button>
+            <button type="button" onClick={addRow} disabled={!baseValid||duplicate||amountViolation||rows.some(r=>r.violation)} className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300">افزودن چک</button>
+            <button type="button" onClick={importTxt} className="rounded-xl bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-800">ورود از TXT</button>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-[1450px] w-full border-collapse text-center text-xs">
-            <thead className="bg-slate-100 text-slate-700"><tr>{["ذخیره","ردیف","شماره چک","مبلغ چک (ریال)","روز","ماه","سال","سری چک","کد بانک","نام بانک","کد شعبه","شماره حساب","تعداد روز","مبلغ کسرشده","مبلغ پرداختی","عملیات"].map(h=><th key={h} className="whitespace-nowrap border-b px-2 py-3">{h}</th>)}</tr></thead>
+            <thead className="bg-indigo-50 text-indigo-900"><tr>{["ذخیره","ردیف","شماره چک","مبلغ چک (ریال)","روز","ماه","سال","سری چک","کد بانک","نام بانک","کد شعبه","شماره حساب","تعداد روز","مبلغ کسرشده","مبلغ پرداختی","عملیات"].map(h=><th key={h} className="whitespace-nowrap border-b px-2 py-3">{h}</th>)}</tr></thead>
             <tbody>
               {rows.map((row,index)=><tr key={row.id} className={`${row.violation?"bg-red-50":index%2?"bg-slate-50":"bg-white"} border-b`}>
-                <td className="px-2 py-2"><input aria-label="انتخاب برای ذخیره در پایگاه داده" type="checkbox" checked={row.selected||row.saved} disabled={row.saved||saving||!row.valid||row.violation} onChange={e=>updateRow(row.id,{selected:e.target.checked})}/>{row.saved&&<span className="mt-1 block text-[10px] text-emerald-700">ذخیره شد</span>}</td>
+                <td className="px-2 py-2"><input aria-label="انتخاب برای ذخیره در پایگاه داده" type="checkbox" checked={row.selected||row.saved} disabled={row.saved||saving||!row.valid||row.violation} onChange={e=>updateRow(row.id,{selected:e.target.checked})}/>{row.saved&&<span className="mt-1 block text-[10px] text-teal-700">ذخیره شد</span>}</td>
                 <td className="px-2 py-2">{(index+1).toLocaleString("fa-IR")}</td>
                 <td className="px-1 py-2"><input className={inputClass} value={row.checkNumber} disabled={row.saved} onChange={e=>updateRow(row.id,{checkNumber:e.target.value})}/></td>
                 <td className="px-1 py-2"><input className={inputClass} inputMode="numeric" value={row.amount} disabled={row.saved} onChange={e=>updateRow(row.id,{amount:formatAmount(e.target.value)})}/></td>
@@ -341,26 +308,13 @@ export default function AddDebtCheckPage() {
                 <td className="px-2 py-2"><button type="button" disabled={row.saved||saving} onClick={()=>setRows(current=>current.filter(r=>r.id!==row.id))} className="rounded-lg bg-red-50 px-3 py-2 font-semibold text-red-700 hover:bg-red-100 disabled:opacity-40">حذف</button></td>
               </tr>)}
             </tbody>
-            <tfoot className="bg-blue-50 font-bold"><tr><td colSpan={3} className="px-3 py-3">جمع کل</td><td className="px-3 py-3">{totalAmount.toLocaleString("fa-IR")}</td><td colSpan={9}></td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.deduction,0)).toLocaleString("fa-IR")}</td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.payment,0)).toLocaleString("fa-IR")}</td><td></td></tr></tfoot>
+            <tfoot className="bg-indigo-50 font-bold"><tr><td colSpan={3} className="px-3 py-3">جمع کل</td><td className="px-3 py-3">{totalAmount.toLocaleString("fa-IR")}</td><td colSpan={9}></td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.deduction,0)).toLocaleString("fa-IR")}</td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.payment,0)).toLocaleString("fa-IR")}</td><td></td></tr></tfoot>
           </table>
         </div>
         <div className="space-y-1 border-t border-slate-200 p-4 text-sm">
           <p className="text-slate-700">جمع مبلغ چک‌ها: <strong>{totalAmount.toLocaleString("fa-IR")} ریال</strong>{maxAmountValue>0&&<> | حداکثر مجاز: {maxAmountValue.toLocaleString("fa-IR")} ریال | باقی‌مانده: {Math.max(0,maxAmountValue-totalAmount).toLocaleString("fa-IR")} ریال</>}</p>
           {(duplicate||amountViolation||rows.some(r=>r.violation))&&<p className="text-red-600">{duplicate?"شماره چک تکراری وجود دارد. ":""}{amountViolation?"جمع مبلغ چک‌ها از سقف مجاز بیشتر است. ":""}{rows.some(r=>r.violation)?"تاریخ سررسید یک یا چند چک از سقف ماه تعیین‌شده عبور کرده است.":""}</p>}
           <p className="text-slate-500">تعداد چک‌های انتخاب‌شده برای ذخیره: {selectedRows.length.toLocaleString("fa-IR")} | تعداد ذخیره‌شده: {rows.filter(r=>r.saved).length.toLocaleString("fa-IR")}</p>
-        </div>
-      </section>
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 p-5"><h2 className="text-lg font-bold text-slate-900">چک‌های ذخیره‌شده در پایگاه داده</h2><p className="mt-1 text-xs text-slate-500">این فهرست پس از بارگذاری مجدد صفحه نیز از PostgreSQL دریافت می‌شود.</p></div>
-        <div className="overflow-x-auto">
-          <table className="min-w-[1050px] w-full text-center text-xs">
-            <thead className="bg-slate-100"><tr>{["ردیف","کدباجه","کد تسهیلات","شماره چک / سریال","شماره انتظامی","تاریخ سررسید","مبلغ","بانک","شعبه","وضعیت","عملیات"].map(h=><th key={h} className="whitespace-nowrap px-3 py-3">{h}</th>)}</tr></thead>
-            <tbody>
-              {loadingSaved?<tr><td colSpan={11} className="p-6 text-slate-500">در حال دریافت...</td></tr>:savedChecks.length===0?<tr><td colSpan={11} className="p-6 text-slate-500">هنوز چکی در پایگاه داده ذخیره نشده است.</td></tr>:savedChecks.map((record,index)=><tr key={record.id} className="border-b even:bg-slate-50">
-                <td className="px-3 py-3">{(index+1).toLocaleString("fa-IR")}</td><td className="px-3 py-3">{record.counterLabel}</td><td className="px-3 py-3">{record.facilityNumber}</td><td className="px-3 py-3">{record.checkNumber||"—"}</td><td className="px-3 py-3">{record.administrativeNumber||"—"}</td><td className="px-3 py-3">{record.dueDate||"—"}</td><td className="px-3 py-3">{record.paidAmount||"—"}</td><td className="px-3 py-3">{record.bankAgent||"—"}</td><td className="px-3 py-3">{record.checkBranch||"—"}</td><td className="px-3 py-3">{record.checkStatus}</td><td className="px-3 py-3"><button type="button" onClick={()=>deleteSavedCheck(record.id)} disabled={deletingId===record.id} className="rounded-lg bg-red-50 px-3 py-2 font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50">{deletingId===record.id?"در حال حذف...":"حذف از پایگاه داده"}</button></td>
-              </tr>)}
-            </tbody>
-          </table>
         </div>
       </section>
       {error&&<div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
