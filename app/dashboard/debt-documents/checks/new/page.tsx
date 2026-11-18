@@ -60,7 +60,6 @@ export default function AddDebtCheckPage() {
   const [baseYear,setBaseYear] = useState(String(initialDate.year));
   const [profitRate,setProfitRate] = useState("23");
   const [maxAmount,setMaxAmount] = useState("5,000,000,000");
-  const [maxMonths,setMaxMonths] = useState("6");
   const [rows,setRows] = useState<CheckRow[]>([blankRow(initialDate)]);
   const [counters,setCounters] = useState<CounterOption[]>([]);
   const [banks,setBanks] = useState<BankOption[]>([]);
@@ -124,7 +123,7 @@ export default function AddDebtCheckPage() {
   });
   const canSaveAll = !saving && !!counterLabel && !!facilityNumber && pendingRows.length > 0 && validPending.length === pendingRows.length && !duplicate && !totalViolation && !pendingRows.some(row=>row.violation);
 
-  function recalculate(source: CheckRow[], settings = {baseDay,baseMonth,baseYear,profitRate,maxMonths}) {
+  function recalculate(source: CheckRow[], settings = {baseDay,baseMonth,baseYear,profitRate}) {
     const b = {year:numberValue(settings.baseYear),month:numberValue(settings.baseMonth),day:numberValue(settings.baseDay)};
     const okBase = b.year >= 1300 && b.month>=1 && b.month<=12 && b.day>=1 && b.day<=monthDays(b.year,b.month);
     return source.map(row=>{
@@ -135,14 +134,13 @@ export default function AddDebtCheckPage() {
       if(days<0) return {...row,valid:false,days, deduction:0,payment:0,violation:false};
       const daily=(Number(settings.profitRate)||0)/100/365, rt=daily*days;
       const deduction=amount*(rt/(1+rt)), payment=amount/(1+rt);
-      const limit=numberValue(settings.maxMonths)*30;
-      return {...row,valid:true,days,deduction,payment,violation:limit>0 && days>limit};
+      return {...row,valid:true,days,deduction,payment,violation:false};
     });
   }
-  function updateSettings(change: Partial<{baseDay:string;baseMonth:string;baseYear:string;profitRate:string;maxMonths:string}>) {
-    const settings={baseDay,baseMonth,baseYear,profitRate,maxMonths,...change};
+  function updateSettings(change: Partial<{baseDay:string;baseMonth:string;baseYear:string;profitRate:string}>) {
+    const settings={baseDay,baseMonth,baseYear,profitRate,...change};
     setBaseDay(settings.baseDay); setBaseMonth(settings.baseMonth); setBaseYear(settings.baseYear);
-    setProfitRate(settings.profitRate); setMaxMonths(settings.maxMonths);
+    setProfitRate(settings.profitRate);
     setRows(current=>recalculate(current,settings));
   }
   function updateRow(id:string,patch:Partial<CheckRow>) {
@@ -323,9 +321,6 @@ export default function AddDebtCheckPage() {
           <label className="space-y-2 text-sm font-semibold text-slate-700">حداکثر جمع مبلغ چک (ریال)
             <input className={inputClass} inputMode="numeric" value={maxAmount} onChange={e=>setMaxAmount(formatAmount(e.target.value))}/>
           </label>
-          <label className="space-y-2 text-sm font-semibold text-slate-700">حداکثر ماه (تاریخ)
-            <input className={inputClass} type="number" min="1" max="120" value={maxMonths} onChange={e=>updateSettings({maxMonths:e.target.value})}/>
-          </label>
         </div>
         {!baseValid && <p className="mt-3 text-sm text-red-600">تاریخ مبنا معتبر نیست.</p>}
       </section>
@@ -376,7 +371,7 @@ export default function AddDebtCheckPage() {
         </div>
         <div className="space-y-1 border-t border-slate-200 p-4 text-sm">
           <p className="text-slate-700">جمع مبلغ چک‌ها: <strong>{totalAmount.toLocaleString("fa-IR")} ریال</strong>{maxAmountValue>0&&<> | حداکثر مجاز: {maxAmountValue.toLocaleString("fa-IR")} ریال | باقی‌مانده: {Math.max(0,maxAmountValue-totalAmount).toLocaleString("fa-IR")} ریال</>}</p>
-          {(duplicate||amountViolation||rows.some(r=>r.violation))&&<p className="text-red-600">{duplicate?"شماره چک تکراری وجود دارد. ":""}{amountViolation?"جمع مبلغ چک‌ها از سقف مجاز بیشتر است. ":""}{rows.some(r=>r.violation)?"تاریخ سررسید یک یا چند چک از سقف ماه تعیین‌شده عبور کرده است.":""}</p>}
+          {(duplicate||amountViolation||rows.some(r=>r.violation))&&<p className="text-red-600">{duplicate?"شماره چک تکراری وجود دارد. ":""}{amountViolation?"جمع مبلغ چک‌ها از سقف مجاز بیشتر است. ":""}</p>}
           <p className="text-slate-500">تعداد چک‌های در انتظار ذخیره: {pendingRows.length.toLocaleString("fa-IR")} | تعداد ذخیره‌شده: {rows.filter(r=>r.saved).length.toLocaleString("fa-IR")}</p>
         </div>
         <div className="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
