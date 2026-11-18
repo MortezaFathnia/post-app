@@ -16,6 +16,7 @@ type CheckRow = {
   year: string;
   serial: string;
   bankCode: string;
+  bankSearch: string;
   branchCode: string;
   accountNumber: string;
   selected: boolean;
@@ -29,14 +30,6 @@ type CheckRow = {
 type ApiResult = { success?: boolean; error?: string; createdCount?: number; duplicateCheckNumbers?: string[] };
 
 const inputClass = "w-full min-w-[72px] rounded-lg border border-slate-300 bg-white px-2 py-2 text-center text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100";
-const bankNames: Record<string, string> = {
-  "61":"بانک شهر","18":"بانک تجارت","56":"بانک سامان","15":"بانک سپه ایران","19":"بانک صادرات ایران",
-  "54":"بانک پارسیان","55":"بانک اقتصاد نوین","17":"بانک ملی ایران","12":"بانک ملت ایران","13":"بانک رفاه کارگران",
-  "14":"بانک مسکن","11":"بانک صنعت و معدن","20":"بانک توسعه صادرات ایران","53":"بانک کارآفرین","16":"بانک کشاورزی",
-  "21":"پست بانک ایران","22":"بانک توسعه تعاون","95":"بانک ایران و ونزوئلا","57":"بانک پاسارگاد",
-  "60":"بانک قرض‌الحسنه مهر ایران","51":"موسسه اعتباری توسعه","66":"بانک دی","58":"بانک سرمایه","62":"بانک آینده",
-  "59":"بانک سینا","64":"بانک گردشگری","69":"بانک ایران زمین","70":"بانک قرض‌الحسنه رسالت","78":"بانک خاورمیانه","75":"موسسه اعتباری ملل"
-};
 const digits = (value: string) => value.replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
 const numberValue = (value: string) => Number(digits(value).replace(/[^0-9]/g, "")) || 0;
 const formatAmount = (value: string) => {
@@ -58,7 +51,7 @@ function newId() { return `row-${Date.now()}-${Math.random().toString(36).slice(
 function blankRow(base: {year:number;month:number;day:number}): CheckRow {
   let year = base.year, month = base.month + 1;
   if (month > 12) { month = 1; year += 1; }
-  return { id:newId(), checkNumber:"", amount:"100,000,000", day:String(Math.min(base.day, monthDays(year,month))), month:String(month), year:String(year), serial:"", bankCode:"", branchCode:"", accountNumber:"", selected:false, saved:false, days:null, deduction:0, payment:0, valid:false, violation:false };
+  return { id:newId(), checkNumber:"", amount:"100,000,000", day:String(Math.min(base.day, monthDays(year,month))), month:String(month), year:String(year), serial:"", bankCode:"", bankSearch:"", branchCode:"", accountNumber:"", selected:false, saved:false, days:null, deduction:0, payment:0, valid:false, violation:false };
 }
 
 export default function AddDebtCheckPage() {
@@ -72,6 +65,7 @@ export default function AddDebtCheckPage() {
   const [rows,setRows] = useState<CheckRow[]>([blankRow(initialDate)]);
   const [counters,setCounters] = useState<CounterOption[]>([]);
   const [banks,setBanks] = useState<BankOption[]>([]);
+  const [bankOpenId,setBankOpenId] = useState<string | null>(null);
   const [facilityPeople,setFacilityPeople] = useState<FacilityPersonOption[]>([]);
   const [counterLabel,setCounterLabel] = useState("");
   const [facilityName,setFacilityName] = useState("");
@@ -178,7 +172,7 @@ export default function AddDebtCheckPage() {
           return [{
             id:newId(),checkNumber:(parts[0]||"").trim(),amount:formatAmount(parts[1]||""),
             day:date[2],month:date[1],year:date[0],serial:(parts[2]||"").trim(),
-            bankCode:(parts[9]||"").trim(),branchCode:(parts[10]||"").trim(),
+            bankCode:(parts[9]||"").trim(),bankSearch:"",branchCode:(parts[10]||"").trim(),
             accountNumber:(parts[12]||"").trim(),selected:false,saved:false,
             days:null,deduction:0,payment:0,valid:false,violation:false
           } satisfies CheckRow];
@@ -205,7 +199,7 @@ export default function AddDebtCheckPage() {
         mode:"discount-calculator",counterLabel,facilityNumber,
         records:validSelected.map(row=>({
           checkNumber:row.checkNumber,amount:String(numberValue(row.amount)),day:numberValue(row.day),month:numberValue(row.month),year:numberValue(row.year),
-          serial:row.serial,bankCode:row.bankCode,bankName:bankNames[row.bankCode] || banks.find(b=>b.bankId===row.bankCode)?.name || "",
+          serial:row.serial,bankCode:row.bankCode,bankName:banks.find(b=>b.bankId===row.bankCode)?.name || "",
           branchCode:row.branchCode,accountNumber:row.accountNumber,days:row.days,deduction:Math.floor(row.deduction),payment:Math.floor(row.payment)
         }))
       })});
@@ -220,7 +214,6 @@ export default function AddDebtCheckPage() {
     finally { setSaving(false); }
   }
 
-  const bankOptions = banks.length ? banks : Object.entries(bankNames).map(([bankId,name],index)=>({id:index,bankId,name}));
   const amountViolation = totalViolation;
   return (
     <div dir="rtl" className="space-y-6">
@@ -293,7 +286,7 @@ export default function AddDebtCheckPage() {
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-[1450px] w-full border-collapse text-center text-sm">
-            <thead className="bg-slate-50 text-slate-700"><tr>{["ذخیره","ردیف","شماره چک","مبلغ چک (ریال)","روز","ماه","سال","سری چک","کد بانک","نام بانک","کد شعبه","شماره حساب","تعداد روز","مبلغ کسرشده","مبلغ پرداختی","عملیات"].map(h=><th key={h} className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
+            <thead className="bg-slate-50 text-slate-700"><tr>{["ذخیره","ردیف","شماره چک","مبلغ چک (ریال)","روز","ماه","سال","سری چک","بانک (کد - نام)","کد شعبه","شماره حساب","تعداد روز","مبلغ کسرشده","مبلغ پرداختی","عملیات"].map(h=><th key={h} className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
             <tbody>
               {rows.map((row,index)=><tr key={row.id} className={`${row.violation?"bg-red-50":index%2?"bg-slate-50":"bg-white"} border-b border-slate-100 transition-colors hover:bg-slate-100/70`}>
                 <td className="px-2 py-2"><input aria-label="انتخاب برای ذخیره در پایگاه داده" type="checkbox" checked={row.selected||row.saved} disabled={row.saved||saving||!row.valid||row.violation} onChange={e=>updateRow(row.id,{selected:e.target.checked})}/>{row.saved&&<span className="mt-1 block text-[10px] text-teal-700">ذخیره شد</span>}</td>
@@ -304,8 +297,14 @@ export default function AddDebtCheckPage() {
                 <td className="px-1 py-2"><input className={inputClass} type="number" min="1" max="12" value={row.month} disabled={row.saved} onChange={e=>updateRow(row.id,{month:e.target.value})}/></td>
                 <td className="px-1 py-2"><input className={inputClass} type="number" min="1300" max="1500" value={row.year} disabled={row.saved} onChange={e=>updateRow(row.id,{year:e.target.value})}/></td>
                 <td className="px-1 py-2"><input className={inputClass} value={row.serial} disabled={row.saved} onChange={e=>updateRow(row.id,{serial:e.target.value})}/></td>
-                <td className="px-1 py-2"><select className={inputClass} value={row.bankCode} disabled={row.saved} onChange={e=>updateRow(row.id,{bankCode:e.target.value})}><option value="">بانک</option>{bankOptions.map(b=><option key={b.id} value={b.bankId}>{b.bankId}</option>)}</select></td>
-                <td className="whitespace-nowrap px-2 py-2">{bankNames[row.bankCode]||banks.find(b=>b.bankId===row.bankCode)?.name||"—"}</td>
+                <td className="relative min-w-[230px] px-1 py-2">
+                  <input className={inputClass+" text-right"} value={row.bankSearch || (banks.find(b=>b.bankId===row.bankCode) ? banks.find(b=>b.bankId===row.bankCode)!.bankId+" - "+banks.find(b=>b.bankId===row.bankCode)!.name : "")} placeholder="جست‌وجوی کد یا نام بانک" autoComplete="off" disabled={row.saved||loadingOptions} onFocus={()=>setBankOpenId(row.id)} onChange={e=>{updateRow(row.id,{bankCode:"",bankSearch:e.target.value});setBankOpenId(row.id);}} onKeyDown={e=>{if(e.key==="Escape")setBankOpenId(null);if(e.key==="Enter"&&banks.filter(b=>(b.bankId+" "+b.name).toLocaleLowerCase().includes(row.bankSearch.toLocaleLowerCase()))[0]){e.preventDefault();const b=banks.filter(x=>(x.bankId+" "+x.name).toLocaleLowerCase().includes(row.bankSearch.toLocaleLowerCase()))[0];updateRow(row.id,{bankCode:b.bankId,bankSearch:b.bankId+" - "+b.name});setBankOpenId(null);}}}/>
+                  {bankOpenId===row.id&&!row.saved&&<div className="absolute inset-x-1 top-full z-40 mt-1 max-h-56 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 text-right shadow-xl">
+                    {banks.filter(b=>!row.bankSearch.trim()||(b.bankId+" "+b.name).toLocaleLowerCase().includes(row.bankSearch.toLocaleLowerCase())).map(b=><button type="button" key={b.id} onMouseDown={e=>e.preventDefault()} onClick={()=>{updateRow(row.id,{bankCode:b.bankId,bankSearch:b.bankId+" - "+b.name});setBankOpenId(null);}} className="block w-full rounded-lg px-3 py-2 text-right text-sm text-slate-700 hover:bg-indigo-50">{b.bankId} - {b.name}</button>)}
+                    {!banks.length&&<p className="p-2 text-xs text-slate-500">فهرست بانک‌ها در دسترس نیست.</p>}
+                    {banks.length>0&&row.bankSearch.trim()&&!banks.some(b=>(b.bankId+" "+b.name).toLocaleLowerCase().includes(row.bankSearch.toLocaleLowerCase()))&&<p className="p-2 text-xs text-slate-500">بانکی یافت نشد.</p>}
+                  </div>}
+                </td>
                 <td className="px-1 py-2"><input className={inputClass} value={row.branchCode} disabled={row.saved} onChange={e=>updateRow(row.id,{branchCode:e.target.value})}/></td>
                 <td className="px-1 py-2"><input className={inputClass} value={row.accountNumber} disabled={row.saved} onChange={e=>updateRow(row.id,{accountNumber:e.target.value})}/></td>
                 <td className="whitespace-nowrap px-2 py-2">{row.days===null?"—":row.days.toLocaleString("fa-IR")}</td>
