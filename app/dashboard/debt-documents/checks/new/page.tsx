@@ -190,30 +190,6 @@ export default function AddDebtCheckPage() {
     picker.click();
   }
 
-  async function saveSingleRow(row: CheckRow) {
-    if(!counterLabel || !facilityNumber) { setError("ابتدا کدباجه و کد تسهیلات را انتخاب کنید."); return; }
-    if(duplicate || totalViolation || row.violation) { setError("شماره چک تکراری یا محدودیت مبلغ/تاریخ وجود دارد؛ ابتدا آن را اصلاح کنید."); return; }
-    if(!row.valid || !row.checkNumber.trim() || !row.serial.trim() || !row.bankCode || !row.accountNumber.trim()) {
-      setError("اطلاعات این چک، از جمله شماره حساب، کامل نیست یا تاریخ معتبر نیست."); return;
-    }
-    setSaving(true); setError(""); setMessage("");
-    try {
-      const response=await fetch("/api/debt-documents/checks",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-        mode:"discount-calculator",counterLabel,facilityNumber,
-        records:[{
-          checkNumber:row.checkNumber,amount:String(numberValue(row.amount)),day:numberValue(row.day),month:numberValue(row.month),year:numberValue(row.year),
-          serial:row.serial,bankCode:row.bankCode,bankName:banks.find(b=>b.bankId===row.bankCode)?.name || "",
-          branchCode:row.branchCode,accountNumber:row.accountNumber,days:row.days,deduction:Math.floor(row.deduction),payment:Math.floor(row.payment)
-        }]
-      })});
-      const result=(await response.json()) as ApiResult;
-      if(!response.ok || !result.success) throw new Error(result.error || "ذخیره چک ناموفق بود.");
-      if(result.duplicateCheckNumbers?.includes(row.checkNumber)) throw new Error("این شماره چک قبلاً در پایگاه داده ثبت شده است.");
-      setRows(current=>current.map(item=>item.id===row.id?{...item,saved:true}:item));
-      setMessage("چک با موفقیت در پایگاه داده ثبت شد.");
-    } catch(e) { setError(e instanceof Error ? e.message : "ذخیره چک ناموفق بود."); }
-    finally { setSaving(false); }
-  }
 
   async function saveAllRows() {
     if(!counterLabel || !facilityNumber) { setError("ابتدا کدباجه و کد تسهیلات را انتخاب کنید."); return; }
@@ -356,7 +332,7 @@ export default function AddDebtCheckPage() {
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col justify-between gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-center">
-          <div><h2 className="text-lg font-bold text-slate-900">فهرست چک‌ها</h2><p className="mt-1 text-xs text-slate-500">برای ثبت هر چک، دکمه آیکون‌دار ستون وضعیت همان ردیف را بزنید؛ امکان ذخیره همه چک‌ها نیز از پایین جدول وجود دارد.</p></div>
+          <div><h2 className="text-lg font-bold text-slate-900">فهرست چک‌ها</h2><p className="mt-1 text-xs text-slate-500">برای افزودن ردیف جدید، دکمه + در ستون وضعیت را بزنید. ردیف‌ها فقط با دکمه ذخیره همه چک‌ها در پایگاه داده ثبت می‌شوند.</p></div>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={importTxt} className="rounded-xl bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-800">ورود از TXT</button>
           </div>
@@ -369,7 +345,7 @@ export default function AddDebtCheckPage() {
                 <td className="px-2 py-2">
                   {row.saved
                     ? <span className="text-xs font-semibold text-teal-700">ذخیره شد</span>
-                    : <button type="button" onClick={()=>saveSingleRow(row)} disabled={saving} aria-label="ذخیره چک" title="ذخیره چک" className="inline-flex items-center justify-center rounded-lg bg-green-600 p-2.5 text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-slate-300">
+                    : <button type="button" onClick={()=>setRows(current=>recalculate([...current,blankRow(base)]))} disabled={saving} aria-label="افزودن ردیف جدید" title="افزودن ردیف جدید" className="inline-flex items-center justify-center rounded-lg bg-green-600 p-2.5 text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-slate-300">
                         <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                       </button>}
                 </td>
@@ -404,7 +380,7 @@ export default function AddDebtCheckPage() {
           <p className="text-slate-500">تعداد چک‌های در انتظار ذخیره: {pendingRows.length.toLocaleString("fa-IR")} | تعداد ذخیره‌شده: {rows.filter(r=>r.saved).length.toLocaleString("fa-IR")}</p>
         </div>
         <div className="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-slate-500">خروجی TXT شامل تمام ردیف‌های جدول است؛ با ذخیره، تمام ردیف‌های تکمیل‌شده در پایگاه داده ثبت می‌شوند.</p>
+          <p className="text-xs text-slate-500">خروجی TXT شامل تمام ردیف‌های جدول است؛ برای ثبت اطلاعات در پایگاه داده از دکمه ذخیره همه چک‌ها استفاده کنید.</p>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={exportTxt} disabled={!rows.length} className="rounded-lg border border-violet-300 bg-white px-4 py-2.5 text-sm font-semibold text-violet-700 hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-40">خروجی TXT</button>
             <button type="button" onClick={saveAllRows} disabled={!canSaveAll} className="rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none">{saving?"در حال ذخیره...":`ذخیره همه چک‌ها (${pendingRows.length})`}</button>
