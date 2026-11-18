@@ -19,7 +19,6 @@ type CheckRow = {
   bankSearch: string;
   branchCode: string;
   accountNumber: string;
-  selected: boolean;
   saved: boolean;
   days: number | null;
   deduction: number;
@@ -51,7 +50,7 @@ function newId() { return `row-${Date.now()}-${Math.random().toString(36).slice(
 function blankRow(base: {year:number;month:number;day:number}): CheckRow {
   let year = base.year, month = base.month + 1;
   if (month > 12) { month = 1; year += 1; }
-  return { id:newId(), checkNumber:"", amount:"100,000,000", day:String(Math.min(base.day, monthDays(year,month))), month:String(month), year:String(year), serial:"", bankCode:"", bankSearch:"", branchCode:"", accountNumber:"", selected:false, saved:false, days:null, deduction:0, payment:0, valid:false, violation:false };
+  return { id:newId(), checkNumber:"", amount:"100,000,000", day:String(Math.min(base.day, monthDays(year,month))), month:String(month), year:String(year), serial:"", bankCode:"", bankSearch:"", branchCode:"", accountNumber:"", saved:false, days:null, deduction:0, payment:0, valid:false, violation:false };
 }
 
 export default function AddDebtCheckPage() {
@@ -115,8 +114,8 @@ export default function AddDebtCheckPage() {
   const maxAmountValue = numberValue(maxAmount);
   const totalViolation = maxAmountValue > 0 && totalAmount > maxAmountValue;
   const duplicate = rows.some((row,index)=>row.checkNumber.trim() && rows.findIndex(other=>other.checkNumber.trim()===row.checkNumber.trim())!==index);
-  const selectedRows = rows.filter(row=>row.selected && !row.saved);
-  const validSelected = selectedRows.filter(row=>row.valid && !row.violation && row.checkNumber.trim() && row.serial.trim() && row.bankCode);
+  const pendingRows = rows.filter(row=>!row.saved);
+  const validPending = pendingRows.filter(row=>row.valid && !row.violation && row.checkNumber.trim() && row.serial.trim() && row.bankCode && row.accountNumber.trim());
 
   function recalculate(source: CheckRow[], settings = {baseDay,baseMonth,baseYear,profitRate,maxMonths}) {
     const b = {year:numberValue(settings.baseYear),month:numberValue(settings.baseMonth),day:numberValue(settings.baseDay)};
@@ -173,7 +172,7 @@ export default function AddDebtCheckPage() {
             id:newId(),checkNumber:(parts[0]||"").trim(),amount:formatAmount(parts[1]||""),
             day:date[2],month:date[1],year:date[0],serial:(parts[2]||"").trim(),
             bankCode:(parts[9]||"").trim(),bankSearch:"",branchCode:(parts[10]||"").trim(),
-            accountNumber:(parts[12]||"").trim(),selected:false,saved:false,
+            accountNumber:(parts[12]||"").trim(),saved:false,
             days:null,deduction:0,payment:0,valid:false,violation:false
           } satisfies CheckRow];
         });
@@ -188,16 +187,16 @@ export default function AddDebtCheckPage() {
     picker.click();
   }
 
-  async function saveSelected() {
+  async function saveAllRows() {
     if(!counterLabel || !facilityNumber) { setError("ابتدا کدباجه و کد تسهیلات را انتخاب کنید."); return; }
-    if(duplicate || totalViolation || selectedRows.some(row=>row.violation)) { setError("شماره چک تکراری یا محدودیت مبلغ/تاریخ وجود دارد؛ ابتدا آن را اصلاح کنید."); return; }
-    if(!selectedRows.length) { setError("حداقل یک چک را برای ذخیره انتخاب کنید."); return; }
-    if(validSelected.length !== selectedRows.length) { setError("اطلاعات چک‌های انتخاب‌شده باید کامل و تاریخ آن‌ها در محدوده مجاز باشد."); return; }
+    if(duplicate || totalViolation || pendingRows.some(row=>row.violation)) { setError("شماره چک تکراری یا محدودیت مبلغ/تاریخ وجود دارد؛ ابتدا آن را اصلاح کنید."); return; }
+    if(!pendingRows.length) { setError("چکی برای ذخیره وجود ندارد."); return; }
+    if(validPending.length !== pendingRows.length) { setError("اطلاعات همه چک‌ها، از جمله شماره حساب، باید کامل و تاریخ آن‌ها در محدوده مجاز باشد."); return; }
     setSaving(true); setError(""); setMessage("");
     try {
       const response=await fetch("/api/debt-documents/checks",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
         mode:"discount-calculator",counterLabel,facilityNumber,
-        records:validSelected.map(row=>({
+        records:validPending.map(row=>({
           checkNumber:row.checkNumber,amount:String(numberValue(row.amount)),day:numberValue(row.day),month:numberValue(row.month),year:numberValue(row.year),
           serial:row.serial,bankCode:row.bankCode,bankName:banks.find(b=>b.bankId===row.bankCode)?.name || "",
           branchCode:row.branchCode,accountNumber:row.accountNumber,days:row.days,deduction:Math.floor(row.deduction),payment:Math.floor(row.payment)
@@ -207,7 +206,7 @@ export default function AddDebtCheckPage() {
       if(!response.ok || !result.success) throw new Error(result.error || "ذخیره چک‌ها ناموفق بود.");
       const savedCount=result.createdCount || 0;
       const duplicateNumbers=new Set(result.duplicateCheckNumbers||[]);
-      setRows(current=>current.map(row=>row.selected && !row.saved && validSelected.some(saved=>saved.id===row.id) && !duplicateNumbers.has(row.checkNumber) ? {...row,saved:true,selected:false} : row));
+      setRows(current=>current.map(row=>!row.saved && validPending.some(saved=>saved.id===row.id) && !duplicateNumbers.has(row.checkNumber) ? {...row,saved:true} : row));
       const duplicates=result.duplicateCheckNumbers?.length ? ` شماره‌های تکراری رد شدند: ${result.duplicateCheckNumbers.join("، ")}.` : "";
       setMessage(`${savedCount.toLocaleString("fa-IR")} چک در پایگاه داده ذخیره شد.${duplicates}`);
     } catch(e) { setError(e instanceof Error ? e.message : "ذخیره چک‌ها ناموفق بود."); }
@@ -278,18 +277,18 @@ export default function AddDebtCheckPage() {
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col justify-between gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-center">
-          <div><h2 className="text-lg font-bold text-slate-900">فهرست چک‌ها</h2><p className="mt-1 text-xs text-slate-500">چک‌ها را بررسی کنید، ردیف‌های موردنظر را انتخاب کرده و از دکمه‌های پایین جدول استفاده کنید.</p></div>
+          <div><h2 className="text-lg font-bold text-slate-900">فهرست چک‌ها</h2><p className="mt-1 text-xs text-slate-500">چک‌ها را تکمیل کنید؛ همه ردیف‌ها با فشردن دکمه ذخیره در پایگاه داده ثبت می‌شوند.</p></div>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={addRow} disabled={!baseValid||duplicate||amountViolation||rows.some(r=>r.violation)} className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300">افزودن چک</button>
             <button type="button" onClick={importTxt} className="rounded-xl bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-800">ورود از TXT</button>
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-[1240px] w-full border-collapse text-center text-sm">
-            <thead className="bg-slate-50 text-slate-700"><tr>{["ذخیره","ردیف","شماره چک","مبلغ چک (ریال)","روز","ماه","سال","سری چک","بانک (کد - نام)","تعداد روز","مبلغ کسرشده","مبلغ پرداختی","عملیات"].map(h=><th key={h} className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
+          <table className="min-w-[1340px] w-full border-collapse text-center text-sm">
+            <thead className="bg-slate-50 text-slate-700"><tr>{["وضعیت","ردیف","شماره چک","مبلغ چک (ریال)","روز","ماه","سال","سری چک","بانک (کد - نام)","شماره حساب","تعداد روز","مبلغ کسرشده","مبلغ پرداختی","عملیات"].map(h=><th key={h} className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
             <tbody>
               {rows.map((row,index)=><tr key={row.id} className={`${row.violation?"bg-red-50":index%2?"bg-slate-50":"bg-white"} border-b border-slate-100 transition-colors hover:bg-slate-100/70`}>
-                <td className="px-2 py-2"><input aria-label="انتخاب برای ذخیره در پایگاه داده" type="checkbox" checked={row.selected||row.saved} disabled={row.saved||saving||!row.valid||row.violation} onChange={e=>updateRow(row.id,{selected:e.target.checked})}/>{row.saved&&<span className="mt-1 block text-[10px] text-teal-700">ذخیره شد</span>}</td>
+                <td className="px-2 py-2">{row.saved?<span className="text-xs font-semibold text-teal-700">ذخیره شد</span>:<span className="text-xs text-amber-700">در انتظار ذخیره</span>}</td>
                 <td className="px-2 py-2">{(index+1).toLocaleString("fa-IR")}</td>
                 <td className="px-1 py-2"><input className={inputClass} value={row.checkNumber} disabled={row.saved} onChange={e=>updateRow(row.id,{checkNumber:e.target.value})}/></td>
                 <td className="px-1 py-2"><input className={inputClass} inputMode="numeric" value={row.amount} disabled={row.saved} onChange={e=>updateRow(row.id,{amount:formatAmount(e.target.value)})}/></td>
@@ -305,25 +304,26 @@ export default function AddDebtCheckPage() {
                     {banks.length>0&&row.bankSearch.trim()&&!banks.some(b=>(b.bankId+" "+b.name).toLocaleLowerCase().includes(row.bankSearch.toLocaleLowerCase()))&&<p className="p-2 text-xs text-slate-500">بانکی یافت نشد.</p>}
                   </div>}
                 </td>
-                            <td className="whitespace-nowrap px-2 py-2">{row.days===null?"—":row.days.toLocaleString("fa-IR")}</td>
+                <td className="px-1 py-2"><input className={inputClass} value={row.accountNumber} disabled={row.saved} onChange={e=>updateRow(row.id,{accountNumber:e.target.value})}/></td>
+                <td className="whitespace-nowrap px-2 py-2">{row.days===null?"—":row.days.toLocaleString("fa-IR")}</td>
                 <td className="whitespace-nowrap px-2 py-2 font-semibold">{row.valid?Math.floor(row.deduction).toLocaleString("fa-IR"):"—"}</td>
                 <td className="whitespace-nowrap px-2 py-2 font-semibold">{row.valid?Math.floor(row.payment).toLocaleString("fa-IR"):"—"}</td>
                 <td className="px-2 py-2"><button type="button" disabled={row.saved||saving} onClick={()=>setRows(current=>current.filter(r=>r.id!==row.id))} className="rounded-lg bg-red-50 px-3 py-2 font-semibold text-red-700 hover:bg-red-100 disabled:opacity-40">حذف</button></td>
               </tr>)}
             </tbody>
-            <tfoot className="bg-slate-50 font-bold text-slate-800"><tr><td colSpan={3} className="px-3 py-3">جمع کل</td><td className="px-3 py-3">{totalAmount.toLocaleString("fa-IR")}</td><td colSpan={6}></td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.deduction,0)).toLocaleString("fa-IR")}</td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.payment,0)).toLocaleString("fa-IR")}</td><td></td></tr></tfoot>
+            <tfoot className="bg-slate-50 font-bold text-slate-800"><tr><td colSpan={3} className="px-3 py-3">جمع کل</td><td className="px-3 py-3">{totalAmount.toLocaleString("fa-IR")}</td><td colSpan={7}></td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.deduction,0)).toLocaleString("fa-IR")}</td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.payment,0)).toLocaleString("fa-IR")}</td><td></td></tr></tfoot>
           </table>
         </div>
         <div className="space-y-1 border-t border-slate-200 p-4 text-sm">
           <p className="text-slate-700">جمع مبلغ چک‌ها: <strong>{totalAmount.toLocaleString("fa-IR")} ریال</strong>{maxAmountValue>0&&<> | حداکثر مجاز: {maxAmountValue.toLocaleString("fa-IR")} ریال | باقی‌مانده: {Math.max(0,maxAmountValue-totalAmount).toLocaleString("fa-IR")} ریال</>}</p>
           {(duplicate||amountViolation||rows.some(r=>r.violation))&&<p className="text-red-600">{duplicate?"شماره چک تکراری وجود دارد. ":""}{amountViolation?"جمع مبلغ چک‌ها از سقف مجاز بیشتر است. ":""}{rows.some(r=>r.violation)?"تاریخ سررسید یک یا چند چک از سقف ماه تعیین‌شده عبور کرده است.":""}</p>}
-          <p className="text-slate-500">تعداد چک‌های انتخاب‌شده برای ذخیره: {selectedRows.length.toLocaleString("fa-IR")} | تعداد ذخیره‌شده: {rows.filter(r=>r.saved).length.toLocaleString("fa-IR")}</p>
+          <p className="text-slate-500">تعداد چک‌های در انتظار ذخیره: {pendingRows.length.toLocaleString("fa-IR")} | تعداد ذخیره‌شده: {rows.filter(r=>r.saved).length.toLocaleString("fa-IR")}</p>
         </div>
         <div className="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-slate-500">خروجی TXT شامل تمام ردیف‌های جدول است؛ ذخیره در پایگاه داده فقط برای ردیف‌های انتخاب‌شده انجام می‌شود.</p>
+          <p className="text-xs text-slate-500">خروجی TXT شامل تمام ردیف‌های جدول است؛ با ذخیره، تمام ردیف‌های تکمیل‌شده در پایگاه داده ثبت می‌شوند.</p>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={exportTxt} disabled={!rows.length} className="rounded-lg border border-violet-300 bg-white px-4 py-2.5 text-sm font-semibold text-violet-700 hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-40">خروجی TXT</button>
-            <button type="button" onClick={saveSelected} disabled={saving||!selectedRows.length||!counterLabel||!facilityNumber} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none">{saving?"در حال ذخیره...":`ذخیره چک‌های انتخاب‌شده (${selectedRows.length})`}</button>
+            <button type="button" onClick={saveAllRows} disabled={saving||!pendingRows.length||!counterLabel||!facilityNumber} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none">{saving?"در حال ذخیره...":`ذخیره همه چک‌ها (${pendingRows.length})`}</button>
           </div>
         </div>
       </section>
