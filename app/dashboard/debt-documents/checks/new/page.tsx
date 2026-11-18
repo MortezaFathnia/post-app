@@ -141,10 +141,6 @@ export default function AddDebtCheckPage() {
   function updateRow(id:string,patch:Partial<CheckRow>) {
     setRows(current=>recalculate(current.map(row=>row.id===id ? {...row,...patch} : row)));
   }
-  function addRow() {
-    if(!baseValid || duplicate || totalViolation || rows.some(r=>r.violation)) return;
-    setRows(current=>recalculate([...current,blankRow(base)]));
-  }
   function exportTxt() {
     const lines=rows.map(row=>{
       const date=`${numberValue(row.year)}-${String(numberValue(row.month)).padStart(2,"0")}-${String(numberValue(row.day)).padStart(2,"0")}`;
@@ -185,6 +181,31 @@ export default function AddDebtCheckPage() {
       reader.readAsText(file,"UTF-8");
     };
     picker.click();
+  }
+
+  async function saveSingleRow(row: CheckRow) {
+    if(!counterLabel || !facilityNumber) { setError("ابتدا کدباجه و کد تسهیلات را انتخاب کنید."); return; }
+    if(duplicate || totalViolation || row.violation) { setError("شماره چک تکراری یا محدودیت مبلغ/تاریخ وجود دارد؛ ابتدا آن را اصلاح کنید."); return; }
+    if(!row.valid || !row.checkNumber.trim() || !row.serial.trim() || !row.bankCode || !row.accountNumber.trim()) {
+      setError("اطلاعات این چک، از جمله شماره حساب، کامل نیست یا تاریخ معتبر نیست."); return;
+    }
+    setSaving(true); setError(""); setMessage("");
+    try {
+      const response=await fetch("/api/debt-documents/checks",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        mode:"discount-calculator",counterLabel,facilityNumber,
+        records:[{
+          checkNumber:row.checkNumber,amount:String(numberValue(row.amount)),day:numberValue(row.day),month:numberValue(row.month),year:numberValue(row.year),
+          serial:row.serial,bankCode:row.bankCode,bankName:banks.find(b=>b.bankId===row.bankCode)?.name || "",
+          branchCode:row.branchCode,accountNumber:row.accountNumber,days:row.days,deduction:Math.floor(row.deduction),payment:Math.floor(row.payment)
+        }]
+      })});
+      const result=(await response.json()) as ApiResult;
+      if(!response.ok || !result.success) throw new Error(result.error || "ذخیره چک ناموفق بود.");
+      if(result.duplicateCheckNumbers?.includes(row.checkNumber)) throw new Error("این شماره چک قبلاً در پایگاه داده ثبت شده است.");
+      setRows(current=>current.map(item=>item.id===row.id?{...item,saved:true}:item));
+      setMessage("چک با موفقیت در پایگاه داده ثبت شد.");
+    } catch(e) { setError(e instanceof Error ? e.message : "ذخیره چک ناموفق بود."); }
+    finally { setSaving(false); }
   }
 
   async function saveAllRows() {
@@ -277,9 +298,8 @@ export default function AddDebtCheckPage() {
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col justify-between gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-center">
-          <div><h2 className="text-lg font-bold text-slate-900">فهرست چک‌ها</h2><p className="mt-1 text-xs text-slate-500">چک‌ها را تکمیل کنید؛ همه ردیف‌ها با فشردن دکمه ذخیره در پایگاه داده ثبت می‌شوند.</p></div>
+          <div><h2 className="text-lg font-bold text-slate-900">فهرست چک‌ها</h2><p className="mt-1 text-xs text-slate-500">برای ثبت هر چک، دکمه «افزودن چک» را در ستون وضعیت همان ردیف بزنید؛ امکان ذخیره همه چک‌ها نیز از پایین جدول وجود دارد.</p></div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={addRow} disabled={!baseValid||duplicate||amountViolation||rows.some(r=>r.violation)} className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300">افزودن چک</button>
             <button type="button" onClick={importTxt} className="rounded-xl bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-800">ورود از TXT</button>
           </div>
         </div>
@@ -288,7 +308,14 @@ export default function AddDebtCheckPage() {
             <thead className="bg-slate-50 text-slate-700"><tr>{["وضعیت","ردیف","شماره چک","مبلغ چک (ریال)","روز","ماه","سال","سری چک","بانک (کد - نام)","شماره حساب","تعداد روز","مبلغ کسرشده","مبلغ پرداختی","عملیات"].map(h=><th key={h} className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
             <tbody>
               {rows.map((row,index)=><tr key={row.id} className={`${row.violation?"bg-red-50":index%2?"bg-slate-50":"bg-white"} border-b border-slate-100 transition-colors hover:bg-slate-100/70`}>
-                <td className="px-2 py-2">{row.saved?<span className="text-xs font-semibold text-teal-700">ذخیره شد</span>:<span className="text-xs text-amber-700">در انتظار ذخیره</span>}</td>
+                <td className="px-2 py-2">
+                  {row.saved
+                    ? <span className="text-xs font-semibold text-teal-700">ذخیره شد</span>
+                    : <button type="button" onClick={()=>saveSingleRow(row)} disabled={saving||!counterLabel||!facilityNumber} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                        افزودن چک
+                      </button>}
+                </td>
                 <td className="px-2 py-2">{(index+1).toLocaleString("fa-IR")}</td>
                 <td className="px-1 py-2"><input className={inputClass} value={row.checkNumber} disabled={row.saved} onChange={e=>updateRow(row.id,{checkNumber:e.target.value})}/></td>
                 <td className="px-1 py-2"><input className={inputClass} inputMode="numeric" value={row.amount} disabled={row.saved} onChange={e=>updateRow(row.id,{amount:formatAmount(e.target.value)})}/></td>
