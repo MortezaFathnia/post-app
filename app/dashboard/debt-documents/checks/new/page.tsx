@@ -25,7 +25,7 @@ type CheckRow = {
   valid: boolean;
   violation: boolean;
 };
-type SavedCheck = { id:number; counterLabel:string; facilityNumber:string; serial:string|null; dueDate:string|null; bankAgent:string|null; checkBranch:string|null; description:string|null; paidAmount:string|null; administrativeNumber:string|null; checkStatus:string };
+type SavedCheck = { id:number; checkNumber:string|null; counterLabel:string; facilityNumber:string; serial:string|null; dueDate:string|null; bankAgent:string|null; checkBranch:string|null; description:string|null; paidAmount:string|null; administrativeNumber:string|null; checkStatus:string };
 type ApiResult = { success?: boolean; error?: string; createdCount?: number; duplicateCheckNumbers?: string[]; records?: SavedCheck[] };
 
 const inputClass = "w-full min-w-[72px] rounded-lg border border-slate-300 bg-white px-2 py-2 text-center text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
@@ -96,6 +96,8 @@ export default function AddDebtCheckPage() {
     } catch(e) { setError(e instanceof Error?e.message:"دریافت چک‌های ذخیره‌شده ناموفق بود."); }
     finally { setLoadingSaved(false); }
   }
+  useEffect(() => { void loadSavedChecks(); }, []);
+
   async function deleteSavedCheck(id:number) {
     if(!window.confirm("آیا از حذف این چک از پایگاه داده مطمئن هستید؟")) return;
     setDeletingId(id); setError(""); setMessage("");
@@ -192,6 +194,7 @@ export default function AddDebtCheckPage() {
   }
   async function saveSelected() {
     if(!counterLabel || !facilityNumber) { setError("ابتدا کدباجه و کد تسهیلات را انتخاب کنید."); return; }
+    if(duplicate || totalViolation || selectedRows.some(row=>row.violation)) { setError("شماره چک تکراری یا محدودیت مبلغ/تاریخ وجود دارد؛ ابتدا آن را اصلاح کنید."); return; }
     if(!selectedRows.length) { setError("حداقل یک چک را برای ذخیره انتخاب کنید."); return; }
     if(validSelected.length !== selectedRows.length) { setError("اطلاعات چک‌های انتخاب‌شده باید کامل و تاریخ آن‌ها در محدوده مجاز باشد."); return; }
     setSaving(true); setError(""); setMessage("");
@@ -322,7 +325,7 @@ export default function AddDebtCheckPage() {
             <thead className="bg-slate-100"><tr>{["ردیف","کدباجه","کد تسهیلات","شماره چک / سریال","شماره انتظامی","تاریخ سررسید","مبلغ","بانک","شعبه","وضعیت","عملیات"].map(h=><th key={h} className="whitespace-nowrap px-3 py-3">{h}</th>)}</tr></thead>
             <tbody>
               {loadingSaved?<tr><td colSpan={11} className="p-6 text-slate-500">در حال دریافت...</td></tr>:savedChecks.length===0?<tr><td colSpan={11} className="p-6 text-slate-500">هنوز چکی در پایگاه داده ذخیره نشده است.</td></tr>:savedChecks.map((record,index)=><tr key={record.id} className="border-b even:bg-slate-50">
-                <td className="px-3 py-3">{(index+1).toLocaleString("fa-IR")}</td><td className="px-3 py-3">{record.counterLabel}</td><td className="px-3 py-3">{record.facilityNumber}</td><td className="px-3 py-3">{record.checkStatus==="درراه"?(record.serial||"—"):(record.serial||"—")}</td><td className="px-3 py-3">{record.administrativeNumber||"—"}</td><td className="px-3 py-3">{record.dueDate||"—"}</td><td className="px-3 py-3">{record.paidAmount||"—"}</td><td className="px-3 py-3">{record.bankAgent||"—"}</td><td className="px-3 py-3">{record.checkBranch||"—"}</td><td className="px-3 py-3">{record.checkStatus}</td><td className="px-3 py-3"><button type="button" onClick={()=>deleteSavedCheck(record.id)} disabled={deletingId===record.id} className="rounded-lg bg-red-50 px-3 py-2 font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50">{deletingId===record.id?"در حال حذف...":"حذف از پایگاه داده"}</button></td>
+                <td className="px-3 py-3">{(index+1).toLocaleString("fa-IR")}</td><td className="px-3 py-3">{record.counterLabel}</td><td className="px-3 py-3">{record.facilityNumber}</td><td className="px-3 py-3">{record.checkNumber||"—"}</td><td className="px-3 py-3">{record.administrativeNumber||"—"}</td><td className="px-3 py-3">{record.dueDate||"—"}</td><td className="px-3 py-3">{record.paidAmount||"—"}</td><td className="px-3 py-3">{record.bankAgent||"—"}</td><td className="px-3 py-3">{record.checkBranch||"—"}</td><td className="px-3 py-3">{record.checkStatus}</td><td className="px-3 py-3"><button type="button" onClick={()=>deleteSavedCheck(record.id)} disabled={deletingId===record.id} className="rounded-lg bg-red-50 px-3 py-2 font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50">{deletingId===record.id?"در حال حذف...":"حذف از پایگاه داده"}</button></td>
               </tr>)}
             </tbody>
           </table>
