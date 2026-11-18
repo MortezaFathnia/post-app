@@ -173,7 +173,7 @@ export default function AddDebtCheckPage() {
     setRows(current=>recalculate(current.map(row=>row.id===id ? {...row,...patch} : row)));
   }
   function exportTxt() {
-    const lines = rows.map(row => {
+    const lines = rows.filter(row => row.checkNumber.trim()).map(row => {
       const year = numberValue(row.year), month = numberValue(row.month), day = numberValue(row.day);
       const date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
       const nextDate = addOneDayToJalaliDate(year, month, day);
