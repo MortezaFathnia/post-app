@@ -25,7 +25,8 @@ type CheckRow = {
   valid: boolean;
   violation: boolean;
 };
-type ApiResult = { success?: boolean; error?: string; createdCount?: number; duplicateCheckNumbers?: string[] };
+type SavedCheck = { id:number; counterLabel:string; facilityNumber:string; serial:string|null; dueDate:string|null; bankAgent:string|null; checkBranch:string|null; description:string|null; paidAmount:string|null; administrativeNumber:string|null; checkStatus:string };
+type ApiResult = { success?: boolean; error?: string; createdCount?: number; duplicateCheckNumbers?: string[]; records?: SavedCheck[] };
 
 const inputClass = "w-full min-w-[72px] rounded-lg border border-slate-300 bg-white px-2 py-2 text-center text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
 const bankNames: Record<string, string> = {
@@ -81,6 +82,32 @@ export default function AddDebtCheckPage() {
   const [saving,setSaving] = useState(false);
   const [error,setError] = useState("");
   const [message,setMessage] = useState("");
+  const [savedChecks,setSavedChecks] = useState<SavedCheck[]>([]);
+  const [loadingSaved,setLoadingSaved] = useState(true);
+  const [deletingId,setDeletingId] = useState<number|null>(null);
+
+  async function loadSavedChecks() {
+    setLoadingSaved(true);
+    try {
+      const response=await fetch("/api/debt-documents/checks",{cache:"no-store"});
+      const result=(await response.json()) as ApiResult;
+      if(!response.ok||!result.success) throw new Error(result.error||"دریافت چک‌های ذخیره‌شده ناموفق بود.");
+      setSavedChecks(result.records||[]);
+    } catch(e) { setError(e instanceof Error?e.message:"دریافت چک‌های ذخیره‌شده ناموفق بود."); }
+    finally { setLoadingSaved(false); }
+  }
+  async function deleteSavedCheck(id:number) {
+    if(!window.confirm("آیا از حذف این چک از پایگاه داده مطمئن هستید؟")) return;
+    setDeletingId(id); setError(""); setMessage("");
+    try {
+      const response=await fetch(`/api/debt-documents/checks?id=${id}`,{method:"DELETE"});
+      const result=(await response.json()) as ApiResult;
+      if(!response.ok||!result.success) throw new Error(result.error||"حذف چک ناموفق بود.");
+      setSavedChecks(current=>current.filter(record=>record.id!==id));
+      setMessage("چک از پایگاه داده حذف شد.");
+    } catch(e) { setError(e instanceof Error?e.message:"حذف چک ناموفق بود."); }
+    finally { setDeletingId(null); }
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -180,7 +207,9 @@ export default function AddDebtCheckPage() {
       const result=(await response.json()) as ApiResult;
       if(!response.ok || !result.success) throw new Error(result.error || "ذخیره چک‌ها ناموفق بود.");
       const savedCount=result.createdCount || 0;
-      setRows(current=>current.map(row=>row.selected && !row.saved && validSelected.some(saved=>saved.id===row.id) ? {...row,saved:true,selected:false} : row));
+      const duplicateNumbers=new Set(result.duplicateCheckNumbers||[]);
+      setRows(current=>current.map(row=>row.selected && !row.saved && validSelected.some(saved=>saved.id===row.id) && !duplicateNumbers.has(row.checkNumber) ? {...row,saved:true,selected:false} : row));
+      await loadSavedChecks();
       const duplicates=result.duplicateCheckNumbers?.length ? ` شماره‌های تکراری رد شدند: ${result.duplicateCheckNumbers.join("، ")}.` : "";
       setMessage(`${savedCount.toLocaleString("fa-IR")} چک در پایگاه داده ذخیره شد.${duplicates}`);
     } catch(e) { setError(e instanceof Error ? e.message : "ذخیره چک‌ها ناموفق بود."); }
@@ -284,6 +313,19 @@ export default function AddDebtCheckPage() {
           <p className="text-slate-700">جمع مبلغ چک‌ها: <strong>{totalAmount.toLocaleString("fa-IR")} ریال</strong>{maxAmountValue>0&&<> | حداکثر مجاز: {maxAmountValue.toLocaleString("fa-IR")} ریال | باقی‌مانده: {Math.max(0,maxAmountValue-totalAmount).toLocaleString("fa-IR")} ریال</>}</p>
           {(duplicate||amountViolation||rows.some(r=>r.violation))&&<p className="text-red-600">{duplicate?"شماره چک تکراری وجود دارد. ":""}{amountViolation?"جمع مبلغ چک‌ها از سقف مجاز بیشتر است. ":""}{rows.some(r=>r.violation)?"تاریخ سررسید یک یا چند چک از سقف ماه تعیین‌شده عبور کرده است.":""}</p>}
           <p className="text-slate-500">تعداد چک‌های انتخاب‌شده برای ذخیره: {selectedRows.length.toLocaleString("fa-IR")} | تعداد ذخیره‌شده: {rows.filter(r=>r.saved).length.toLocaleString("fa-IR")}</p>
+        </div>
+      </section>
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 p-5"><h2 className="text-lg font-bold text-slate-900">چک‌های ذخیره‌شده در پایگاه داده</h2><p className="mt-1 text-xs text-slate-500">این فهرست پس از بارگذاری مجدد صفحه نیز از PostgreSQL دریافت می‌شود.</p></div>
+        <div className="overflow-x-auto">
+          <table className="min-w-[1050px] w-full text-center text-xs">
+            <thead className="bg-slate-100"><tr>{["ردیف","کدباجه","کد تسهیلات","شماره چک / سریال","شماره انتظامی","تاریخ سررسید","مبلغ","بانک","شعبه","وضعیت","عملیات"].map(h=><th key={h} className="whitespace-nowrap px-3 py-3">{h}</th>)}</tr></thead>
+            <tbody>
+              {loadingSaved?<tr><td colSpan={11} className="p-6 text-slate-500">در حال دریافت...</td></tr>:savedChecks.length===0?<tr><td colSpan={11} className="p-6 text-slate-500">هنوز چکی در پایگاه داده ذخیره نشده است.</td></tr>:savedChecks.map((record,index)=><tr key={record.id} className="border-b even:bg-slate-50">
+                <td className="px-3 py-3">{(index+1).toLocaleString("fa-IR")}</td><td className="px-3 py-3">{record.counterLabel}</td><td className="px-3 py-3">{record.facilityNumber}</td><td className="px-3 py-3">{record.checkStatus==="درراه"?(record.serial||"—"):(record.serial||"—")}</td><td className="px-3 py-3">{record.administrativeNumber||"—"}</td><td className="px-3 py-3">{record.dueDate||"—"}</td><td className="px-3 py-3">{record.paidAmount||"—"}</td><td className="px-3 py-3">{record.bankAgent||"—"}</td><td className="px-3 py-3">{record.checkBranch||"—"}</td><td className="px-3 py-3">{record.checkStatus}</td><td className="px-3 py-3"><button type="button" onClick={()=>deleteSavedCheck(record.id)} disabled={deletingId===record.id} className="rounded-lg bg-red-50 px-3 py-2 font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50">{deletingId===record.id?"در حال حذف...":"حذف از پایگاه داده"}</button></td>
+              </tr>)}
+            </tbody>
+          </table>
         </div>
       </section>
       {error&&<div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
