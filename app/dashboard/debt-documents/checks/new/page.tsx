@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import PersianDatePicker from "@/components/PersianDatePicker";
 import { useEffect, useMemo, useState } from "react";
 
 type CounterOption = { id: number; code: string; name: string };
@@ -255,14 +256,19 @@ export default function AddDebtCheckPage() {
               {facilityPeople.find(p=>p.name===facilityName.trim())?.facilityNumbers.map(n=><option key={n} value={n}>{n}</option>)}
             </select>
           </label>
-          <label className="space-y-2 text-sm font-semibold text-slate-700">تاریخ مبنا - روز
-            <input className={inputClass} type="number" min="1" max="31" value={baseDay} onChange={e=>updateSettings({baseDay:e.target.value})}/>
-          </label>
-          <label className="space-y-2 text-sm font-semibold text-slate-700">تاریخ مبنا - ماه
-            <input className={inputClass} type="number" min="1" max="12" value={baseMonth} onChange={e=>updateSettings({baseMonth:e.target.value})}/>
-          </label>
-          <label className="space-y-2 text-sm font-semibold text-slate-700">تاریخ مبنا - سال
-            <input className={inputClass} type="number" min="1300" max="1500" value={baseYear} onChange={e=>updateSettings({baseYear:e.target.value})}/>
+          <label className="space-y-2 text-sm font-semibold text-slate-700">تاریخ مبنا محاسبه
+            <PersianDatePicker
+              value={baseYear + "/" + String(numberValue(baseMonth)).padStart(2,"0") + "/" + String(numberValue(baseDay)).padStart(2,"0")}
+              onChange={value=>{
+                const parts=value.split("/");
+                if(parts.length===3) updateSettings({baseYear:parts[0],baseMonth:String(Number(parts[1])),baseDay:String(Number(parts[2]))});
+                else updateSettings({baseYear:"",baseMonth:"",baseDay:""});
+              }}
+              className={inputClass + " text-right"}
+              placeholder="انتخاب تاریخ مبنا"
+              inputId="calculation-base-date"
+              aria-label="تاریخ مبنا محاسبه"
+            />
           </label>
           <label className="space-y-2 text-sm font-semibold text-slate-700">درصد سود سالانه (٪)
             <input className={inputClass} type="number" min="0" step="0.001" value={profitRate} onChange={e=>updateSettings({profitRate:e.target.value})}/>
