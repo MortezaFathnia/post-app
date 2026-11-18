@@ -192,6 +192,37 @@ export default function AddDebtCheckPage() {
     const url=URL.createObjectURL(blob),anchor=document.createElement("a");
     anchor.href=url; anchor.download="تنزیل_چک.txt"; anchor.click(); URL.revokeObjectURL(url);
   }
+  function importTxt() {
+    const picker=document.createElement("input");
+    picker.type="file"; picker.accept=".txt,text/plain";
+    picker.onchange=()=>{
+      const file=picker.files?.[0]; if(!file) return;
+      const reader=new FileReader();
+      reader.onload=()=>{
+        const imported=(String(reader.result||"")).replace(/^\\uFEFF/,"").split(/\\r?\\n/).flatMap(line=>{
+          const parts=line.trim().split(",");
+          if(parts.length<14) return [];
+          const date=(parts[3]||"").trim().replace(/\\//g,"-").split("-");
+          if(date.length!==3) return [];
+          return [{
+            id:newId(),checkNumber:(parts[0]||"").trim(),amount:formatAmount(parts[1]||""),
+            day:date[2],month:date[1],year:date[0],serial:(parts[2]||"").trim(),
+            bankCode:(parts[9]||"").trim(),branchCode:(parts[10]||"").trim(),
+            accountNumber:(parts[12]||"").trim(),selected:false,saved:false,
+            days:null,deduction:0,payment:0,valid:false,violation:false
+          } satisfies CheckRow];
+        });
+        if(imported.length) {
+          setRows(current=>recalculate([...current.filter(row=>row.checkNumber||row.serial||numberValue(row.amount)!==100000000),...imported]));
+          setMessage(`${imported.length.toLocaleString("fa-IR")} چک از فایل متنی بارگذاری شد.`);
+          setError("");
+        } else setError("هیچ ردیف معتبر در فایل متنی پیدا نشد.");
+      };
+      reader.readAsText(file,"UTF-8");
+    };
+    picker.click();
+  }
+
   async function saveSelected() {
     if(!counterLabel || !facilityNumber) { setError("ابتدا کدباجه و کد تسهیلات را انتخاب کنید."); return; }
     if(duplicate || totalViolation || selectedRows.some(row=>row.violation)) { setError("شماره چک تکراری یا محدودیت مبلغ/تاریخ وجود دارد؛ ابتدا آن را اصلاح کنید."); return; }
@@ -282,6 +313,7 @@ export default function AddDebtCheckPage() {
           <div><h2 className="text-lg font-bold text-slate-900">فهرست چک‌ها</h2><p className="mt-1 text-xs text-slate-500">تیک هر ردیف را فعال کنید تا هنگام ذخیره، آن چک به پایگاه داده اضافه شود.</p></div>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={addRow} disabled={!baseValid||duplicate||amountViolation||rows.some(r=>r.violation)} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300">افزودن چک</button>
+            <button type="button" onClick={importTxt} className="rounded-xl bg-slate-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-600">ورود از TXT</button>
             <button type="button" onClick={exportTxt} disabled={!rows.length} className="rounded-xl bg-slate-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-40">خروجی TXT</button>
             <button type="button" onClick={saveSelected} disabled={saving||!selectedRows.length||!counterLabel||!facilityNumber} className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-300">{saving?"در حال ذخیره...":`ذخیره چک‌های انتخاب‌شده (${selectedRows.length})`}</button>
           </div>
