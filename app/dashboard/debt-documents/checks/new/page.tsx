@@ -279,17 +279,17 @@ export default function AddDebtCheckPage() {
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col justify-between gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-center">
-          <div><h2 className="text-lg font-bold text-slate-900">فهرست چک‌ها</h2><p className="mt-1 text-xs text-slate-500">تیک هر ردیف را فعال کنید تا هنگام ذخیره، آن چک به پایگاه داده اضافه شود.</p></div>
+          <div><h2 className="text-lg font-bold text-slate-900">فهرست چک‌ها</h2><p className="mt-1 text-xs text-slate-500">چک‌ها را بررسی کنید، ردیف‌های موردنظر را انتخاب کرده و از دکمه‌های پایین جدول استفاده کنید.</p></div>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={addRow} disabled={!baseValid||duplicate||amountViolation||rows.some(r=>r.violation)} className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300">افزودن چک</button>
             <button type="button" onClick={importTxt} className="rounded-xl bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-800">ورود از TXT</button>
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-[1450px] w-full border-collapse text-center text-xs">
-            <thead className="bg-indigo-50 text-indigo-900"><tr>{["ذخیره","ردیف","شماره چک","مبلغ چک (ریال)","روز","ماه","سال","سری چک","کد بانک","نام بانک","کد شعبه","شماره حساب","تعداد روز","مبلغ کسرشده","مبلغ پرداختی","عملیات"].map(h=><th key={h} className="whitespace-nowrap border-b px-2 py-3">{h}</th>)}</tr></thead>
+          <table className="min-w-[1450px] w-full border-collapse text-center text-sm">
+            <thead className="bg-slate-50 text-slate-700"><tr>{["ذخیره","ردیف","شماره چک","مبلغ چک (ریال)","روز","ماه","سال","سری چک","کد بانک","نام بانک","کد شعبه","شماره حساب","تعداد روز","مبلغ کسرشده","مبلغ پرداختی","عملیات"].map(h=><th key={h} className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
             <tbody>
-              {rows.map((row,index)=><tr key={row.id} className={`${row.violation?"bg-red-50":index%2?"bg-slate-50":"bg-white"} border-b`}>
+              {rows.map((row,index)=><tr key={row.id} className={`${row.violation?"bg-red-50":index%2?"bg-slate-50":"bg-white"} border-b border-slate-100 transition-colors hover:bg-slate-100/70`}>
                 <td className="px-2 py-2"><input aria-label="انتخاب برای ذخیره در پایگاه داده" type="checkbox" checked={row.selected||row.saved} disabled={row.saved||saving||!row.valid||row.violation} onChange={e=>updateRow(row.id,{selected:e.target.checked})}/>{row.saved&&<span className="mt-1 block text-[10px] text-teal-700">ذخیره شد</span>}</td>
                 <td className="px-2 py-2">{(index+1).toLocaleString("fa-IR")}</td>
                 <td className="px-1 py-2"><input className={inputClass} value={row.checkNumber} disabled={row.saved} onChange={e=>updateRow(row.id,{checkNumber:e.target.value})}/></td>
@@ -308,13 +308,20 @@ export default function AddDebtCheckPage() {
                 <td className="px-2 py-2"><button type="button" disabled={row.saved||saving} onClick={()=>setRows(current=>current.filter(r=>r.id!==row.id))} className="rounded-lg bg-red-50 px-3 py-2 font-semibold text-red-700 hover:bg-red-100 disabled:opacity-40">حذف</button></td>
               </tr>)}
             </tbody>
-            <tfoot className="bg-indigo-50 font-bold"><tr><td colSpan={3} className="px-3 py-3">جمع کل</td><td className="px-3 py-3">{totalAmount.toLocaleString("fa-IR")}</td><td colSpan={9}></td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.deduction,0)).toLocaleString("fa-IR")}</td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.payment,0)).toLocaleString("fa-IR")}</td><td></td></tr></tfoot>
+            <tfoot className="bg-slate-50 font-bold text-slate-800"><tr><td colSpan={3} className="px-3 py-3">جمع کل</td><td className="px-3 py-3">{totalAmount.toLocaleString("fa-IR")}</td><td colSpan={9}></td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.deduction,0)).toLocaleString("fa-IR")}</td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.payment,0)).toLocaleString("fa-IR")}</td><td></td></tr></tfoot>
           </table>
         </div>
         <div className="space-y-1 border-t border-slate-200 p-4 text-sm">
           <p className="text-slate-700">جمع مبلغ چک‌ها: <strong>{totalAmount.toLocaleString("fa-IR")} ریال</strong>{maxAmountValue>0&&<> | حداکثر مجاز: {maxAmountValue.toLocaleString("fa-IR")} ریال | باقی‌مانده: {Math.max(0,maxAmountValue-totalAmount).toLocaleString("fa-IR")} ریال</>}</p>
           {(duplicate||amountViolation||rows.some(r=>r.violation))&&<p className="text-red-600">{duplicate?"شماره چک تکراری وجود دارد. ":""}{amountViolation?"جمع مبلغ چک‌ها از سقف مجاز بیشتر است. ":""}{rows.some(r=>r.violation)?"تاریخ سررسید یک یا چند چک از سقف ماه تعیین‌شده عبور کرده است.":""}</p>}
           <p className="text-slate-500">تعداد چک‌های انتخاب‌شده برای ذخیره: {selectedRows.length.toLocaleString("fa-IR")} | تعداد ذخیره‌شده: {rows.filter(r=>r.saved).length.toLocaleString("fa-IR")}</p>
+        </div>
+        <div className="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-slate-500">خروجی TXT شامل تمام ردیف‌های جدول است؛ ذخیره در پایگاه داده فقط برای ردیف‌های انتخاب‌شده انجام می‌شود.</p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={exportTxt} disabled={!rows.length} className="rounded-lg border border-violet-300 bg-white px-4 py-2.5 text-sm font-semibold text-violet-700 hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-40">خروجی TXT</button>
+            <button type="button" onClick={saveSelected} disabled={saving||!selectedRows.length||!counterLabel||!facilityNumber} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none">{saving?"در حال ذخیره...":`ذخیره چک‌های انتخاب‌شده (${selectedRows.length})`}</button>
+          </div>
         </div>
       </section>
       {error&&<div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
