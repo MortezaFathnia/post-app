@@ -285,8 +285,8 @@ export default function AddDebtCheckPage() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-[1320px] w-full border-collapse text-center text-sm">
-            <thead className="bg-slate-50 text-slate-700"><tr>{["ذخیره","ردیف","شماره چک","مبلغ چک (ریال)","روز","ماه","سال","سری چک","بانک (کد - نام)","شماره حساب","تعداد روز","مبلغ کسرشده","مبلغ پرداختی","عملیات"].map(h=><th key={h} className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
+          <table className="min-w-[1240px] w-full border-collapse text-center text-sm">
+            <thead className="bg-slate-50 text-slate-700"><tr>{["ذخیره","ردیف","شماره چک","مبلغ چک (ریال)","روز","ماه","سال","سری چک","بانک (کد - نام)","تعداد روز","مبلغ کسرشده","مبلغ پرداختی","عملیات"].map(h=><th key={h} className="whitespace-nowrap border-b border-slate-200 px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
             <tbody>
               {rows.map((row,index)=><tr key={row.id} className={`${row.violation?"bg-red-50":index%2?"bg-slate-50":"bg-white"} border-b border-slate-100 transition-colors hover:bg-slate-100/70`}>
                 <td className="px-2 py-2"><input aria-label="انتخاب برای ذخیره در پایگاه داده" type="checkbox" checked={row.selected||row.saved} disabled={row.saved||saving||!row.valid||row.violation} onChange={e=>updateRow(row.id,{selected:e.target.checked})}/>{row.saved&&<span className="mt-1 block text-[10px] text-teal-700">ذخیره شد</span>}</td>
@@ -305,14 +305,13 @@ export default function AddDebtCheckPage() {
                     {banks.length>0&&row.bankSearch.trim()&&!banks.some(b=>(b.bankId+" "+b.name).toLocaleLowerCase().includes(row.bankSearch.toLocaleLowerCase()))&&<p className="p-2 text-xs text-slate-500">بانکی یافت نشد.</p>}
                   </div>}
                 </td>
-                <td className="px-1 py-2"><input className={inputClass} value={row.accountNumber} disabled={row.saved} onChange={e=>updateRow(row.id,{accountNumber:e.target.value})}/></td>
-                <td className="whitespace-nowrap px-2 py-2">{row.days===null?"—":row.days.toLocaleString("fa-IR")}</td>
+                            <td className="whitespace-nowrap px-2 py-2">{row.days===null?"—":row.days.toLocaleString("fa-IR")}</td>
                 <td className="whitespace-nowrap px-2 py-2 font-semibold">{row.valid?Math.floor(row.deduction).toLocaleString("fa-IR"):"—"}</td>
                 <td className="whitespace-nowrap px-2 py-2 font-semibold">{row.valid?Math.floor(row.payment).toLocaleString("fa-IR"):"—"}</td>
                 <td className="px-2 py-2"><button type="button" disabled={row.saved||saving} onClick={()=>setRows(current=>current.filter(r=>r.id!==row.id))} className="rounded-lg bg-red-50 px-3 py-2 font-semibold text-red-700 hover:bg-red-100 disabled:opacity-40">حذف</button></td>
               </tr>)}
             </tbody>
-            <tfoot className="bg-slate-50 font-bold text-slate-800"><tr><td colSpan={3} className="px-3 py-3">جمع کل</td><td className="px-3 py-3">{totalAmount.toLocaleString("fa-IR")}</td><td colSpan={7}></td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.deduction,0)).toLocaleString("fa-IR")}</td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.payment,0)).toLocaleString("fa-IR")}</td><td></td></tr></tfoot>
+            <tfoot className="bg-slate-50 font-bold text-slate-800"><tr><td colSpan={3} className="px-3 py-3">جمع کل</td><td className="px-3 py-3">{totalAmount.toLocaleString("fa-IR")}</td><td colSpan={6}></td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.deduction,0)).toLocaleString("fa-IR")}</td><td className="px-3 py-3">{Math.floor(rows.reduce((s,r)=>s+r.payment,0)).toLocaleString("fa-IR")}</td><td></td></tr></tfoot>
           </table>
         </div>
         <div className="space-y-1 border-t border-slate-200 p-4 text-sm">
