@@ -173,15 +173,30 @@ export default function AddDebtCheckPage() {
     setRows(current=>recalculate(current.map(row=>row.id===id ? {...row,...patch} : row)));
   }
   function exportTxt() {
-    const lines=rows.map(row=>{
-      const date=`${numberValue(row.year)}-${String(numberValue(row.month)).padStart(2,"0")}-${String(numberValue(row.day)).padStart(2,"0")}`;
-      const cells=[row.checkNumber||"0",String(numberValue(row.amount)),row.serial||"0",date,"L","0",date,"0","0",row.bankCode||"0",row.branchCode||"0","TRUE",row.accountNumber||"0",row.serial||"0"];
+    const lines = rows.map(row => {
+      const year = numberValue(row.year), month = numberValue(row.month), day = numberValue(row.day);
+      const date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const nextDate = addOneDayToJalaliDate(year, month, day);
+      const cells = [
+        row.checkNumber || "0",
+        String(numberValue(row.amount)),
+        row.serial || "0",
+        date,
+        "L",
+        "0",
+        nextDate,
+        "0",
+        "0",
+        "17",
+        "8881",
+        "TRUE",
+        row.accountNumber || "0",
+        row.serial || "0",
+      ];
       return cells.join(",");
     });
-    if(!lines.length) return;
-    const blob=new Blob(["\uFEFF"+lines.join("\r\n")+"\r\n"],{type:"text/plain;charset=utf-8"});
-    const url=URL.createObjectURL(blob),anchor=document.createElement("a");
-    anchor.href=url; anchor.download="تنزیل_چک.txt"; anchor.click(); URL.revokeObjectURL(url);
+    if (!lines.length) return;
+    downloadText(lines.join("\r\n") + "\r\n", "تنزیل_چک.txt");
   }
   function importTxt() {
     const picker=document.createElement("input");
