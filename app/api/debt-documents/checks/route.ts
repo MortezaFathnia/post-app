@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         const day = Number(row.day);
         const month = Number(row.month);
         const year = Number(row.year);
-        if (!checkNumber || !amount || !serial || !bankCode || !bankName || !branchCode ||
+        if (!checkNumber || !amount || !serial || !bankCode || !bankName || !accountNumber ||
             !Number.isInteger(day) || !Number.isInteger(month) || !Number.isInteger(year)) {
           return NextResponse.json({ success: false, error: `اطلاعات چک ردیف ${index + 1} کامل نیست.` }, { status: 400 });
         }
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
             dueDate,
             paidAmount: amount.replace(/,/g, ""),
             bankAgent: `${bankCode}-${bankName}`,
-            checkBranch: branchCode,
+            checkBranch: branchCode || null,
             description: accountNumber || null,
             rawData: {
               "شماره چک": checkNumber,
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
               "تاریخ سررسید": dueDate,
               "کد بانک": bankCode,
               "نام بانک": bankName,
-              "کد شعبه": branchCode,
+              "کد شعبه": branchCode || "",
               "شماره حساب": accountNumber,
               "تعداد روز": Number(row.days) || 0,
               "مبلغ کسر شده": Number(row.deduction) || 0,
