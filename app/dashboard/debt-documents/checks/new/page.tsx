@@ -199,10 +199,10 @@ export default function AddDebtCheckPage() {
       const file=picker.files?.[0]; if(!file) return;
       const reader=new FileReader();
       reader.onload=()=>{
-        const imported=(String(reader.result||"")).replace(/^\\uFEFF/,"").split(/\\r?\\n/).flatMap(line=>{
+        const imported=(String(reader.result||"")).replace(/^\uFEFF/,"").split(/\r?\n/).flatMap(line=>{
           const parts=line.trim().split(",");
           if(parts.length<14) return [];
-          const date=(parts[3]||"").trim().replace(/\\//g,"-").split("-");
+          const date=(parts[3]||"").trim().replace(/\//g,"-").split("-");
           if(date.length!==3) return [];
           return [{
             id:newId(),checkNumber:(parts[0]||"").trim(),amount:formatAmount(parts[1]||""),
