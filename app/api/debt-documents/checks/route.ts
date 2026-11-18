@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
       }
 
       const sourceFile = `تنزیل چک-${new Date().toISOString()}`;
-      const created: Array<{ id: number; checkNumber: string }> = [];
+      const created: Array<{ id: number; checkNumber: string; administrativeNumber: string }> = [];
       const duplicates: string[] = [];
       for (let index = 0; index < rows.length; index += 1) {
         const row = rows[index];
@@ -142,8 +142,6 @@ export async function POST(request: NextRequest) {
             !Number.isInteger(day) || !Number.isInteger(month) || !Number.isInteger(year)) {
           return NextResponse.json({ success: false, error: `اطلاعات چک ردیف ${index + 1} کامل نیست.` }, { status: 400 });
         }
-        const inputDueDate = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-        const outputDueDate = inputDueDate;
         const dueDate = normalizeJalaliDate(addOneDayToJalaliDate(year, month, day));
         const existing = await prisma.debtDiscountingRecord.findFirst({
           where: { checkNumber, administrativeNumber: serial },
@@ -186,13 +184,14 @@ export async function POST(request: NextRequest) {
           },
           select: { id: true, checkNumber: true },
         });
-        created.push(record);
+        created.push({ ...record, administrativeNumber: serial });
       }
 
+      const createdPairs = new Set(created.map(record => JSON.stringify([record.checkNumber, record.administrativeNumber])));
       const savedRows = rows.filter(row => {
         const checkNumber = clean(row.checkNumber);
         const serial = clean(row.serial);
-        return checkNumber && serial && !duplicates.includes(checkNumber);
+        return Boolean(checkNumber && serial && createdPairs.has(JSON.stringify([checkNumber, serial])));
       });
       const textContent = savedRows.map(row => {
         const year = Number(row.year), month = Number(row.month), day = Number(row.day);
@@ -216,7 +215,7 @@ export async function POST(request: NextRequest) {
           serial,
         ];
         return cells.map(textCsvCell).join(",");
-      }).join("\\r\\n") + (savedRows.length ? "\\r\\n" : "");
+      }).join("\r\n") + (savedRows.length ? "\r\n" : "");
       const safeFacility = facilityNumber.replace(/[<>:"/\\\\|?*\\x00-\\x1F]/g, "_");
 
       return NextResponse.json({
