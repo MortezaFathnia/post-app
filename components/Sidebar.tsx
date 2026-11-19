@@ -7,8 +7,16 @@ import { useTheme } from "@/components/ThemeProvider";
 
 const menuItems = [
   { title: "داشبورد", href: "/dashboard", icon: "▦", description: "نمای کلی سامانه" },
-  { title: "قراردادها", href: "/dashboard/contracts", icon: "▤", description: "مشاهده قراردادهای ثبت‌شده" },
-  { title: "ثبت قرارداد", href: "/dashboard/upload", icon: "+", description: "ثبت از طریق فایل Excel" },
+  {
+    title: "قراردادها",
+    href: "/dashboard/contracts",
+    icon: "▤",
+    description: "مدیریت قراردادها",
+    children: [
+      { title: "فهرست قراردادها", href: "/dashboard/contracts", icon: "▤", description: "مشاهده قراردادهای ثبت‌شده" },
+      { title: "ثبت قرارداد", href: "/dashboard/upload", icon: "+", description: "ثبت از طریق فایل Excel" },
+    ],
+  },
   {
     title: "ضمانتنامه",
     href: "/dashboard/guarantees/extension",
