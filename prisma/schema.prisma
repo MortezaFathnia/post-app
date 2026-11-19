@@ -327,3 +327,11 @@ model DebtDiscountingFacility {
   @@index([facilityNumber])
   @@index([status])
 }
+
+model FacilityCode {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
