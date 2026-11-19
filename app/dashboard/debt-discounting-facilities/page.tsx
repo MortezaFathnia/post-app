@@ -33,6 +33,10 @@ type ApiResult = {
   missingDebtDiscountingCount?: number;
 };
 
+function getCustomerNumber(facilityNumber: string | null | undefined) {
+  return facilityNumber?.split(".")[2] || "";
+}
+
 function normalizeDigits(value: string) {
   return value.replace(/[۰-۹٠-٩]/g, (digit) => {
     const persianIndex = "۰۱۲۳۴۵۶۷۸۹".indexOf(digit);
@@ -60,6 +64,7 @@ export default function DebtDiscountingFacilitiesPage() {
       record.contract?.facilityTitle,
       record.facilityNumber,
       record.contract?.facilityNumber,
+      getCustomerNumber(record.facilityNumber || record.contract?.facilityNumber),
       record.counterLabel,
       record.serial,
       record.status,
@@ -225,6 +230,7 @@ export default function DebtDiscountingFacilitiesPage() {
                 <th className="px-4 py-3 font-semibold">ردیف</th>
                 <th className="px-4 py-3 font-semibold">عنوان تسهیلات</th>
                 <th className="px-4 py-3 font-semibold">شماره تسهیلات</th>
+                <th className="px-4 py-3 font-semibold">شماره مشتری</th>
                 <th className="px-4 py-3 font-semibold">کد باجه - نام باجه</th>
                 <th className="px-4 py-3 font-semibold">سریال</th>
                 <th className="px-4 py-3 font-semibold">وضعیت</th>
@@ -235,12 +241,13 @@ export default function DebtDiscountingFacilitiesPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {pageRecords.length === 0 ? (
-                <tr><td colSpan={9} className="px-4 py-12 text-center text-slate-500">{loading ? "در حال دریافت اطلاعات..." : "هنوز تسهیلاتی ثبت نشده است."}</td></tr>
+                <tr><td colSpan={10} className="px-4 py-12 text-center text-slate-500">{loading ? "در حال دریافت اطلاعات..." : "هنوز تسهیلاتی ثبت نشده است."}</td></tr>
               ) : pageRecords.map((record, index) => (
                 <tr key={record.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3">{(firstRecord+index).toLocaleString("fa-IR")}</td>
                   <td className="px-4 py-3">{record.facilityTitle || record.contract?.facilityTitle || "—"}</td>
                   <td className="px-4 py-3" dir="ltr">{record.facilityNumber || record.contract?.facilityNumber || "—"}</td>
+                  <td className="px-4 py-3" dir="ltr">{getCustomerNumber(record.facilityNumber || record.contract?.facilityNumber) || "—"}</td>
                   <td className="px-4 py-3">{record.counterLabel || "—"}</td>
                   <td className="px-4 py-3" dir="ltr">{record.serial || "—"}</td>
                   <td className="px-4 py-3">
