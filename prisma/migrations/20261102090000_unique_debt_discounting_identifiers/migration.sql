@@ -1,7 +1,4 @@
--- Uniqueness applies to the combination of administrative and check numbers.
--- Remove the earlier individual unique indexes if a failed attempt created either one.
-DROP INDEX IF EXISTS "DebtDiscountingRecord_checkNumber_key";
-DROP INDEX IF EXISTS "DebtDiscountingRecord_administrativeNumber_key";
-
-CREATE UNIQUE INDEX "DebtDiscountingRecord_administrativeNumber_checkNumber_key"
-ON "DebtDiscountingRecord"("administrativeNumber", "checkNumber");
+-- This migration originally ran before DebtDiscountingRecord was created.
+-- The final unique constraint is applied by
+-- 20261110100000_unique_debt_check_number_administrative_number.
+-- Keep this migration as a no-op so fresh shadow databases can replay history safely.
