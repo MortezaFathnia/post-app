@@ -1,10 +1,2 @@
-ALTER TABLE "DebtDiscountingFacility"
-ADD COLUMN "customerName" TEXT;
-
-UPDATE "DebtDiscountingFacility" AS facility
-SET "customerName" = COALESCE(
-    NULLIF(customer."name", ''),
-    NULLIF(customer."companyName", '')
-)
-FROM "Customer" AS customer
-WHERE facility."customerId" = customer."id";
+-- No-op: customer data is no longer part of DebtDiscountingFacility.
+-- The following migration removes the legacy customer columns.
