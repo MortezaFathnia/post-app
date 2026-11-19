@@ -32,8 +32,12 @@ const inputClass = "w-full min-w-[72px] rounded-lg border border-slate-300 bg-wh
 const digits = (value: string) => value.replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
 const numberValue = (value: string) => Number(digits(value).replace(/[^0-9]/g, "")) || 0;
 const formatAmount = (value: string) => {
-  const raw = digits(value).replace(/[^0-9]/g, "");
-  return raw ? Number(raw).toLocaleString("en-US") : "";
+  const normalized = digits(value).replace(/,/g, "").replace(/[^0-9*]/g, "");
+  const raw = normalized.endsWith("*")
+    ? normalized.slice(0, -1).replace(/\*/g, "") + "000"
+    : normalized.replace(/\*/g, "");
+  const clean = raw.replace(/^0+(?=\d)/, "");
+  return clean ? clean.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
 };
 function isLeapJalali(year: number) { return [1,5,9,13,17,22,26,30].includes(year % 33); }
 function monthDays(year: number, month: number) { return month <= 6 ? 31 : month <= 11 ? 30 : isLeapJalali(year) ? 30 : 29; }
