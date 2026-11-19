@@ -40,6 +40,7 @@ const menuItems = [
     children: [
       { title: "مدیریت کد و نام باجه", href: "/dashboard/settings", icon: "▤", description: "فهرست باجه‌ها" },
       { title: "فهرست بانک‌ها", href: "/dashboard/settings/banks", icon: "▤", description: "نام و شناسه بانک‌ها" },
+      { title: "مدیریت کد و نام تسهیلات", href: "/dashboard/settings/facility-codes", icon: "▤", description: "فهرست مرجع انواع تسهیلات" },
     ],
   },
 ];
