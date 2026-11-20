@@ -75,6 +75,8 @@ model ContractDetails {
   id                        Int              @id @default(autoincrement())
   contractCode              String?          @unique
   contractNumber            String?
+  contractType              ContractType       @default(MORABAHA)
+  loanType                  LoanType?
   contractDate              String?
   requestNumber             String?
   requestDate               String?
