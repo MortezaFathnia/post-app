@@ -75,7 +75,7 @@ async function readApiResponse(response: Response) {
     throw new Error(`پاسخ سرور خالی است (HTTP ${response.status}). خطای سرور را در ترمینال Next.js بررسی کنید.`);
   }
   try {
-    return JSON.parse(text) as { success?: boolean; error?: string; record?: ApiRecord; counters?: CounterOption[]; nextSerial?: string };
+    return JSON.parse(text) as { success?: boolean; error?: string; record?: ApiRecord; counters?: CounterOption[]; facilityCodes?: FacilityOption[]; nextSerial?: string };
   } catch {
     const detail = text.trim().slice(0, 180).replace(/\\s+/g, " ");
     throw new Error(`پاسخ API معتبر نیست (HTTP ${response.status}). ${detail}`);
@@ -154,7 +154,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const record = result.record as ApiRecord;
         const raw = record.rawData && typeof record.rawData === "object" ? removeUnwantedColumns(record.rawData) : {};
         const legacyArchiveCode = String(raw["کد بایگانی جدید"] ?? raw["کد بایگانی"] ?? "").trim();
-        delete raw["کد بایگانی جدید"];
+        delete raw["کد بایگانی جدید"];\n        delete raw["شماره مشتری"];
         if (legacyArchiveCode) raw["کد بایگانی"] = legacyArchiveCode;
         const next: Record<string, string> = { ...initialFields };
         next["مبلغ مصوب"] = normalizeAmount(String(raw["مبلغ مصوب"] ?? raw["مبلغ"] ?? ""));
@@ -174,7 +174,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         if (active) {
           setFields(next);
           setOriginalFields(next);
-          setCounterQuery([next["کد باجه"], next["نام باجه"]].filter(Boolean).join("-"));
+          setCounterQuery([next["کد باجه"], next["نام باجه"]].filter(Boolean).join("-"));\n          setFacilityTypeQuery(next["نوع تسهیلات"] || "");
         }
       })
       .catch((e: unknown) => { if (active) setError(e instanceof Error ? e.message : "خطا در دریافت اطلاعات."); })
