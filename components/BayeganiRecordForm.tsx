@@ -233,7 +233,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
       return;
     }
     const facilityNumber = String(fields["شماره تسهیلات"] ?? fields["شماره تسهيلات"] ?? "").trim();
-    if (!/^\\d+\\.\\d+\\.\\d+\\.\\d+$/.test(facilityNumber)) {
+    if (!/^\d+\.\d+\.\d+\.\d+$/.test(facilityNumber)) {
       setError("شماره تسهیلات باید دقیقاً شامل ۴ بخش عددی باشد که با نقطه (.) از هم جدا شده‌اند؛ مانند 1538.232.3323421.1");
       return;
     }
@@ -510,7 +510,6 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                 <input
                   value={key === "مبلغ مصوب" ? formatAmount(value) : value}
                   pattern={key === "کد ملی" ? "[0-9]{10}" : key === "شماره تسهیلات" ? "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+" : undefined}
-                  title={key === "شماره تسهیلات" ? "شماره تسهیلات باید ۴ بخش عددی جداشده با نقطه داشته باشد؛ مانند 1538.232.3323421.1" : key === "کد ملی" ? "کد ملی باید دقیقاً شامل ۱۰ رقم انگلیسی باشد." : undefined}
                   maxLength={key === "کد ملی" ? 10 : undefined}
                   inputMode={key === "کد ملی" ? "numeric" : undefined}
                   title={key === "کد ملی" ? "کد ملی باید دقیقاً ۱۰ رقم انگلیسی باشد." : undefined}
