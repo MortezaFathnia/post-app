@@ -35,8 +35,6 @@ model Customer {
   id                       Int          @id @default(autoincrement())
   contractCode             String
   role                     CustomerRole
-
-  // Individual information
   name                     String?
   lastName                 String?
   fatherName               String?
@@ -48,41 +46,133 @@ model Customer {
   passportNumber           String?
   occupation               String?
   installmentAmount        String?
-
-  // Contact and residence
   residence                String?
   address                  String?
   workAddress              String?
   landline                 String?
   workPhone                String?
   mobile                   String?
-
-  // Bank information
   accountNumber            String?
   accountOpeningDate       String?
   longTermDepositNumber    String?
   longTermDepositAmount    String?
   customerNumber           String?
-
-  // Company information
   companyName              String?
   registrationNumber       String?
   registrationDate         String?
   registrationOffice       String?
   companyEconomicCode      String?
   companyNationalId        String?
-
-  contract                 ContractDetails @relation(
-    fields: [contractCode],
-    references: [contractCode],
-    onDelete: Cascade
-  )
-
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
+  contract                 ContractDetails @relation(fields: [contractCode], references: [contractCode], onDelete: Cascade)
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
 
   @@unique([contractCode, role])
   @@index([nationalCode])
+}
+
+model ContractDetails {
+  id                         Int      @id @default(autoincrement())
+  contractCode               String?  @unique
+  contractNumber             String?
+  contractDate               String?
+  requestNumber              String?
+  requestDate                String?
+  approvalNumber             String?
+  approvalDate               String?
+  maturityDate               String?
+  facilityDescription        String?
+  economicSector             String?
+  useOfFunds                 String?
+  transactionDescription     String?
+  salePrice                  String?
+  salePriceWords             String?
+  purchasePrice              String?
+  profitAmount               String?
+  interestRate               String?
+  latePaymentBaseRate        String?
+  latePaymentRate            String?
+  prepayment                 String?
+  payableAmount               String?
+  facilityAmount             String?
+  contractDuration           String?
+  repaymentMethod            String?
+  gracePeriod                String?
+  installmentCount           String?
+  installmentInterval        String?
+  firstInstallmentDate       String?
+  firstQardInstallmentDate   String?
+  bankParticipationPercent   String?
+  proposedPartnershipProfit  String?
+  proposedMudarabahProfit    String?
+  collateralType             String?
+  collateralDescription      String?
+  collateralValue             String?
+  customers                  Customer[]
+  bankDetails                BankDetails?
+  bayeganiRecords            BayeganiRecord[]
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+}
+
+model BankDetails {
+  id                    Int             @id @default(autoincrement())
+  contractDetailsId     Int             @unique
+  contractDetails       ContractDetails @relation(fields: [contractDetailsId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  bankName              String?
+  branchName            String?
+  branchCode            String?
+  branchPostalCode      String?
+  branchPhone           String?
+  branchAddress         String?
+  branchManager         String?
+  counterName           String?
+  counterCode           String?
+  brokerName            String?
+  brokerCustomerCode    String?
+  bankRepresentative    String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+}
+
+model BayeganiRecord {
+  id                Int      @id @default(autoincrement())
+  sourceFile        String
+  sheetName         String
+  sourceRow         Int
+  facilityNumber    String?
+  customerNumber    String?
+  archiveCode       String?
+  facilityTitle     String?
+  serial            String?
+  serialSort        BigInt?
+  classification    String?
+  counterName       String?
+  counterCode       String?
+  counterLabel      String?
+  status            String?  @default("فعال")
+  startDate         String?
+  endDate           String?
+  duration          String?
+  installmentCount  String?
+  approvedAmount    String?
+  remainingAmount   String?
+  nationalId        String?
+  contractCode      String?
+  contractDetails   ContractDetails? @relation(fields: [contractCode], references: [contractCode], onDelete: SetNull, onUpdate: Cascade)
+  rawData           Json
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  debtDiscountingFacilities DebtDiscountingFacility[]
+
+  @@unique([sourceFile, sheetName, sourceRow])
+  @@unique([facilityNumber, serial])
+  @@index([facilityNumber])
+  @@index([customerNumber])
+  @@index([nationalId])
+  @@index([archiveCode])
+  @@index([serialSort])
+  @@index([contractCode])
 }
 
 model DebtDiscountingFacility {
