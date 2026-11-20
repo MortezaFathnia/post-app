@@ -75,7 +75,7 @@ async function readApiResponse(response: Response) {
     throw new Error(`پاسخ سرور خالی است (HTTP ${response.status}). خطای سرور را در ترمینال Next.js بررسی کنید.`);
   }
   try {
-    return JSON.parse(text) as { success?: boolean; error?: string; record?: ApiRecord; counters?: CounterOption[]; facilityCodes?: FacilityOption[]; nextSerial?: string };
+    return JSON.parse(text) as { success?: boolean; error?: string; record?: ApiRecord; counters?: CounterOption[]; facilityCodes?: FacilityCodeOption[]; nextSerial?: string };
   } catch {
     const detail = text.trim().slice(0, 180).replace(/\\s+/g, " ");
     throw new Error(`پاسخ API معتبر نیست (HTTP ${response.status}). ${detail}`);
@@ -176,7 +176,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
           setFields(next);
           setOriginalFields(next);
           setCounterQuery([next["کد باجه"], next["نام باجه"]].filter(Boolean).join("-"));
-          setFacilityTypeQuery(next["نوع تسهیلات"] || "");
+          setFacilityQuery(next["نوع تسهیلات"] || "");
         }
       })
       .catch((e: unknown) => { if (active) setError(e instanceof Error ? e.message : "خطا در دریافت اطلاعات."); })
