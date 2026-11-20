@@ -1,5 +1,4 @@
-import type { Customer } from "@prisma/client";
-
+type TemplateDataSource = Record<string, any>;
 
 function getTehranCalendarDate(date: Date): { year: number; month: number; day: number } {
   const parts = new Intl.DateTimeFormat("en-US-u-ca-gregory", {
@@ -60,7 +59,7 @@ function deriveInstallmentCount(durationValue: unknown, intervalValue: unknown):
   return String(Math.max(1, Math.floor(duration / interval)));
 }
 
-export function getTemplateData(customer: Customer) {
+export function getTemplateData(customer: TemplateDataSource) {
   const applicantName = customer.type === "COMPANY"
     ? customer.companyName
     : customer.name;

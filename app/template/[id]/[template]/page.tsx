@@ -3,9 +3,7 @@ import { readFile } from "fs/promises";
 import path from "path";
 
 import { prisma } from "@/lib/prisma";
-import {
-  getContractTemplate,
-} from "@/lib/templates/contract-templates";
+import { getContractTemplate } from "@/lib/templates/contract-templates";
 import { getTemplateData } from "@/lib/templates/template-data";
 
 import TemplateToolbar from "./TemplateToolbar";
@@ -21,17 +19,12 @@ function getTemplateFolder(contractType: string): string {
   switch (contractType) {
     case "MORABAHA":
       return "morabaha";
-
     case "CREDIT_CARD":
       return "credit-card";
-
     case "DEBT_DISCOUNTING":
       return "debt-discounting";
-
     default:
-      throw new Error(
-        `Unsupported contract type: ${contractType}`,
-      );
+      throw new Error(`Unsupported contract type: ${contractType}`);
   }
 }
 
@@ -44,55 +37,47 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#039;");
 }
 
-function replaceTemplate(
-  html: string,
-  data: Record<string, unknown>,
-): string {
-  return html.replace(
-    /{{\s*([^{}]+?)\s*}}/g,
-    (_, key: string) => {
-      const value = data[key.trim()];
-      if (value === null || value === undefined) return "";
-      if (typeof value === "object") return "";
-      return escapeHtml(String(value));
-    },
-  );
+function replaceTemplate(html: string, data: Record<string, unknown>): string {
+  return html.replace(/{{\s*([^{}]+?)\s*}}/g, (_, key: string) => {
+    const value = data[key.trim()];
+    if (value === null || value === undefined || typeof value === "object") {
+      return "";
+    }
+    return escapeHtml(String(value));
+  });
 }
 
-export default async function TemplatePage({
-  params,
-}: PageProps) {
+export default async function TemplatePage({ params }: PageProps) {
   const { id, template } = await params;
+  const contractId = Number(id);
 
-  const customerId = Number(id);
-
-  if (!Number.isInteger(customerId)) {
+  if (!Number.isInteger(contractId) || contractId <= 0) {
     notFound();
   }
 
-  const customer = await prisma.customer.findUnique({
-    where: {
-      id: customerId,
+  // The URL ID is ContractDetails.id (the same ID used by the selection page),
+  // not Customer.id. Customer information is loaded through ContractCustomer.
+  const contract = await prisma.contractDetails.findUnique({
+    where: { id: contractId },
+    include: {
+      customerLinks: {
+        where: { role: "BORROWER" },
+        include: { customer: true },
+        take: 1,
+      },
     },
   });
 
-  if (!customer) {
+  if (!contract) {
     notFound();
   }
 
-  const templateDefinition = getContractTemplate(
-    customer.contractType,
-    template,
-  );
-
+  const templateDefinition = getContractTemplate(contract.contractType, template);
   if (!templateDefinition) {
     notFound();
   }
 
-  const folder = getTemplateFolder(
-    customer.contractType,
-  );
-
+  const folder = getTemplateFolder(contract.contractType);
   const templatePath = path.join(
     process.cwd(),
     "templates",
@@ -101,27 +86,23 @@ export default async function TemplatePage({
   );
 
   let templateHtml: string;
-
   try {
-    templateHtml = await readFile(
-      templatePath,
-      "utf8",
-    );
+    templateHtml = await readFile(templatePath, "utf8");
   } catch {
-    throw new Error(
-      `Template file not found: ${templatePath}`,
-    );
+    throw new Error(`Template file not found: ${templatePath}`);
   }
 
-  const templateData = getTemplateData(customer);
+  const borrower = contract.customerLinks[0]?.customer;
+  const templateSource = {
+    ...(borrower ?? {}),
+    ...contract,
+    // Customer no longer stores contract type/loan type; those belong to
+    // ContractDetails. Derive the customer kind from the available company data.
+    type: borrower?.companyName ? "COMPANY" : "INDIVIDUAL",
+  };
+  const templateData = getTemplateData(templateSource);
 
-  const replacedHtml = replaceTemplate(
-    templateHtml,
-    templateData,
-  );
-
-  // All generated documents share one stylesheet so typography and A4 print
-  // settings stay consistent across contract, request, approval and commitment.
+  const replacedHtml = replaceTemplate(templateHtml, templateData);
   const sharedStylePath = path.join(
     process.cwd(),
     "templates",
@@ -137,21 +118,9 @@ export default async function TemplatePage({
       : `<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8">${sharedStyleTag}</head><body>${replacedHtml}</body></html>`;
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f3f4f6",
-      }}
-    >
-      <TemplateToolbar
-        backUrl={`/template/${customer.id}`}
-      />
-
-      <main
-        style={{
-          padding: "20px",
-        }}
-      >
+    <div style={{ minHeight: "100vh", background: "#f3f4f6" }}>
+      <TemplateToolbar backUrl={`/template/${contract.id}`} />
+      <main style={{ padding: "20px" }}>
         <iframe
           title={templateDefinition.title}
           srcDoc={generatedHtml}
