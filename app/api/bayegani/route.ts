@@ -117,7 +117,7 @@ function mapRow(rawData: Record<string, unknown>) {
     installmentCount: findValue(rawData, "تعداد اقساط") || null,
     approvedAmount: findValue(rawData, "مبلغ مصوب", "مبلغ"),
     remainingAmount: findValue(rawData, "مانده تسهيلات", "مانده تسهیلات"),
-    nationalId: findValue(rawData, "کد ملي ", "کد ملي مشتري", "کد ملی"),
+    nationalId: findValue(rawData, "کد ملي ", "کد ملي مشتري", "کد ملی") || null,
   };
 }
 
