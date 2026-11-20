@@ -20,13 +20,14 @@ type FacilityCodeOption = { id: number; code: string; name: string };
 const initialFields: Record<string, string> = {
   "شماره تسهیلات": "",
   "نوع تسهیلات": "",
-  "کد بایگانی": "",
   "عنوان تسهیلات": "",
   "سریال": "",
   "طبقه": "",
   "نام باجه": "",
   "کد باجه": "",
   "وضعیت کنونی": "فعال",
+  "کد بایگانی": "",
+  "جنسیت": "",
   "تاریخ شروع": "",
   "پایان قرارداد": "",
   "مدت": "",
@@ -271,7 +272,17 @@ export default function BayeganiRecordForm({ recordId }: Props) {
           {entries.map(([key, value]) => (
             <label key={key} className="block">
               <span className="mb-1.5 block text-sm font-medium text-slate-700">{key === "نام باجه" ? "کد باجه-نام باجه" : key}</span>
-              {key === "وضعیت کنونی" ? (
+              {key === "جنسیت" ? (
+                <select
+                  value={value}
+                  onChange={(event) => changeField(key, event.target.value)}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">انتخاب جنسیت</option>
+                  <option value="مرد">مرد</option>
+                  <option value="زن">زن</option>
+                </select>
+              ) : key === "وضعیت کنونی" ? (
                 <select
                   value={value || "فعال"}
                   onChange={(event) => changeField(key, event.target.value)}
