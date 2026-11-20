@@ -155,6 +155,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           create: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null, nationalCode },
           update: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null },
         });
+        if (facilityNumber) {
+          await tx.contractDetails.upsert({
+            where: { contractCode: facilityNumber },
+            create: { contractCode: facilityNumber },
+            update: {},
+          });
+          await tx.contractCustomer.upsert({
+            where: { contractCode_nationalCode: { contractCode: facilityNumber, nationalCode } },
+            create: { contractCode: facilityNumber, nationalCode, role: "BORROWER" },
+            update: { role: "BORROWER" },
+          });
+        }
       }
       const updatedRecord = await tx.bayeganiRecord.update({
         where: { id: recordId },
@@ -177,6 +189,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
         remainingAmount: value(raw, "مانده تسهيلات", "مانده تسهیلات"),
         nationalId: nationalCode || null,
+        contractCode: facilityNumber || null,
         },
       });
       return updatedRecord;
