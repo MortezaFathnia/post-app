@@ -166,6 +166,10 @@ ALTER TABLE "Customer"
   ADD COLUMN IF NOT EXISTS "role" "CustomerRole",
   ADD COLUMN IF NOT EXISTS "contractCode" TEXT;
 
+-- Release the legacy id primary key before changing id nullability.
+-- The migration preflight above has already rejected foreign keys that reference Customer.id.
+ALTER TABLE "Customer" DROP CONSTRAINT IF EXISTS "Customer_pkey";
+
 -- The existing Customer table may still carry required legacy columns that
 -- are intentionally no longer part of the role-based Prisma Customer model.
 -- Keep the columns for compatibility, but remove their obsolete NOT NULL
@@ -197,7 +201,6 @@ BEGIN
   END IF;
 END $$;
 
-ALTER TABLE "Customer" DROP CONSTRAINT IF EXISTS "Customer_pkey";
 ALTER TABLE "Customer"
   ALTER COLUMN "nationalCode" SET NOT NULL,
   ALTER COLUMN "contractCode" SET NOT NULL,
