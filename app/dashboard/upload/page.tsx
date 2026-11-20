@@ -15,7 +15,6 @@ export default function UploadPage() {
 
   const [file, setFile] = useState<File | null>(null);
   const [contractNumber, setContractNumber] = useState("");
-  const [contractCode, setContractCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -41,7 +40,6 @@ export default function UploadPage() {
 
       formData.append("file", file);
       formData.append("contractNumber", contractNumber.trim());
-      formData.append("contractCode", contractCode.trim());
 
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -113,31 +111,6 @@ export default function UploadPage() {
                   setContractNumber(event.target.value)
                 }
                 placeholder="شماره قرارداد را وارد کنید"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-right outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                disabled={loading}
-              />
-            </div>
-
-            {/* Contract Code */}
-            <div>
-              <label
-                htmlFor="contractCode"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                کد قرارداد
-                <span className="mr-1 text-xs text-gray-400">
-                  (در صورت نبود در فایل، الزامی است)
-                </span>
-              </label>
-
-              <input
-                id="contractCode"
-                type="text"
-                value={contractCode}
-                onChange={(event) =>
-                  setContractCode(event.target.value)
-                }
-                placeholder="کد قرارداد را وارد کنید یا آن را در فایل Excel قرار دهید"
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 text-right outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 disabled={loading}
               />
