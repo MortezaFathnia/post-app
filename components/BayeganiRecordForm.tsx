@@ -264,7 +264,9 @@ export default function BayeganiRecordForm({ recordId }: Props) {
     || !currentCounterIsComplete
     ? completeCounters
     : [...completeCounters, currentCounter];
-  const entries = Object.entries(fields).filter(([key]) => key !== "شماره مشتری" && key !== "مبلغ" && !isHiddenField(key));
+  const entries = Object.keys(initialFields)
+    .filter((key) => key !== "شماره مشتری" && key !== "مبلغ" && !isHiddenField(key))
+    .map((key) => [key, fields[key] ?? ""] as [string, string]);
   const hasChanges = JSON.stringify(fields) !== JSON.stringify(originalFields);
   const requiredFields = Object.keys(initialFields).filter((key) => key !== "تعداد اقساط" && key !== "توضیحات");
   const hasAllRequiredFields = requiredFields.every((key) => String(fields[key] ?? "").trim().length > 0);
