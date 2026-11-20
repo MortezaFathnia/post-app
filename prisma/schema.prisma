@@ -153,6 +153,7 @@ model BayeganiRecord {
   status                    String?                   @default("فعال")
   startDate                 String?
   endDate                   String?
+  bailDeliveryDate          String?
   duration                  String?
   installmentCount          String?
   approvedAmount            String?
