@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import Sidebar from "@/components/Sidebar";
 import { prisma } from "@/lib/prisma";
 import { getContractTemplateSet } from "@/lib/templates/contract-templates";
 
@@ -16,7 +17,7 @@ function getContractTypeTitle(contractType: string) {
     case "CREDIT_CARD":
       return "مرابحه کارت اعتباری";
     default:
-      return "-";
+      return "نامشخص";
   }
 }
 
@@ -27,7 +28,7 @@ function getLoanTypeTitle(loanType: string | null) {
     case "INSTALLMENT":
       return "اقساط";
     default:
-      return "-";
+      return "—";
   }
 }
 
@@ -36,9 +37,26 @@ function getApplicantName(customer: {
   lastName: string | null;
   companyName: string | null;
 } | null) {
-  if (!customer) return "-";
+  if (!customer) return "—";
   if (customer.companyName) return customer.companyName;
-  return [customer.name, customer.lastName].filter(Boolean).join(" ") || "-";
+  return [customer.name, customer.lastName].filter(Boolean).join(" ") || "—";
+}
+
+function InfoItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null;
+}) {
+  return (
+    <div className="rounded-xl bg-slate-50 p-4">
+      <p className="text-xs font-medium text-slate-500">{label}</p>
+      <p className="mt-2 break-words text-sm font-bold text-slate-800">
+        {value || "—"}
+      </p>
+    </div>
+  );
 }
 
 export default async function TemplateSelectionPage({ params }: PageProps) {
@@ -49,8 +67,6 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
     notFound();
   }
 
-  // The contracts list links to /template/{ContractDetails.id}, so this page
-  // must load ContractDetails rather than Customer by the same numeric ID.
   const contract = await prisma.contractDetails.findUnique({
     where: { id: contractId },
     include: {
@@ -80,115 +96,119 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
     notFound();
   }
 
-  const contractTypeTitle = getContractTypeTitle(contract.contractType);
-  const loanTypeTitle = getLoanTypeTitle(contract.loanType);
   const applicantName = getApplicantName(
     contract.customerLinks[0]?.customer ?? null,
   );
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gray-100 p-6">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">اسناد قرارداد</h1>
-            <p className="mt-2 text-sm text-gray-500">
-              قرارداد شماره{" "}
-              <span className="font-semibold text-gray-700">
-                {contract.contractNumber || "-"}
-              </span>
-            </p>
-          </div>
+    <div dir="rtl" className="min-h-screen bg-slate-50 text-slate-900">
+      <Sidebar />
 
-          <Link
-            href="/dashboard/contracts"
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            بازگشت به قراردادها
-          </Link>
-        </div>
-
-        <div className="mb-6 rounded-xl border bg-white p-6 shadow-sm">
-          <h2 className="mb-5 text-lg font-semibold text-gray-900">
-            اطلاعات قرارداد
-          </h2>
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <main className="min-h-screen px-4 pb-8 pt-20 sm:px-6 lg:mr-64 lg:px-8 lg:pt-8">
+        <div className="mx-auto w-full max-w-[1600px] space-y-6">
+          <section className="flex flex-col justify-between gap-4 rounded-2xl bg-gradient-to-l from-slate-900 to-blue-900 p-6 text-white shadow-sm sm:flex-row sm:items-center sm:p-8">
             <div>
-              <p className="text-xs text-gray-500">شماره قرارداد</p>
-              <p className="mt-1 font-medium text-gray-900">
-                {contract.contractNumber || "-"}
+              <p className="text-sm font-medium text-blue-200">
+                مدیریت قراردادها
+              </p>
+              <h1 className="mt-2 text-2xl font-extrabold sm:text-3xl">
+                اسناد قرارداد
+              </h1>
+              <p className="mt-2 text-sm leading-6 text-slate-300">
+                انتخاب و مشاهده اسناد مربوط به قرارداد شماره{" "}
+                <span className="font-bold text-white">
+                  {contract.contractNumber || "—"}
+                </span>
               </p>
             </div>
-            <div>
-              <p className="text-xs text-gray-500">کد قرارداد</p>
-              <p className="mt-1 font-medium text-gray-900">
-                {contract.contractCode || "-"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">متقاضی</p>
-              <p className="mt-1 font-medium text-gray-900">{applicantName}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">نوع قرارداد</p>
-              <p className="mt-1 font-medium text-blue-700">
-                {contractTypeTitle}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">نوع تسهیلات</p>
-              <p className="mt-1 font-medium text-gray-900">{loanTypeTitle}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">تاریخ قرارداد</p>
-              <p className="mt-1 font-medium text-gray-900">
-                {contract.contractDate || "-"}
-              </p>
-            </div>
-          </div>
-        </div>
 
-        <div className="rounded-xl border bg-white p-6 shadow-sm">
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">اسناد</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              سند مورد نظر را انتخاب کنید.
-            </p>
-          </div>
+            <Link
+              href="/dashboard/contracts"
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20"
+            >
+              <span aria-hidden="true">→</span>
+              بازگشت به قراردادها
+            </Link>
+          </section>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {templateSet.templates.map((template) => (
-              <div
-                key={template.id}
-                className="rounded-xl border border-gray-200 p-5 transition hover:border-blue-300 hover:shadow-md"
-              >
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-xl">
-                  {template.id === "request"
-                    ? "📝"
-                    : template.id === "contract"
-                      ? "📄"
-                      : "✍️"}
+          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-lg text-blue-700" aria-hidden="true">
+                  ▤
+                </span>
+                <div>
+                  <h2 className="font-bold text-slate-900">
+                    اطلاعات قرارداد
+                  </h2>
+                  <p className="mt-1 text-xs text-slate-500">
+                    مشخصات قرارداد و متقاضی
+                  </p>
                 </div>
-
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {template.title}
-                </h3>
-                <p className="mt-2 min-h-10 text-sm leading-6 text-gray-500">
-                  {template.description}
-                </p>
-
-                <Link
-                  href={`/template/${contract.id}/${template.id}`}
-                  className="mt-5 block rounded-lg bg-blue-600 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-700"
-                >
-                  مشاهده {template.title}
-                </Link>
               </div>
-            ))}
-          </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:p-6">
+              <InfoItem label="شماره قرارداد" value={contract.contractNumber} />
+              <InfoItem label="کد قرارداد" value={contract.contractCode} />
+              <InfoItem label="متقاضی" value={applicantName} />
+              <InfoItem
+                label="نوع قرارداد"
+                value={getContractTypeTitle(contract.contractType)}
+              />
+              <InfoItem
+                label="نوع تسهیلات"
+                value={getLoanTypeTitle(contract.loanType)}
+              />
+              <InfoItem label="تاریخ قرارداد" value={contract.contractDate} />
+            </div>
+          </section>
+
+          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
+              <h2 className="text-lg font-bold text-slate-900">انتخاب سند</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                برای مشاهده یا چاپ، سند مورد نظر را انتخاب کنید.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3 sm:p-6">
+              {templateSet.templates.map((template, index) => (
+                <article
+                  key={template.id}
+                  className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-xl text-blue-700">
+                    {template.id === "request"
+                      ? "▧"
+                      : template.id === "contract"
+                        ? "▤"
+                        : "✎"}
+                  </div>
+
+                  <p className="mt-4 text-xs font-semibold text-slate-400">
+                    سند {new Intl.NumberFormat("fa-IR").format(index + 1)}
+                  </p>
+                  <h3 className="mt-1 text-lg font-extrabold text-slate-900">
+                    {template.title}
+                  </h3>
+                  <p className="mt-2 flex-1 text-sm leading-7 text-slate-500">
+                    {template.description}
+                  </p>
+
+                  <Link
+                    href={`/template/${contract.id}/${template.id}`}
+                    className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-700"
+                  >
+                    مشاهده سند
+                    <span aria-hidden="true">←</span>
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
