@@ -30,162 +30,162 @@ model Customer {
   loanType     LoanType?
 
   // INDIVIDUAL — shown as «اطلاعات مدیون»
-  name                       String?
-  lastName                   String?
-  fatherName                 String?
-  birthDate                  String?
-  birthCertificateNumber     String?
-  birthPlace                 String?
-  birthCertificateSerial     String?
-  nationalCode               String?        @unique
-  passportNumber             String?
-  occupation                 String?
-  installmentAmount          String?
+  name                   String?
+  lastName               String?
+  fatherName             String?
+  birthDate              String?
+  birthCertificateNumber String?
+  birthPlace             String?
+  birthCertificateSerial String?
+  nationalCode           String? @unique
+  passportNumber         String?
+  occupation             String?
+  installmentAmount      String?
 
   // COMPANY
-  companyName                String?
-  registrationNumber         String?
-  registrationDate           String?
-  registrationOffice         String?
-  companyEconomicCode        String?
-  companyNationalId          String?
+  companyName         String?
+  registrationNumber  String?
+  registrationDate    String?
+  registrationOffice  String?
+  companyEconomicCode String?
+  companyNationalId   String?
 
   // CONTACT / DEBTOR
-  postalCode                 String?
-  address                    String?
-  workAddress                String?
-  landline                   String?
-  workPhone                  String?
-  mobile                     String?
-  email                      String?
+  postalCode  String?
+  address     String?
+  workAddress String?
+  landline    String?
+  workPhone   String?
+  mobile      String?
+  email       String?
 
   // DEBTOR BANK DETAILS
-  debtorAccountNumber        String?
-  debtorAccountOpeningDate   String?
+  debtorAccountNumber         String?
+  debtorAccountOpeningDate    String?
   debtorLongTermDepositNumber String?
   debtorLongTermDepositAmount String?
-  debtorCustomerNumber       String?
+  debtorCustomerNumber        String?
 
   // CONTRACT / REQUEST
-  contractNumber             String?
-  contractDate               String?
-  contractCode               String?
-  requestNumber              String?
-  requestDate                String?
-  approvalNumber             String?
-  approvalDate               String?
-  maturityDate               String?
+  contractNumber String?
+  contractDate   String?
+  contractCode   String?
+  requestNumber  String?
+  requestDate    String?
+  approvalNumber String?
+  approvalDate   String?
+  maturityDate   String?
 
   // BANK / BRANCH
-  bankName                   String?
-  branchName                 String?
-  branchCode                 String?
-  branchPostalCode           String?
-  branchPhone                String?
-  branchAddress              String?
-  branchManager              String?
-  counterName                String?
-  counterCode                String?
-  brokerName                 String?
-  brokerCustomerCode         String?
-  bankRepresentative         String?
+  bankName           String?
+  branchName         String?
+  branchCode         String?
+  branchPostalCode   String?
+  branchPhone        String?
+  branchAddress      String?
+  branchManager      String?
+  counterName        String?
+  counterCode        String?
+  brokerName         String?
+  brokerCustomerCode String?
+  bankRepresentative String?
 
   // FACILITY / FINANCIAL
-  facilityDescription        String?
-  economicSector             String?
-  useOfFunds                 String?
-  transactionDescription     String?
-  salePrice                  String?
-  salePriceWords             String?
-  purchasePrice              String?
-  profitAmount               String?
-  interestRate               String?
-  latePaymentBaseRate        String?
-  latePaymentRate            String?
-  prepayment                 String?
-  payableAmount              String?
-  facilityAmount             String?
-  contractDuration           String?
-  repaymentMethod            String?
-  gracePeriod                String?
-  installmentCount           String?
-  installmentInterval        String?
-  firstInstallmentDate       String?
-  firstQardInstallmentDate   String?
-  bankParticipationPercent   String?
-  proposedPartnershipProfit  String?
-  proposedMudarabahProfit    String?
+  facilityDescription       String?
+  economicSector            String?
+  useOfFunds                String?
+  transactionDescription    String?
+  salePrice                 String?
+  salePriceWords            String?
+  purchasePrice             String?
+  profitAmount              String?
+  interestRate              String?
+  latePaymentBaseRate       String?
+  latePaymentRate           String?
+  prepayment                String?
+  payableAmount             String?
+  facilityAmount            String?
+  contractDuration          String?
+  repaymentMethod           String?
+  gracePeriod               String?
+  installmentCount          String?
+  installmentInterval       String?
+  firstInstallmentDate      String?
+  firstQardInstallmentDate  String?
+  bankParticipationPercent  String?
+  proposedPartnershipProfit String?
+  proposedMudarabahProfit   String?
 
   // COLLATERAL
-  collateralType             String?
-  collateralDescription      String?
-  collateralValue            String?
+  collateralType        String?
+  collateralDescription String?
+  collateralValue       String?
 
   // GUARANTOR 1 — no separate representative fields
-  guarantor1Name                    String?
-  guarantor1NationalCode            String?
-  guarantor1PostalCode              String?
-  guarantor1BirthCertificate        String?
-  guarantor1BirthCertificateSerial  String?
-  guarantor1BirthDate               String?
-  guarantor1FatherName              String?
-  guarantor1BirthPlace               String?
-  guarantor1Residence               String?
-  guarantor1Address                 String?
-  guarantor1WorkAddress             String?
-  guarantor1Landline                String?
-  guarantor1WorkPhone               String?
-  guarantor1Mobile                  String?
-  guarantor1Occupation              String?
-  guarantor1AccountNumber           String?
-  guarantor1AccountOpeningDate      String?
-  guarantor1LongTermDepositNumber   String?
-  guarantor1LongTermDepositAmount   String?
-  guarantor1CustomerNumber          String?
+  guarantor1Name                   String?
+  guarantor1NationalCode           String?
+  guarantor1PostalCode             String?
+  guarantor1BirthCertificate       String?
+  guarantor1BirthCertificateSerial String?
+  guarantor1BirthDate              String?
+  guarantor1FatherName             String?
+  guarantor1BirthPlace             String?
+  guarantor1Residence              String?
+  guarantor1Address                String?
+  guarantor1WorkAddress            String?
+  guarantor1Landline               String?
+  guarantor1WorkPhone              String?
+  guarantor1Mobile                 String?
+  guarantor1Occupation             String?
+  guarantor1AccountNumber          String?
+  guarantor1AccountOpeningDate     String?
+  guarantor1LongTermDepositNumber  String?
+  guarantor1LongTermDepositAmount  String?
+  guarantor1CustomerNumber         String?
 
   // GUARANTOR 2
-  guarantor2Name                    String?
-  guarantor2NationalCode            String?
-  guarantor2PostalCode              String?
-  guarantor2BirthCertificate        String?
-  guarantor2BirthCertificateSerial  String?
-  guarantor2BirthDate               String?
-  guarantor2FatherName              String?
-  guarantor2BirthPlace               String?
-  guarantor2Residence               String?
-  guarantor2Address                 String?
-  guarantor2WorkAddress             String?
-  guarantor2Landline                String?
-  guarantor2WorkPhone               String?
-  guarantor2Mobile                  String?
-  guarantor2Occupation              String?
-  guarantor2AccountNumber           String?
-  guarantor2AccountOpeningDate      String?
-  guarantor2LongTermDepositNumber   String?
-  guarantor2LongTermDepositAmount   String?
-  guarantor2CustomerNumber          String?
+  guarantor2Name                   String?
+  guarantor2NationalCode           String?
+  guarantor2PostalCode             String?
+  guarantor2BirthCertificate       String?
+  guarantor2BirthCertificateSerial String?
+  guarantor2BirthDate              String?
+  guarantor2FatherName             String?
+  guarantor2BirthPlace             String?
+  guarantor2Residence              String?
+  guarantor2Address                String?
+  guarantor2WorkAddress            String?
+  guarantor2Landline               String?
+  guarantor2WorkPhone              String?
+  guarantor2Mobile                 String?
+  guarantor2Occupation             String?
+  guarantor2AccountNumber          String?
+  guarantor2AccountOpeningDate     String?
+  guarantor2LongTermDepositNumber  String?
+  guarantor2LongTermDepositAmount  String?
+  guarantor2CustomerNumber         String?
 
   // GUARANTOR 3
-  guarantor3Name                    String?
-  guarantor3NationalCode            String?
-  guarantor3PostalCode              String?
-  guarantor3BirthCertificate        String?
-  guarantor3BirthCertificateSerial  String?
-  guarantor3BirthDate               String?
-  guarantor3FatherName              String?
-  guarantor3BirthPlace               String?
-  guarantor3Residence               String?
-  guarantor3Address                 String?
-  guarantor3WorkAddress              String?
-  guarantor3Landline                String?
-  guarantor3WorkPhone               String?
-  guarantor3Mobile                  String?
-  guarantor3Occupation               String?
-  guarantor3AccountNumber           String?
-  guarantor3AccountOpeningDate      String?
-  guarantor3LongTermDepositNumber   String?
-  guarantor3LongTermDepositAmount   String?
-  guarantor3CustomerNumber          String?
+  guarantor3Name                   String?
+  guarantor3NationalCode           String?
+  guarantor3PostalCode             String?
+  guarantor3BirthCertificate       String?
+  guarantor3BirthCertificateSerial String?
+  guarantor3BirthDate              String?
+  guarantor3FatherName             String?
+  guarantor3BirthPlace             String?
+  guarantor3Residence              String?
+  guarantor3Address                String?
+  guarantor3WorkAddress            String?
+  guarantor3Landline               String?
+  guarantor3WorkPhone              String?
+  guarantor3Mobile                 String?
+  guarantor3Occupation             String?
+  guarantor3AccountNumber          String?
+  guarantor3AccountOpeningDate     String?
+  guarantor3LongTermDepositNumber  String?
+  guarantor3LongTermDepositAmount  String?
+  guarantor3CustomerNumber         String?
 
   // Original Excel data: all source headers and values are preserved here.
   dbExcelData       Json?
@@ -196,63 +196,62 @@ model Customer {
   tabagheCount String?
   copyCount    String?
 
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   bayeganiRecords BayeganiRecord[]
   contractDetails ContractDetails[]
-
 }
 
 model DebtDocument {
-  id             Int               @id @default(autoincrement())
-  contractId     Int?              @unique
+  id             Int             @id @default(autoincrement())
+  contractId     Int?            @unique
   facilityNumber String?
   facilityTitle  String?
   counterLabel   String?
   serial         String?
-  status         String            @default("فعال")
+  status         String          @default("فعال")
   startDate      String?
   endDate        String?
-  contract       BayeganiRecord?   @relation(fields: [contractId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  contract       BayeganiRecord? @relation(fields: [contractId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@index([facilityNumber])
   @@index([status])
 }
 
 model BayeganiRecord {
-  id                Int      @id @default(autoincrement())
-  sourceFile        String
-  sheetName         String
-  sourceRow         Int
-  facilityNumber    String?
-  customerNumber    String?
-  archiveCode       String?
-  facilityTitle     String?
-  serial            String?
-  serialSort        BigInt?
-  classification    String?
-  counterName       String?
-  counterCode       String?
-  counterLabel      String?
-  status            String?  @default("فعال")
-  startDate         String?
-  endDate           String?
-  duration          String?
-  installmentCount  String?
-  approvedAmount    String?
-  remainingAmount   String?
-  nationalId        String?
-  contractCode      String?
-  contractDetails   ContractDetails? @relation(fields: [contractCode], references: [contractCode], onDelete: SetNull, onUpdate: Cascade)
-  customer          Customer? @relation(fields: [nationalId], references: [nationalCode], onDelete: SetNull, onUpdate: Cascade)
-  rawData           Json
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                        Int                       @id @default(autoincrement())
+  sourceFile                String
+  sheetName                 String
+  sourceRow                 Int
+  facilityNumber            String?
+  customerNumber            String?
+  archiveCode               String?
+  facilityTitle             String?
+  serial                    String?
+  serialSort                BigInt?
+  classification            String?
+  counterName               String?
+  counterCode               String?
+  counterLabel              String?
+  status                    String?                   @default("فعال")
+  startDate                 String?
+  endDate                   String?
+  duration                  String?
+  installmentCount          String?
+  approvedAmount            String?
+  remainingAmount           String?
+  nationalId                String?
+  contractCode              String?
+  contractDetails           ContractDetails?          @relation(fields: [contractCode], references: [contractCode], onDelete: SetNull, onUpdate: Cascade)
+  customer                  Customer?                 @relation(fields: [nationalId], references: [nationalCode], onDelete: SetNull, onUpdate: Cascade)
+  rawData                   Json
+  createdAt                 DateTime                  @default(now())
+  updatedAt                 DateTime                  @updatedAt
   debtDiscountingFacilities DebtDiscountingFacility[]
-  debtDocuments DebtDocument[]
+  debtDocuments             DebtDocument[]
 
   @@unique([sourceFile, sheetName, sourceRow])
   @@unique([facilityNumber, serial])
@@ -264,72 +263,71 @@ model BayeganiRecord {
   @@index([contractCode])
 }
 
-
 model ContractDetails {
-  id                         Int      @id @default(autoincrement())
-  customerId                 Int?
-  customer                   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  contractCode               String?  @unique
-  contractNumber             String?
-  contractDate               String?
-  requestNumber              String?
-  requestDate                String?
-  approvalNumber             String?
-  approvalDate               String?
-  maturityDate               String?
-  facilityDescription        String?
-  economicSector             String?
-  useOfFunds                 String?
-  transactionDescription     String?
-  salePrice                  String?
-  salePriceWords             String?
-  purchasePrice              String?
-  profitAmount               String?
-  interestRate               String?
-  latePaymentBaseRate        String?
-  latePaymentRate            String?
-  prepayment                 String?
-  payableAmount              String?
-  facilityAmount             String?
-  contractDuration           String?
-  repaymentMethod            String?
-  gracePeriod                String?
-  installmentCount           String?
-  installmentInterval        String?
-  firstInstallmentDate       String?
-  firstQardInstallmentDate   String?
-  bankParticipationPercent   String?
-  proposedPartnershipProfit  String?
-  proposedMudarabahProfit    String?
-  collateralType             String?
-  collateralDescription      String?
-  collateralValue             String?
-  bankDetails                BankDetails?
-  bayeganiRecords            BayeganiRecord[]
-  createdAt                  DateTime @default(now())
-  updatedAt                  DateTime @updatedAt
+  id                        Int              @id @default(autoincrement())
+  customerId                Int?
+  customer                  Customer?        @relation(fields: [customerId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  contractCode              String?          @unique
+  contractNumber            String?
+  contractDate              String?
+  requestNumber             String?
+  requestDate               String?
+  approvalNumber            String?
+  approvalDate              String?
+  maturityDate              String?
+  facilityDescription       String?
+  economicSector            String?
+  useOfFunds                String?
+  transactionDescription    String?
+  salePrice                 String?
+  salePriceWords            String?
+  purchasePrice             String?
+  profitAmount              String?
+  interestRate              String?
+  latePaymentBaseRate       String?
+  latePaymentRate           String?
+  prepayment                String?
+  payableAmount             String?
+  facilityAmount            String?
+  contractDuration          String?
+  repaymentMethod           String?
+  gracePeriod               String?
+  installmentCount          String?
+  installmentInterval       String?
+  firstInstallmentDate      String?
+  firstQardInstallmentDate  String?
+  bankParticipationPercent  String?
+  proposedPartnershipProfit String?
+  proposedMudarabahProfit   String?
+  collateralType            String?
+  collateralDescription     String?
+  collateralValue           String?
+  bankDetails               BankDetails?
+  bayeganiRecords           BayeganiRecord[]
+  createdAt                 DateTime         @default(now())
+  updatedAt                 DateTime         @updatedAt
 
   @@index([customerId])
 }
 
 model BankDetails {
-  id                    Int      @id @default(autoincrement())
-  contractDetailsId     Int      @unique
-  contractDetails       ContractDetails @relation(fields: [contractDetailsId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  bankName              String?
-  branchName            String?
-  branchCode            String?
-  branchPostalCode      String?
-  branchPhone           String?
-  branchAddress         String?
-  branchManager         String?
-  counterName           String?
-  counterCode           String?
-  brokerName            String?
-  brokerCustomerCode    String?
-  bankRepresentative    String?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id                 Int             @id @default(autoincrement())
+  contractDetailsId  Int             @unique
+  contractDetails    ContractDetails @relation(fields: [contractDetailsId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  bankName           String?
+  branchName         String?
+  branchCode         String?
+  branchPostalCode   String?
+  branchPhone        String?
+  branchAddress      String?
+  branchManager      String?
+  counterName        String?
+  counterCode        String?
+  brokerName         String?
+  brokerCustomerCode String?
+  bankRepresentative String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
 }
 
 model Bank {
@@ -379,12 +377,11 @@ model DebtDiscountingRecord {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
+  @@unique([checkNumber, administrativeNumber])
   @@index([facilityNumber])
   @@index([counterLabel])
-  @@unique([checkNumber, administrativeNumber])
   @@index([sourceFile, sheetName])
 }
-
 
 model DebtDiscountingFacility {
   id             Int            @id @default(autoincrement())
