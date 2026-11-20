@@ -175,7 +175,7 @@ ALTER TABLE "Customer"
   DROP CONSTRAINT IF EXISTS "Customer_type_not_null",
   DROP CONSTRAINT IF EXISTS "Customer_contractType_not_null";
 
-DO $
+DO $$
 BEGIN
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
