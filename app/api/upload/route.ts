@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
 
     // Map rows from the first table in DB using the existing Persian-header mapper.
     const customers = rows.map(({ values, rowNumber }) => ({
-      data: mapDbExcelRow(values, file.name, rowNumber),
+      data: mapDbExcelRow(values),
       rowNumber,
       values,
     }));
@@ -163,14 +163,14 @@ export async function POST(request: NextRequest) {
     }
 
     const invalidRows = customers
-      .filter(({ data }) => !data.name)
+      .filter(({ data }) => !data.name || !data.nationalCode || data.nationalCode === "0")
       .map(({ rowNumber }) => rowNumber);
 
     if (invalidRows.length > 0) {
       return NextResponse.json(
         {
           success: false,
-          error: "نام و نام خانوادگی مدیون در بعضی از ردیف‌های جدول اول خالی است.",
+          error: "نام یا کد ملی معتبر مدیون در بعضی از ردیف‌های جدول اول خالی است.",
           rows: invalidRows,
         },
         { status: 400 },
@@ -182,28 +182,44 @@ export async function POST(request: NextRequest) {
 
       for (const { data } of customers) {
         const customerData = {
-          ...data,
-          // Keep legacy fields populated while existing templates are migrated.
-          contractNumber,
-          contractCode: resolvedContractCode,
+          name: data.name,
+          nationalCode: data.nationalCode!,
+          postalCode: data.postalCode,
+          birthCertificateNumber: data.birthCertificateNumber,
+          birthCertificateSerial: data.birthCertificateSerial,
+          birthDate: data.birthDate,
+          fatherName: data.fatherName,
+          birthPlace: data.birthPlace,
+          residence: data.residence,
+          address: data.address,
+          workAddress: data.workAddress,
+          landline: data.landline,
+          workPhone: data.workPhone,
+          mobile: data.mobile,
+          occupation: data.occupation,
+          accountNumber: data.debtorAccountNumber,
+          accountOpeningDate: data.debtorAccountOpeningDate,
+          longTermDepositNumber: data.debtorLongTermDepositNumber,
+          longTermDepositAmount: data.debtorLongTermDepositAmount,
+          customerNumber: data.debtorCustomerNumber,
         };
-        const created = data.nationalCode
-          ? await tx.customer.upsert({
-              where: { nationalCode: data.nationalCode },
-              create: customerData,
-              update: customerData,
-            })
-          : await tx.customer.create({ data: customerData });
-        createdCustomers.push(created);
+
+        const savedCustomer = await tx.customer.upsert({
+          where: { nationalCode: customerData.nationalCode },
+          create: customerData,
+          update: customerData,
+        });
+        createdCustomers.push(savedCustomer);
       }
 
       const firstCustomer = createdCustomers[0];
       const firstData = customers[0].data;
 
       const contractPayload = {
-        customerId: firstCustomer.id,
         contractCode: resolvedContractCode,
         contractNumber,
+        contractType: firstData.contractType,
+        loanType: firstData.loanType,
         contractDate: firstData.contractDate,
         requestNumber: firstData.requestNumber,
         requestDate: firstData.requestDate,
@@ -239,13 +255,118 @@ export async function POST(request: NextRequest) {
         collateralValue: firstData.collateralValue,
       };
 
-      const contract = resolvedContractCode
-        ? await tx.contractDetails.upsert({
-            where: { contractCode: resolvedContractCode },
-            create: contractPayload,
-            update: contractPayload,
-          })
-        : await tx.contractDetails.create({ data: contractPayload });
+      const contract = await tx.contractDetails.upsert({
+        where: { contractCode: resolvedContractCode },
+        create: contractPayload,
+        update: contractPayload,
+      });
+
+      // Link the debtor to the contract using the association model.
+      await tx.contractCustomer.deleteMany({
+        where: { contractCode: resolvedContractCode, role: "BORROWER" },
+      });
+      await tx.contractCustomer.create({
+        data: {
+          contractCode: resolvedContractCode,
+          nationalCode: firstCustomer.nationalCode,
+          role: "BORROWER",
+        },
+      });
+
+      const guarantors = [
+        {
+          role: "GUARANTOR_1" as const,
+          name: firstData.guarantor1Name,
+          nationalCode: firstData.guarantor1NationalCode,
+          postalCode: firstData.guarantor1PostalCode,
+          birthCertificateNumber: firstData.guarantor1BirthCertificate,
+          birthCertificateSerial: firstData.guarantor1BirthCertificateSerial,
+          birthDate: firstData.guarantor1BirthDate,
+          fatherName: firstData.guarantor1FatherName,
+          birthPlace: firstData.guarantor1BirthPlace,
+          residence: firstData.guarantor1Residence,
+          address: firstData.guarantor1Address,
+          workAddress: firstData.guarantor1WorkAddress,
+          landline: firstData.guarantor1Landline,
+          workPhone: firstData.guarantor1WorkPhone,
+          mobile: firstData.guarantor1Mobile,
+          occupation: firstData.guarantor1Occupation,
+          accountNumber: firstData.guarantor1AccountNumber,
+          accountOpeningDate: firstData.guarantor1AccountOpeningDate,
+          longTermDepositNumber: firstData.guarantor1LongTermDepositNumber,
+          longTermDepositAmount: firstData.guarantor1LongTermDepositAmount,
+          customerNumber: firstData.guarantor1CustomerNumber,
+        },
+        {
+          role: "GUARANTOR_2" as const,
+          name: firstData.guarantor2Name,
+          nationalCode: firstData.guarantor2NationalCode,
+          postalCode: firstData.guarantor2PostalCode,
+          birthCertificateNumber: firstData.guarantor2BirthCertificate,
+          birthCertificateSerial: firstData.guarantor2BirthCertificateSerial,
+          birthDate: firstData.guarantor2BirthDate,
+          fatherName: firstData.guarantor2FatherName,
+          birthPlace: firstData.guarantor2BirthPlace,
+          residence: firstData.guarantor2Residence,
+          address: firstData.guarantor2Address,
+          workAddress: firstData.guarantor2WorkAddress,
+          landline: firstData.guarantor2Landline,
+          workPhone: firstData.guarantor2WorkPhone,
+          mobile: firstData.guarantor2Mobile,
+          occupation: firstData.guarantor2Occupation,
+          accountNumber: firstData.guarantor2AccountNumber,
+          accountOpeningDate: firstData.guarantor2AccountOpeningDate,
+          longTermDepositNumber: firstData.guarantor2LongTermDepositNumber,
+          longTermDepositAmount: firstData.guarantor2LongTermDepositAmount,
+          customerNumber: firstData.guarantor2CustomerNumber,
+        },
+        {
+          role: "GUARANTOR_3" as const,
+          name: firstData.guarantor3Name,
+          nationalCode: firstData.guarantor3NationalCode,
+          postalCode: firstData.guarantor3PostalCode,
+          birthCertificateNumber: firstData.guarantor3BirthCertificate,
+          birthCertificateSerial: firstData.guarantor3BirthCertificateSerial,
+          birthDate: firstData.guarantor3BirthDate,
+          fatherName: firstData.guarantor3FatherName,
+          birthPlace: firstData.guarantor3BirthPlace,
+          residence: firstData.guarantor3Residence,
+          address: firstData.guarantor3Address,
+          workAddress: firstData.guarantor3WorkAddress,
+          landline: firstData.guarantor3Landline,
+          workPhone: firstData.guarantor3WorkPhone,
+          mobile: firstData.guarantor3Mobile,
+          occupation: firstData.guarantor3Occupation,
+          accountNumber: firstData.guarantor3AccountNumber,
+          accountOpeningDate: firstData.guarantor3AccountOpeningDate,
+          longTermDepositNumber: firstData.guarantor3LongTermDepositNumber,
+          longTermDepositAmount: firstData.guarantor3LongTermDepositAmount,
+          customerNumber: firstData.guarantor3CustomerNumber,
+        },
+      ];
+
+      const linkedNationalCodes = new Set([firstCustomer.nationalCode]);
+      for (const guarantor of guarantors) {
+        const nationalCode = guarantor.nationalCode?.trim();
+        if (!guarantor.name?.trim() || !nationalCode || nationalCode === "0" || linkedNationalCodes.has(nationalCode)) {
+          continue;
+        }
+
+        const { role, ...guarantorData } = guarantor;
+        await tx.customer.upsert({
+          where: { nationalCode },
+          create: { ...guarantorData, nationalCode },
+          update: { ...guarantorData, nationalCode },
+        });
+
+        await tx.contractCustomer.deleteMany({
+          where: { contractCode: resolvedContractCode, role },
+        });
+        await tx.contractCustomer.create({
+          data: { contractCode: resolvedContractCode, nationalCode, role },
+        });
+        linkedNationalCodes.add(nationalCode);
+      }
 
       const bankPayload = {
         contractDetailsId: contract.id,
@@ -312,7 +433,7 @@ export async function POST(request: NextRequest) {
         bayeganiRecordCount: bayeganiRecords.length,
         id: firstCustomer.id,
         ids: createdCustomers.map((customer) => customer.id),
-        contractNumber: firstCustomer.contractNumber,
+        contractNumber: contract.contractNumber,
       },
       { status: 200 },
     );
