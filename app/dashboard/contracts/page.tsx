@@ -43,6 +43,7 @@ export default async function ContractsPage() {
     include: {
       customer: {
         select: {
+          id: true,
           type: true,
           name: true,
           companyName: true,
@@ -308,14 +309,14 @@ export default async function ContractsPage() {
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
                         <Link
-                          href={`/template/${contract.id}`}
+                          href={`/template/${contract.customer?.id}`}
                           className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100"
                         >
                           مشاهده
                         </Link>
 
                         <Link
-                          href={`/template/${contract.id}/contract`}
+                          href={`/template/${contract.customer?.id}/contract`}
                           className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-blue-700"
                         >
                           قرارداد
