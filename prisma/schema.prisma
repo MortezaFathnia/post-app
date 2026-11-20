@@ -218,6 +218,15 @@ model FacilityCode {
 }
 
 
+model FacilityClassification {
+  id             Int      @id @default(autoincrement())
+  classification Int      @unique
+  facilityType   String?
+  duration       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
 model Bank {
   id        Int      @id @default(autoincrement())
   name      String   @unique
