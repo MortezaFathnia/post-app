@@ -305,7 +305,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: `${createdCustomers.length} رکورد از جدول اول صفحه DB با موفقیت ذخیره شد.`,
+        message: `${createdCustomers.length} رکورد مشتری به‌همراه اطلاعات قرارداد، بانک و بایگانی با موفقیت ذخیره شد.`,
         count: createdCustomers.length,
         contractDetailsId: contract.id,
         bankDetailsSaved: true,
