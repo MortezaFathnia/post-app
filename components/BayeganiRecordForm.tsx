@@ -21,6 +21,8 @@ const initialFields: Record<string, string> = {
   "شماره تسهیلات": "",
   "نوع تسهیلات": "",
   "جنسیت": "مرد",
+  "نام": "",
+  "نام خانوادگی": "",
   "عنوان تسهیلات": "",
   "سریال": "",
   "طبقه": "",
@@ -200,15 +202,17 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const selected = counters.find((counter) => counter.code === value);
         if (selected) next["نام باجه"] = selected.name;
       }
-      if (key === "نوع تسهیلات" || key === "جنسیت") {
+      if (["نوع تسهیلات", "جنسیت", "نام", "نام خانوادگی"].includes(key)) {
         const selectedFacility = facilityCodes.find(
           (item) => `${item.code}-${item.name}` === next["نوع تسهیلات"]
         );
         const facilityName = selectedFacility?.name
           || next["نوع تسهیلات"].split("-").slice(1).join("-").trim();
         const gender = next["جنسیت"];
-        next["عنوان تسهیلات"] = facilityName && gender
-          ? `${facilityName} ${gender === "زن" ? "سرکار خانم" : "جناب آقای"}`
+        const firstName = next["نام"].trim();
+        const lastName = next["نام خانوادگی"].trim();
+        next["عنوان تسهیلات"] = facilityName && gender && firstName && lastName
+          ? `${facilityName} ${gender === "زن" ? "سرکار خانم" : "جناب آقای"} ${firstName} ${lastName}`
           : "";
       }
       if (key === "تاریخ شروع" || key === "مدت") {
@@ -503,7 +507,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                   maxLength={key === "کد ملی" ? 10 : undefined}
                   inputMode={key === "کد ملی" ? "numeric" : undefined}
                   title={key === "کد ملی" ? "کد ملی باید دقیقاً ۱۰ رقم انگلیسی باشد." : undefined}
-                  readOnly={key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد"}
+                  readOnly={key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد" || key === "عنوان تسهیلات"}
                   onChange={(event) => changeField(key, event.target.value)}
                   onKeyDown={(event) => {
                     if (key === "مبلغ مصوب" && event.key === "*") {
@@ -511,7 +515,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                       changeField(key, `${normalizeAmount(fields["مبلغ مصوب"])}000`);
                     }
                   }}
-                  className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
+                  className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد" || key === "عنوان تسهیلات" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
                   placeholder={key}
                 />
               )}
