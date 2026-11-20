@@ -41,7 +41,6 @@ const columns: { key: keyof DebtRecord; label: string }[] = [
   { key: "administrativeNumber", label: "شماره انتظامی" },
   { key: "dueDate", label: "تاریخ سررسید" },
   { key: "description", label: "توضیحات" },
-  { key: "checkStatus", label: "وضعیت سفته / چک" },
 ];
 
 export default function DebtDocumentsArchivePage() {
