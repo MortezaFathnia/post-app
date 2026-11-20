@@ -20,7 +20,7 @@ type FacilityCodeOption = { id: number; code: string; name: string };
 const initialFields: Record<string, string> = {
   "شماره تسهیلات": "",
   "نوع تسهیلات": "",
-  "جنسیت": "",
+  "جنسیت": "مرد",
   "عنوان تسهیلات": "",
   "سریال": "",
   "طبقه": "",
