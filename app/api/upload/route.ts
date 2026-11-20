@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
-import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { mapDbExcelRow } from "@/lib/excel/mappping";
