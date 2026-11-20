@@ -309,7 +309,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                       );
                       if (exact) {
                         setFields((current) => {
-                          const next = { ...current, "نام باجه": exact.name, "کد باجه": exact.code };
+                          const next: Record<string, string> = { ...current, "نام باجه": exact.name, "کد باجه": exact.code };
                           next["کد بایگانی"] = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
                           return next;
                         });
@@ -327,7 +327,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                           event.preventDefault();
                           setCounterQuery(`${first.code}-${first.name}`);
                           setFields((current) => {
-                            const next = { ...current, "نام باجه": first.name, "کد باجه": first.code };
+                            const next: Record<string, string> = { ...current, "نام باجه": first.name, "کد باجه": first.code };
                             next["کد بایگانی"] = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
                             return next;
                           });
@@ -362,7 +362,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                             onClick={() => {
                               setCounterQuery(`${counter.code}-${counter.name}`);
                               setFields((current) => {
-                                const next = { ...current, "نام باجه": counter.name, "کد باجه": counter.code };
+                                const next: Record<string, string> = { ...current, "نام باجه": counter.name, "کد باجه": counter.code };
                                 next["کد بایگانی"] = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
                                 return next;
                               });
