@@ -29,7 +29,6 @@ export default function BayeganiPage() {
   const [sortBy, setSortBy] = useState<SortField>("serial");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [message, setMessage] = useState("");
-  const [statusSavingId, setStatusSavingId] = useState<number | null>(null);
   const [error, setError] = useState("");
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const firstRecord = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -85,24 +84,6 @@ export default function BayeganiPage() {
         {label}<span aria-hidden="true" className={active ? "text-blue-700" : "text-slate-400"}>{active ? (sortOrder === "asc" ? "↑" : "↓") : "↕"}</span>
       </button>
     </th>;
-  }
-
-  async function updateRecordStatus(id: number, status: string) {
-    setError(""); setMessage(""); setStatusSavingId(id);
-    try {
-      const response = await fetch(`/api/bayegani/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || "بروزرسانی وضعیت ناموفق بود.");
-      setRecords((current) => current.map((record) => record.id === id ? { ...record, status } : record));
-      setMessage("وضعیت رکورد بایگانی بروزرسانی شد.");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "خطا در بروزرسانی وضعیت");
-      await loadRecords();
-    } finally { setStatusSavingId(null); }
   }
 
   async function exportExcel() {
@@ -205,7 +186,7 @@ export default function BayeganiPage() {
         <table className="w-full min-w-[1200px] text-right text-sm">
           <thead className="bg-slate-50 text-slate-600"><tr>{sortableHeader("سریال", "serial")}{sortableHeader("شماره تسهیلات", "facilityNumber")}<th className="whitespace-nowrap px-4 py-3 font-semibold">شماره مشتری</th>{sortableHeader("عنوان تسهیلات", "facilityTitle")}{sortableHeader("کد ملی", "nationalId")}{sortableHeader("کدباجه-نام باجه", "counterLabel")}{sortableHeader("کد بایگانی", "archiveCode")}{sortableHeader("تاریخ شروع", "startDate")}{sortableHeader("پایان قرارداد", "endDate")}{sortableHeader("مبلغ مصوب", "approvedAmount")}<th className="whitespace-nowrap px-4 py-3 font-semibold">وضعیت</th><th className="whitespace-nowrap px-4 py-3 font-semibold">عملیات</th></tr></thead>
           <tbody className="divide-y divide-slate-100">{records.map((r, index) => <tr key={r.id} className="hover:bg-slate-50">
-            <td className="px-4 py-3">{r.serial || "—"}</td><td className="px-4 py-3" dir="ltr">{r.facilityNumber || "—"}</td><td className="px-4 py-3" dir="ltr">{r.customerNumber || "—"}</td><td className="max-w-xs px-4 py-3">{r.facilityTitle || "—"}</td><td className="px-4 py-3" dir="ltr">{r.nationalId || "—"}</td><td className="whitespace-nowrap px-4 py-3">{r.counterLabel || "—"}</td><td className="px-4 py-3">{r.archiveCode || "—"}</td><td className="px-4 py-3">{r.startDate || "—"}</td><td className="px-4 py-3">{r.endDate || "—"}</td><td className="px-4 py-3">{r.approvedAmount || "—"}</td><td className="px-4 py-3"><select aria-label={`وضعیت رکورد ${r.id}`} value={r.status || "فعال"} disabled={statusSavingId === r.id} onChange={(e) => void updateRecordStatus(r.id, e.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm disabled:opacity-50"><option value="فعال">فعال</option><option value="تسویه شده">تسویه شده</option></select></td><td className="px-4 py-3"><Link href={`/dashboard/bayegani/${r.id}/edit`} className="rounded-lg bg-blue-50 px-3 py-2 font-semibold text-blue-700 hover:bg-blue-100">ویرایش</Link></td>
+            <td className="px-4 py-3">{r.serial || "—"}</td><td className="px-4 py-3" dir="ltr">{r.facilityNumber || "—"}</td><td className="px-4 py-3" dir="ltr">{r.customerNumber || "—"}</td><td className="max-w-xs px-4 py-3">{r.facilityTitle || "—"}</td><td className="px-4 py-3" dir="ltr">{r.nationalId || "—"}</td><td className="whitespace-nowrap px-4 py-3">{r.counterLabel || "—"}</td><td className="px-4 py-3">{r.archiveCode || "—"}</td><td className="px-4 py-3">{r.startDate || "—"}</td><td className="px-4 py-3">{r.endDate || "—"}</td><td className="px-4 py-3">{r.approvedAmount || "—"}</td><td className="whitespace-nowrap px-4 py-3">{r.status || "—"}</td><td className="px-4 py-3"><Link href={`/dashboard/bayegani/${r.id}/edit`} className="rounded-lg bg-blue-50 px-3 py-2 font-semibold text-blue-700 hover:bg-blue-100">ویرایش</Link></td>
           </tr>)}</tbody>
         </table>
         {records.length === 0 && <p className="p-8 text-center text-sm text-slate-500">رکوردی پیدا نشد. ابتدا فایل Excel را بارگذاری کنید یا عبارت جستجو را تغییر دهید.</p>}
