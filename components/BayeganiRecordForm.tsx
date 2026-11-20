@@ -154,7 +154,8 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const record = result.record as ApiRecord;
         const raw = record.rawData && typeof record.rawData === "object" ? removeUnwantedColumns(record.rawData) : {};
         const legacyArchiveCode = String(raw["کد بایگانی جدید"] ?? raw["کد بایگانی"] ?? "").trim();
-        delete raw["کد بایگانی جدید"];\n        delete raw["شماره مشتری"];
+        delete raw["کد بایگانی جدید"];
+        delete raw["شماره مشتری"];
         if (legacyArchiveCode) raw["کد بایگانی"] = legacyArchiveCode;
         const next: Record<string, string> = { ...initialFields };
         next["مبلغ مصوب"] = normalizeAmount(String(raw["مبلغ مصوب"] ?? raw["مبلغ"] ?? ""));
@@ -174,7 +175,8 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         if (active) {
           setFields(next);
           setOriginalFields(next);
-          setCounterQuery([next["کد باجه"], next["نام باجه"]].filter(Boolean).join("-"));\n          setFacilityTypeQuery(next["نوع تسهیلات"] || "");
+          setCounterQuery([next["کد باجه"], next["نام باجه"]].filter(Boolean).join("-"));
+          setFacilityTypeQuery(next["نوع تسهیلات"] || "");
         }
       })
       .catch((e: unknown) => { if (active) setError(e instanceof Error ? e.message : "خطا در دریافت اطلاعات."); })
