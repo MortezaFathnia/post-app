@@ -83,6 +83,26 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
         },
         take: 1,
       },
+      bayeganiRecords: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          facilityNumber: true,
+          customerNumber: true,
+          archiveCode: true,
+          facilityTitle: true,
+          serial: true,
+          classification: true,
+          counterLabel: true,
+          status: true,
+          startDate: true,
+          endDate: true,
+          duration: true,
+          installmentCount: true,
+          approvedAmount: true,
+          remainingAmount: true,
+        },
+      },
     },
   });
 
@@ -162,6 +182,62 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
               />
               <InfoItem label="تاریخ قرارداد" value={contract.contractDate} />
             </div>
+          </section>
+
+          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
+              <h2 className="text-lg font-bold text-slate-900">اطلاعات بایگانی تسهیلات</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                رکوردهای بایگانی مرتبط با این قرارداد
+              </p>
+            </div>
+
+            {contract.bayeganiRecords.length === 0 ? (
+              <p className="px-6 py-8 text-center text-sm text-slate-500">
+                هیچ رکورد بایگانی مرتبط با این قرارداد ثبت نشده است.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[1100px] text-right text-sm">
+                  <thead className="bg-slate-50 text-xs font-bold text-slate-500">
+                    <tr>
+                      <th className="whitespace-nowrap px-4 py-3">شماره تسهیلات</th>
+                      <th className="whitespace-nowrap px-4 py-3">کد بایگانی</th>
+                      <th className="whitespace-nowrap px-4 py-3">سریال</th>
+                      <th className="whitespace-nowrap px-4 py-3">عنوان تسهیلات</th>
+                      <th className="whitespace-nowrap px-4 py-3">کد و نام باجه</th>
+                      <th className="whitespace-nowrap px-4 py-3">طبقه</th>
+                      <th className="whitespace-nowrap px-4 py-3">وضعیت</th>
+                      <th className="whitespace-nowrap px-4 py-3">تاریخ شروع</th>
+                      <th className="whitespace-nowrap px-4 py-3">تاریخ پایان</th>
+                      <th className="whitespace-nowrap px-4 py-3">مدت</th>
+                      <th className="whitespace-nowrap px-4 py-3">تعداد اقساط</th>
+                      <th className="whitespace-nowrap px-4 py-3">مبلغ مصوب</th>
+                      <th className="whitespace-nowrap px-4 py-3">مانده</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {contract.bayeganiRecords.map((record) => (
+                      <tr key={record.id} className="text-slate-700">
+                        <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.facilityNumber || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{record.archiveCode || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.serial || "—"}</td>
+                        <td className="px-4 py-3">{record.facilityTitle || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{record.counterLabel || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{record.classification || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{record.status || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{record.startDate || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{record.endDate || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{record.duration || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{record.installmentCount || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{record.approvedAmount || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{record.remainingAmount || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
 
           <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
