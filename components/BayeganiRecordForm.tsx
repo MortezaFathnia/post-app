@@ -30,6 +30,7 @@ const initialFields: Record<string, string> = {
   "کد بایگانی": "",
   "تاریخ شروع": "",
   "پایان قرارداد": "",
+  "تاریخ تحویل وثیقه": "",
   "مدت": "",
   "تعداد اقساط": "",
   "مبلغ مصوب": "",
@@ -485,13 +486,13 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                     </div>
                   )}
                 </div>
-              ) : key === "تاریخ شروع" ? (
+              ) : key === "تاریخ شروع" || key === "تاریخ تحویل وثیقه" ? (
                 <PersianDatePicker
                   value={value}
                   onChange={(date) => changeField(key, date)}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  placeholder="انتخاب تاریخ شروع"
-                  aria-label="تاریخ شروع"
+                  placeholder={key === "تاریخ شروع" ? "انتخاب تاریخ شروع" : "انتخاب تاریخ تحویل وثیقه"}
+                  aria-label={key === "تاریخ شروع" ? "تاریخ شروع" : "تاریخ تحویل وثیقه"}
                 />
               ) : (
                 <input
