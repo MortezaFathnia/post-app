@@ -15,10 +15,11 @@ type ApiRecord = {
   rawData: Record<string, unknown> | null;
 };
 type CounterOption = { name: string; code: string };
+type FacilityOption = { code: string; name: string };
 
 const initialFields: Record<string, string> = {
   "شماره تسهیلات": "",
-  "شماره مشتری": "",
+  "نوع تسهیلات": "",
   "کد بایگانی": "",
   "عنوان تسهیلات": "",
   "سریال": "",
@@ -73,7 +74,7 @@ async function readApiResponse(response: Response) {
     throw new Error(`پاسخ سرور خالی است (HTTP ${response.status}). خطای سرور را در ترمینال Next.js بررسی کنید.`);
   }
   try {
-    return JSON.parse(text) as { success?: boolean; error?: string; record?: ApiRecord; counters?: CounterOption[]; nextSerial?: string };
+    return JSON.parse(text) as { success?: boolean; error?: string; record?: ApiRecord; counters?: CounterOption[]; facilityCodes?: FacilityOption[]; nextSerial?: string };
   } catch {
     const detail = text.trim().slice(0, 180).replace(/\\s+/g, " ");
     throw new Error(`پاسخ API معتبر نیست (HTTP ${response.status}). ${detail}`);
@@ -91,6 +92,9 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   const [counters, setCounters] = useState<CounterOption[]>([]);
   const [counterQuery, setCounterQuery] = useState("");
   const [counterOpen, setCounterOpen] = useState(false);
+  const [facilityCodes, setFacilityCodes] = useState<FacilityOption[]>([]);
+  const [facilityTypeQuery, setFacilityTypeQuery] = useState("");
+  const [facilityTypeOpen, setFacilityTypeOpen] = useState(false);
 
 
   useEffect(() => {
@@ -154,7 +158,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         if (active) {
           setFields(next);
           setOriginalFields(next);
-          setCounterQuery([next["کد باجه"], next["نام باجه"]].filter(Boolean).join("-"));
+          setCounterQuery([next["کد باجه"], next["نام باجه"]].filter(Boolean).join("-"));\n          setFacilityTypeQuery(next["نوع تسهیلات"] || "");
         }
       })
       .catch((e: unknown) => { if (active) setError(e instanceof Error ? e.message : "خطا در دریافت اطلاعات."); })
@@ -252,7 +256,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
           {entries.map(([key, value]) => (
             <label key={key} className="block">
               <span className="mb-1.5 block text-sm font-medium text-slate-700">{key === "نام باجه" ? "کد باجه-نام باجه" : key}</span>
-              {key === "وضعیت کنونی" ? (
+              {key === "نوع تسهیلات" ? (\n                <div className="relative">\n                  <input role="combobox" aria-autocomplete="list" aria-expanded={facilityTypeOpen} value={facilityTypeQuery} onFocus={() => setFacilityTypeOpen(true)} onChange={(event) => { setFacilityTypeQuery(event.target.value); setFacilityTypeOpen(true); changeField(key, event.target.value); }} onKeyDown={(event) => { if (event.key === "Escape") setFacilityTypeOpen(false); if (event.key === "Enter" && facilityTypeOpen) { const first = facilityCodes.find((item) => `${item.code} ${item.name}`.toLowerCase().includes(facilityTypeQuery.trim().toLowerCase())); if (first) { event.preventDefault(); setFacilityTypeQuery(`${first.code}-${first.name}`); changeField(key, `${first.code}-${first.name}`); setFacilityTypeOpen(false); } } }} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="کد یا نام نوع تسهیلات..." autoComplete="off" />\n                  {facilityTypeOpen && <div className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">{facilityCodes.filter((item) => { const q = facilityTypeQuery.trim().toLowerCase(); return !q || `${item.code} ${item.name} ${item.code}-${item.name}`.toLowerCase().includes(q); }).slice(0,50).map((item) => <button key={item.code} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => { setFacilityTypeQuery(`${item.code}-${item.name}`); changeField(key, `${item.code}-${item.name}`); setFacilityTypeOpen(false); }} className="flex w-full rounded-lg px-3 py-2.5 text-right text-sm text-slate-700 hover:bg-blue-50"><span className="font-medium">{item.code}-{item.name}</span></button>)}{facilityCodes.filter((item) => { const q = facilityTypeQuery.trim().toLowerCase(); return !q || `${item.code} ${item.name} ${item.code}-${item.name}`.toLowerCase().includes(q); }).length===0 && <p className="px-3 py-4 text-center text-sm text-slate-500">موردی پیدا نشد.</p>}</div>}\n                </div>\n              ) : key === "وضعیت کنونی" ? (
                 <select
                   value={value || "فعال"}
                   onChange={(event) => changeField(key, event.target.value)}
