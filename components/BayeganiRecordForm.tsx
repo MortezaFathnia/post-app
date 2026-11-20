@@ -232,8 +232,12 @@ export default function BayeganiRecordForm({ recordId }: Props) {
       setError("شماره تسهیلات باید دقیقاً شامل ۴ بخش عددی باشد که با نقطه (.) از هم جدا شده‌اند؛ مانند 1538.232.3323421.1");
       return;
     }
-    if (fields["کد ملی"] && !/^[0-9]{10}$/.test(fields["کد ملی"])) {
-      setError("کد ملی باید دقیقاً شامل ۱۰ رقم انگلیسی باشد.");
+    if (!fields["نام"].trim() || !fields["نام خانوادگی"].trim()) {
+      setError("لطفاً نام و نام خانوادگی را وارد کنید.");
+      return;
+    }
+    if (!/^[0-9]{10}$/.test(fields["کد ملی"])) {
+      setError("کد ملی الزامی است و باید دقیقاً شامل ۱۰ رقم انگلیسی باشد.");
       return;
     }
     setSaving(true);
