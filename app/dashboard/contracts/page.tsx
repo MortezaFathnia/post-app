@@ -28,28 +28,28 @@ function getLoanTypeTitle(loanType: string | null) {
 }
 
 function getApplicantName(customer: {
-  type: string;
   name: string | null;
+  lastName: string | null;
   companyName: string | null;
 } | null) {
   if (!customer) return "-";
-  if (customer.type === "COMPANY") return customer.companyName || "-";
-  return customer.name || "-";
+  if (customer.companyName) return customer.companyName;
+  return [customer.name, customer.lastName].filter(Boolean).join(" ") || "-";
 }
 
 export default async function ContractsPage() {
   const contracts = await prisma.contractDetails.findMany({
     orderBy: { createdAt: "desc" },
     include: {
-      customer: {
+      customers: {
+        where: { role: "BORROWER" },
         select: {
-          id: true,
-          type: true,
+          nationalCode: true,
           name: true,
+          lastName: true,
           companyName: true,
-          contractType: true,
-          loanType: true,
         },
+        take: 1,
       },
     },
   });
@@ -58,22 +58,22 @@ export default async function ContractsPage() {
 
   const morabahaCount = contracts.filter(
     (contract) =>
-      contract.customer?.contractType === "MORABAHA",
+      contract.contractType === "MORABAHA",
   ).length;
 
   const creditCardCount = contracts.filter(
     (contract) =>
-      contract.customer?.contractType === "CREDIT_CARD",
+      contract.contractType === "CREDIT_CARD",
   ).length;
 
   const maturityCount = contracts.filter(
     (contract) =>
-      contract.customer?.loanType === "MATURITY",
+      contract.loanType === "MATURITY",
   ).length;
 
   const installmentCount = contracts.filter(
     (contract) =>
-      contract.customer?.loanType === "INSTALLMENT",
+      contract.loanType === "INSTALLMENT",
   ).length;
 
   return (
@@ -261,38 +261,38 @@ export default async function ContractsPage() {
 
                     {/* Applicant */}
                     <td className="px-5 py-4 font-medium text-gray-700">
-                      {getApplicantName(contract.customer)}
+                      {getApplicantName(contract.customers[0] ?? null)}
                     </td>
 
                     {/* Contract type */}
                     <td className="px-5 py-4">
                       <span
                         className={
-                          contract.customer?.contractType ===
+                          contract.contractType ===
                           "MORABAHA"
                             ? "rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700"
                             : "rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700"
                         }
                       >
                         {getContractTypeTitle(
-                          contract.customer?.contractType ?? "",
+                          contract.contractType ?? "",
                         )}
                       </span>
                     </td>
 
                     {/* Loan type */}
                     <td className="px-5 py-4">
-                      {contract.customer?.loanType ? (
+                      {contract.loanType ? (
                         <span
                           className={
-                            contract.customer?.loanType ===
+                            contract.loanType ===
                             "MATURITY"
                               ? "rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700"
                               : "rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-700"
                           }
                         >
                           {getLoanTypeTitle(
-                            contract.customer?.loanType ?? null,
+                            contract.loanType ?? null,
                           )}
                         </span>
                       ) : (
@@ -309,14 +309,14 @@ export default async function ContractsPage() {
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
                         <Link
-                          href={`/template/${contract.customer?.id}`}
+                          href={`/template/${contract.id}`}
                           className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100"
                         >
                           مشاهده
                         </Link>
 
                         <Link
-                          href={`/template/${contract.customer?.id}/contract`}
+                          href={`/template/${contract.id}/contract`}
                           className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-blue-700"
                         >
                           قرارداد
