@@ -18,8 +18,9 @@ function getLoanTypeTitle(loanType: string | null) {
   }
 }
 
-function getApplicantName(customer: { type: string; name: string | null; companyName: string | null }) {
-  return customer.type === "COMPANY" ? customer.companyName || "—" : customer.name || "—";
+function getApplicantName(customer: { name: string | null; companyName: string | null } | undefined) {
+  if (!customer) return "—";
+  return customer.companyName || customer.name || "—";
 }
 
 function formatCount(value: number) {
@@ -27,25 +28,35 @@ function formatCount(value: number) {
 }
 
 export default async function DashboardPage() {
-  const [totalContracts, morabahaContracts, creditCardContracts, debtDiscountingContracts, maturityContracts, installmentContracts, recentContracts] = await Promise.all([
-    prisma.customer.count(),
-    prisma.customer.count({ where: { contractType: "MORABAHA" } }),
-    prisma.customer.count({ where: { contractType: "CREDIT_CARD" } }),
-    prisma.customer.count({ where: { contractType: "DEBT_DISCOUNTING" } }),
-    prisma.customer.count({ where: { loanType: "MATURITY" } }),
-    prisma.customer.count({ where: { loanType: "INSTALLMENT" } }),
-    prisma.customer.findMany({
+  const [
+    totalContracts,
+    morabahaContracts,
+    creditCardContracts,
+    debtDiscountingContracts,
+    maturityContracts,
+    installmentContracts,
+    recentContracts,
+  ] = await Promise.all([
+    prisma.contractDetails.count(),
+    prisma.contractDetails.count({ where: { contractType: "MORABAHA" } }),
+    prisma.contractDetails.count({ where: { contractType: "CREDIT_CARD" } }),
+    prisma.contractDetails.count({ where: { contractType: "DEBT_DISCOUNTING" } }),
+    prisma.contractDetails.count({ where: { loanType: "MATURITY" } }),
+    prisma.contractDetails.count({ where: { loanType: "INSTALLMENT" } }),
+    prisma.contractDetails.findMany({
       orderBy: { createdAt: "desc" },
       take: 8,
       select: {
         id: true,
-        type: true,
-        name: true,
-        companyName: true,
-        contractType: true,
-        loanType: true,
         contractNumber: true,
         contractDate: true,
+        contractType: true,
+        loanType: true,
+        customers: {
+          where: { role: "BORROWER" },
+          take: 1,
+          select: { name: true, companyName: true },
+        },
       },
     }),
   ]);
@@ -128,7 +139,7 @@ export default async function DashboardPage() {
                 {recentContracts.map((contract) => (
                   <tr key={contract.id} className="transition hover:bg-slate-50/80">
                     <td className="whitespace-nowrap px-5 py-4 font-bold text-slate-800">{contract.contractNumber || "—"}</td>
-                    <td className="px-5 py-4 text-slate-700">{getApplicantName(contract)}</td>
+                    <td className="px-5 py-4 text-slate-700">{getApplicantName(contract.customers[0])}</td>
                     <td className="px-5 py-4"><span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">{getContractTypeTitle(contract.contractType)}</span></td>
                     <td className="px-5 py-4 text-slate-600">{getLoanTypeTitle(contract.loanType)}</td>
                     <td className="whitespace-nowrap px-5 py-4 text-slate-600">{contract.contractDate || "—"}</td>
