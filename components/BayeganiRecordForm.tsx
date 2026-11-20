@@ -199,10 +199,6 @@ export default function BayeganiRecordForm({ recordId }: Props) {
       if (key === "تاریخ شروع" || key === "مدت") {
         next["پایان قرارداد"] = addMonthsToDate(next["تاریخ شروع"] || "", next["مدت"] || "");
       }
-      if (key === "شماره تسهیلات" || key === "شماره تسهيلات") {
-        const parts = value.trim().split(".");
-        const derivedCustomerNumber = parts.length >= 3 ? (parts[2] || "").trim() : "";
-      }
       return next;
     });
   }
