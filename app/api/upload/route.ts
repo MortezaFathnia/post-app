@@ -5,6 +5,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { mapDbExcelRow } from "@/lib/excel/mappping";
 import type { DbExcelRow } from "@/lib/excel/types";
+import { mapBayeganiExcelRow } from "@/lib/excel/map-bayegani-record";
 
 export const runtime = "nodejs";
 
@@ -392,13 +393,11 @@ export async function POST(request: NextRequest) {
 
       const bayeganiRecords = [];
       for (const { data, rowNumber, values } of customers) {
-        const recordData = {
-          contractCode: resolvedContractCode,
-          nationalId: data.nationalCode,
-          facilityTitle: data.facilityDescription,
-          status: "فعال",
-          rawData: values as Prisma.InputJsonObject,
-        };
+        const recordData = mapBayeganiExcelRow(
+          values,
+          resolvedContractCode,
+          values as Prisma.InputJsonObject,
+        );
         const record = await tx.bayeganiRecord.upsert({
           where: {
             sourceFile_sheetName_sourceRow: {
