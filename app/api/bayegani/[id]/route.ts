@@ -171,6 +171,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         status: value(raw, "وضعيت کنونی", "وضعیت کنونی") || "فعال",
         startDate: value(raw, "تاريخ شروع", "تاریخ شروع"),
         endDate: value(raw, " پایان قرارداد", "پایان قرارداد", "تاریخ پایان قرارداد"),
+        bailDeliveryDate: value(raw, "تاریخ تحویل وثیقه", "تاريخ تحويل وثيقه") || null,
         duration: value(raw, "مدت", "24"),
         installmentCount: value(raw, "تعداد اقساط") || null,
         approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
