@@ -1,7 +1,43 @@
 -- Incremental migration for the existing production database.
 -- Historical migrations remain in this directory; existing feature tables and data are preserved.
 
-DO $$
+CREATE TABLE IF NOT EXISTS "Customer" (
+  "contractCode" TEXT NOT NULL,
+  "role" "CustomerRole" NOT NULL,
+  "name" TEXT,
+  "lastName" TEXT,
+  "fatherName" TEXT,
+  "birthDate" TEXT,
+  "birthCertificateNumber" TEXT,
+  "birthPlace" TEXT,
+  "birthCertificateSerial" TEXT,
+  "nationalCode" TEXT NOT NULL,
+  "passportNumber" TEXT,
+  "occupation" TEXT,
+  "installmentAmount" TEXT,
+  "residence" TEXT,
+  "address" TEXT,
+  "workAddress" TEXT,
+  "landline" TEXT,
+  "workPhone" TEXT,
+  "mobile" TEXT,
+  "accountNumber" TEXT,
+  "accountOpeningDate" TEXT,
+  "longTermDepositNumber" TEXT,
+  "longTermDepositAmount" TEXT,
+  "customerNumber" TEXT,
+  "companyName" TEXT,
+  "registrationNumber" TEXT,
+  "registrationDate" TEXT,
+  "registrationOffice" TEXT,
+  "companyEconomicCode" TEXT,
+  "companyNationalId" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Customer_pkey" PRIMARY KEY ("nationalCode")
+);
+
+DO $
 DECLARE
   referencing_constraints TEXT;
 BEGIN
