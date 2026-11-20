@@ -190,6 +190,9 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   function changeField(key: string, value: string) {
     setFields((current) => {
       const next = { ...current, [key]: value };
+      if (key === "وضعیت کنونی" && value === "فعال") {
+        next["تاریخ تحویل وثیقه"] = "";
+      }
       if (["کد باجه", "طبقه", "سریال"].includes(key)) {
         const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
         next["کد بایگانی"] = archiveCode;
