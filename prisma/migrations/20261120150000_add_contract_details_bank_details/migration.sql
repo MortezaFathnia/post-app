@@ -125,6 +125,7 @@ FROM "Customer" c
 JOIN unique_customer_contracts ucc ON ucc."customerId" = c."id"
 WHERE br."nationalId" = c."nationalCode";
 
+CREATE INDEX "BayeganiRecord_contractCode_idx" ON "BayeganiRecord"("contractCode");
 CREATE UNIQUE INDEX "ContractDetails_contractCode_key" ON "ContractDetails"("contractCode");
 CREATE INDEX "ContractDetails_customerId_idx" ON "ContractDetails"("customerId");
 CREATE UNIQUE INDEX "BankDetails_contractDetailsId_key" ON "BankDetails"("contractDetailsId");
