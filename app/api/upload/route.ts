@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { mapDbExcelRow } from "@/lib/excel/mappping";
@@ -151,6 +151,7 @@ export async function POST(request: NextRequest) {
     const customers = rows.map(({ values, rowNumber }) => ({
       data: mapDbExcelRow(values, file.name, rowNumber),
       rowNumber,
+      values,
     }));
 
     const invalidRows = customers
