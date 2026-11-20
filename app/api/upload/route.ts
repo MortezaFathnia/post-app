@@ -181,14 +181,19 @@ export async function POST(request: NextRequest) {
       const createdCustomers = [];
 
       for (const { data } of customers) {
-        const created = await tx.customer.create({
-          data: {
-            ...data,
-            // Keep legacy fields populated while existing templates are migrated.
-            contractNumber,
-            contractCode: contractCode || data.contractCode || null,
-          },
-        });
+        const customerData = {
+          ...data,
+          // Keep legacy fields populated while existing templates are migrated.
+          contractNumber,
+          contractCode: resolvedContractCode,
+        };
+        const created = data.nationalCode
+          ? await tx.customer.upsert({
+              where: { nationalCode: data.nationalCode },
+              create: customerData,
+              update: customerData,
+            })
+          : await tx.customer.create({ data: customerData });
         createdCustomers.push(created);
       }
 
@@ -266,17 +271,28 @@ export async function POST(request: NextRequest) {
 
       const bayeganiRecords = [];
       for (const { data, rowNumber, values } of customers) {
-        const record = await tx.bayeganiRecord.create({
-          data: {
+        const recordData = {
+          contractCode: resolvedContractCode,
+          nationalId: data.nationalCode,
+          facilityTitle: data.facilityDescription,
+          status: "فعال",
+          rawData: values as Prisma.InputJsonObject,
+        };
+        const record = await tx.bayeganiRecord.upsert({
+          where: {
+            sourceFile_sheetName_sourceRow: {
+              sourceFile: file.name,
+              sheetName: "DB",
+              sourceRow: rowNumber,
+            },
+          },
+          create: {
             sourceFile: file.name,
             sheetName: "DB",
             sourceRow: rowNumber,
-            contractCode: resolvedContractCode,
-            nationalId: data.nationalCode,
-            facilityTitle: data.facilityDescription,
-            status: "فعال",
-            rawData: values as Prisma.InputJsonObject,
+            ...recordData,
           },
+          update: recordData,
         });
         bayeganiRecords.push(record);
       }
