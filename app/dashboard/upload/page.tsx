@@ -126,7 +126,7 @@ export default function UploadPage() {
               >
                 کد قرارداد
                 <span className="mr-1 text-xs text-gray-400">
-                  (اختیاری)
+                  (در صورت نبود در فایل، الزامی است)
                 </span>
               </label>
 
@@ -137,7 +137,7 @@ export default function UploadPage() {
                 onChange={(event) =>
                   setContractCode(event.target.value)
                 }
-                placeholder="کد قرارداد را وارد کنید"
+                placeholder="کد قرارداد را وارد کنید یا آن را در فایل Excel قرار دهید"
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 text-right outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 disabled={loading}
               />
