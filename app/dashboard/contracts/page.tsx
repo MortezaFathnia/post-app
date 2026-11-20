@@ -41,13 +41,17 @@ export default async function ContractsPage() {
   const contracts = await prisma.contractDetails.findMany({
     orderBy: { createdAt: "desc" },
     include: {
-      customers: {
+      customerLinks: {
         where: { role: "BORROWER" },
-        select: {
-          nationalCode: true,
-          name: true,
-          lastName: true,
-          companyName: true,
+        include: {
+          customer: {
+            select: {
+              nationalCode: true,
+              name: true,
+              lastName: true,
+              companyName: true,
+            },
+          },
         },
         take: 1,
       },
@@ -261,7 +265,7 @@ export default async function ContractsPage() {
 
                     {/* Applicant */}
                     <td className="px-5 py-4 font-medium text-gray-700">
-                      {getApplicantName(contract.customers[0] ?? null)}
+                      {getApplicantName(contract.customerLinks[0]?.customer ?? null)}
                     </td>
 
                     {/* Contract type */}
