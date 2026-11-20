@@ -1,6 +1,29 @@
--- Incremental migration for the existing production database.
--- Historical migrations remain in this directory; existing feature tables and data are preserved.
+-- Incremental migration for the existing database.
+-- Existing feature tables and records are preserved.
 
+DO $$
+BEGIN
+  CREATE TYPE "CustomerRole" AS ENUM (
+    'CUSTOMER', 'BORROWER', 'GUARANTOR_1', 'GUARANTOR_2', 'GUARANTOR_3'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  CREATE TYPE "ContractType" AS ENUM ('MORABAHA', 'CREDIT_CARD', 'DEBT_DISCOUNTING');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  CREATE TYPE "LoanType" AS ENUM ('MATURITY', 'INSTALLMENT');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- On databases where the legacy Customer table was dropped by an earlier
+-- migration, create the new role-based table. On the current database this
+-- statement is a no-op because Customer exists and is empty.
 CREATE TABLE IF NOT EXISTS "Customer" (
   "contractCode" TEXT NOT NULL,
   "role" "CustomerRole" NOT NULL,
@@ -37,7 +60,7 @@ CREATE TABLE IF NOT EXISTS "Customer" (
   CONSTRAINT "Customer_pkey" PRIMARY KEY ("nationalCode")
 );
 
-DO $
+DO $$
 DECLARE
   referencing_constraints TEXT;
 BEGIN
@@ -65,15 +88,6 @@ BEGIN
     RAISE EXCEPTION
       'Customer contains rows without nationalCode or contractCode; resolve them before changing the primary key.';
   END IF;
-END $$;
-
-DO $$
-BEGIN
-  CREATE TYPE "CustomerRole" AS ENUM (
-    'CUSTOMER', 'BORROWER', 'GUARANTOR_1', 'GUARANTOR_2', 'GUARANTOR_3'
-  );
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
 END $$;
 
 CREATE TABLE IF NOT EXISTS "ContractDetails" (
@@ -140,8 +154,7 @@ CREATE TABLE IF NOT EXISTS "BankDetails" (
   CONSTRAINT "BankDetails_pkey" PRIMARY KEY ("id")
 );
 
--- Customer is empty in the current database. Keep legacy columns (including id)
--- for compatibility, but use nationalCode as the Prisma model's primary key.
+-- Preserve the legacy id column if it exists, but use nationalCode as the PK.
 ALTER TABLE "Customer"
   ADD COLUMN IF NOT EXISTS "lastName" TEXT,
   ADD COLUMN IF NOT EXISTS "residence" TEXT,
