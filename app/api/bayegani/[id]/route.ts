@@ -88,8 +88,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const body = await request.json() as { rawData?: unknown; status?: string };
     if (body.status !== undefined) {
-      if (!["فعال", "غیرفعال"].includes(body.status)) {
-        return NextResponse.json({ success: false, error: "وضعیت باید فعال یا غیرفعال باشد." }, { status: 400 });
+      if (!["فعال", "تسویه شده"].includes(body.status)) {
+        return NextResponse.json({ success: false, error: "وضعیت باید فعال یا تسویه شده باشد." }, { status: 400 });
       }
       const existing = await prisma.bayeganiRecord.findUnique({ where: { id: recordId }, select: { id: true, rawData: true } });
       if (!existing) return NextResponse.json({ success: false, error: "رکورد پیدا نشد." }, { status: 404 });
