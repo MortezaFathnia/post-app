@@ -66,9 +66,22 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       return NextResponse.json({ success: false, error: "رکورد پیدا نشد." }, { status: 404 });
     }
 
-    // GET must only read data. Legacy rawData cleanup belongs in a separate,
-    // explicit maintenance operation rather than running when an edit page opens.
-    return NextResponse.json({ success: true, record: serializeRecord(record) });
+    // GET remains read-only; hydrate customer name fields for older records from Customer.
+    const rawData = record.rawData && typeof record.rawData === "object" && !Array.isArray(record.rawData)
+      ? { ...(record.rawData as Record<string, unknown>) }
+      : {};
+    const nationalCode = record.nationalId || value(rawData, "کد ملی", "کد ملي ", "کد ملي مشتري");
+    if (nationalCode) {
+      const customer = await prisma.customer.findFirst({
+        where: { nationalCode },
+        select: { name: true, lastName: true },
+      });
+      if (customer) {
+        rawData["نام"] = customer.name || rawData["نام"] || "";
+        rawData["نام خانوادگی"] = customer.lastName || rawData["نام خانوادگی"] || "";
+      }
+    }
+    return NextResponse.json({ success: true, record: serializeRecord({ ...record, rawData }));
   } catch (error) {
     console.error("Load archive record error:", error);
     return NextResponse.json({
@@ -134,9 +147,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     delete raw["کد بایگانی جدید"];
     if (archiveCode) raw["کد بایگانی"] = archiveCode;
 
-    const record = await prisma.bayeganiRecord.update({
-      where: { id: recordId },
-      data: {
+    const record = await prisma.$transaction(async (tx) => {
+      const updatedRecord = await tx.bayeganiRecord.update({
+        where: { id: recordId },
+        data: {
         rawData: raw as never,
         facilityNumber: facilityNumber || null,
         customerNumber: customerNumber || null,
@@ -154,7 +168,26 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
         remainingAmount: value(raw, "مانده تسهيلات", "مانده تسهیلات"),
         nationalId: value(raw, "کد ملي ", "کد ملي مشتري", "کد ملی"),
-      },
+
+      });
+      const nationalCode = value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري");
+      if (nationalCode) {
+        const customerData = {
+          name: value(raw, "نام") || null,
+          lastName: value(raw, "نام خانوادگی") || null,
+          nationalCode,
+        };
+        const existingCustomer = await tx.customer.findFirst({
+          where: { nationalCode },
+          select: { id: true },
+        });
+        if (existingCustomer) {
+          await tx.customer.update({ where: { id: existingCustomer.id }, data: customerData });
+        } else {
+          await tx.customer.create({ data: customerData });
+        }
+      }
+      return updatedRecord;
     });
 
     return NextResponse.json({ success: true, record: serializeRecord(record) });

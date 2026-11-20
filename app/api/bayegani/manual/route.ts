@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
       });
       const nextSourceRow = (lastManualRecord?.sourceRow ?? 0) + 1;
 
-      return tx.bayeganiRecord.create({
+      const createdRecord = await tx.bayeganiRecord.create({
         data: {
           sourceFile: "ورود دستی", sheetName: "ورود دستی", sourceRow: nextSourceRow,
           facilityNumber: facilityNumber || null,
@@ -149,6 +149,24 @@ export async function POST(request: NextRequest) {
           rawData: raw as never,
         },
       });
+      const nationalCode = value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري");
+      if (nationalCode) {
+        const customerData = {
+          name: value(raw, "نام") || null,
+          lastName: value(raw, "نام خانوادگی") || null,
+          nationalCode,
+        };
+        const existingCustomer = await tx.customer.findFirst({
+          where: { nationalCode },
+          select: { id: true },
+        });
+        if (existingCustomer) {
+          await tx.customer.update({ where: { id: existingCustomer.id }, data: customerData });
+        } else {
+          await tx.customer.create({ data: customerData });
+        }
+      }
+      return createdRecord;
     }, { isolationLevel: "Serializable" });
     // Convert every BigInt value (including nested values) before building the JSON response.
     // This keeps PostgreSQL BIGINT fields intact in the database and exposes them as strings.
