@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 export const runtime = "nodejs";
 
 const facilityPrefix = "1538.340.";
+const allowedStatuses = ["فعال", "تسویه شده"] as const;
 
 export async function GET() {
   try {
