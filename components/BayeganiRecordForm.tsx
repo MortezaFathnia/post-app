@@ -282,7 +282,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   entryKeys.splice(statusIndex + 1, 0, "تاریخ تحویل وثیقه");
   const entries = entryKeys.map((key) => [key, fields[key] ?? ""] as [string, string]);
   const hasChanges = JSON.stringify(fields) !== JSON.stringify(originalFields);
-  const requiredFields = Object.keys(initialFields).filter((key) => key !== "تعداد اقساط" && key !== "توضیحات");
+  const requiredFields = Object.keys(initialFields).filter((key) => key !== "تعداد اقساط" && key !== "توضیحات" && key !== "تاریخ تحویل وثیقه");
   const hasAllRequiredFields = requiredFields.every((key) => String(fields[key] ?? "").trim().length > 0);
   const canSave = hasChanges && (Boolean(recordId) || hasAllRequiredFields);
   return (
