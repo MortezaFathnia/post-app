@@ -32,6 +32,7 @@ enum CustomerRole {
 }
 
 model Customer {
+  id                     Int             @id @default(autoincrement())
   name                   String?
   lastName               String?
   fatherName             String?
