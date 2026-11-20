@@ -164,6 +164,7 @@ model BayeganiRecord {
   createdAt                 DateTime                  @default(now())
   updatedAt                 DateTime                  @updatedAt
   debtDiscountingFacilities DebtDiscountingFacility[]
+  debtDocuments             DebtDocument[]
 
   @@unique([sourceFile, sheetName, sourceRow])
   @@unique([facilityNumber, serial])
@@ -200,4 +201,76 @@ model FacilityCode {
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+
+model Bank {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  bankId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BajehCode {
+  id        Int      @id @default(autoincrement())
+  code      String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([code, name])
+  @@index([code])
+  @@index([name])
+  @@map("bajehCode")
+}
+
+model DebtDiscountingRecord {
+  id                   Int      @id @default(autoincrement())
+  sourceFile           String
+  sheetName            String
+  sourceRow            Int
+  counterLabel         String
+  facilityNumber       String
+  customerNumber       String?
+  serial               String?
+  checkNumber          String?
+  checkStatus          String   @default("درراه")
+  domesticForeign      String?
+  dueDate              String?
+  paidAmount           String?
+  unpaidAmount         String?
+  embeddedProfit       String?
+  delayDays            String?
+  delayPenalty         String?
+  bankAgent            String?
+  checkBranch          String?
+  description          String?
+  administrativeNumber String?
+  rawData              Json
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([facilityNumber])
+  @@index([counterLabel])
+  @@unique([checkNumber, administrativeNumber])
+  @@index([sourceFile, sheetName])
+}
+
+model DebtDocument {
+  id             Int             @id @default(autoincrement())
+  contractId     Int?            @unique
+  facilityNumber String?
+  facilityTitle  String?
+  counterLabel   String?
+  serial         String?
+  status         String          @default("فعال")
+  startDate      String?
+  endDate        String?
+  contract       BayeganiRecord? @relation(fields: [contractId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([facilityNumber])
+  @@index([status])
 }
