@@ -274,9 +274,13 @@ export default function BayeganiRecordForm({ recordId }: Props) {
     || !currentCounterIsComplete
     ? completeCounters
     : [...completeCounters, currentCounter];
-  const entries = Object.keys(initialFields)
-    .filter((key) => key !== "شماره مشتری" && key !== "مبلغ" && !isHiddenField(key))
-    .map((key) => [key, fields[key] ?? ""] as [string, string]);
+  const entryKeys = Object.keys(initialFields)
+    .filter((key) => key !== "شماره مشتری" && key !== "مبلغ" && !isHiddenField(key));
+  const bailDateIndex = entryKeys.indexOf("تاریخ تحویل وثیقه");
+  if (bailDateIndex !== -1) entryKeys.splice(bailDateIndex, 1);
+  const statusIndex = entryKeys.indexOf("وضعیت کنونی");
+  entryKeys.splice(statusIndex + 1, 0, "تاریخ تحویل وثیقه");
+  const entries = entryKeys.map((key) => [key, fields[key] ?? ""] as [string, string]);
   const hasChanges = JSON.stringify(fields) !== JSON.stringify(originalFields);
   const requiredFields = Object.keys(initialFields).filter((key) => key !== "تعداد اقساط" && key !== "توضیحات");
   const hasAllRequiredFields = requiredFields.every((key) => String(fields[key] ?? "").trim().length > 0);
@@ -293,7 +297,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
       <form onSubmit={submit} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {entries.map(([key, value]) => (
-            <label key={key} className="block">
+            <label key={key} className={`block ${key === "وضعیت کنونی" ? "sm:col-start-1" : ""}`}>
               <span className="mb-1.5 block text-sm font-medium text-slate-700">{key === "نام باجه" ? "کد باجه-نام باجه" : key}</span>
               {key === "جنسیت" ? (
                 <select
