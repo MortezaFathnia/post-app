@@ -40,7 +40,8 @@ model Customer {
   birthCertificateNumber String?
   birthPlace             String?
   birthCertificateSerial String?
-  nationalCode           String          @id
+  nationalCode           String          @unique
+  postalCode             String?
   passportNumber         String?
   occupation             String?
   installmentAmount      String?
