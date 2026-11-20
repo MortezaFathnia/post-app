@@ -154,6 +154,14 @@ export async function POST(request: NextRequest) {
       values,
     }));
 
+    const resolvedContractCode = contractCode || customers[0]?.data.contractCode || "";
+    if (!resolvedContractCode) {
+      return NextResponse.json(
+        { success: false, error: "کد قرارداد الزامی است؛ آن را وارد کنید یا در فایل Excel قرار دهید." },
+        { status: 400 },
+      );
+    }
+
     const invalidRows = customers
       .filter(({ data }) => !data.name)
       .map(({ rowNumber }) => rowNumber);
@@ -186,7 +194,6 @@ export async function POST(request: NextRequest) {
 
       const firstCustomer = createdCustomers[0];
       const firstData = customers[0].data;
-      const resolvedContractCode = contractCode || firstData.contractCode || null;
 
       const contractPayload = {
         customerId: firstCustomer.id,
