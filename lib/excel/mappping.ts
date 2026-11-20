@@ -1,4 +1,4 @@
-import { ContractType, CustomerType, LoanType, Prisma } from "@prisma/client";
+import { ContractType, LoanType } from "@prisma/client";
 import type { DbExcelRow } from "./types";
 
 function value(row: DbExcelRow, header: string): string | null {
@@ -74,17 +74,17 @@ function mapGuarantor(row: DbExcelRow, n: 1 | 2 | 3) {
   );
 }
 
-export function mapDbExcelRow(row: DbExcelRow, fileName: string, excelRowNumber: number) {
+export function mapDbExcelRow(row: DbExcelRow) {
   const debtorName = value(row, "نام و نام خانوادگی مدیون");
   const loanType = mapLoanType(row);
 
   const mapped = {
-    type: CustomerType.INDIVIDUAL,
     contractType: ContractType.MORABAHA,
     loanType,
 
     name: debtorName,
     nationalCode: value(row, "کدملی/شناسه ملی مدیون"),
+    residence: value(row, "مقیم مدیون"),
     postalCode: value(row, "کد پستی مدیون"),
     birthCertificateNumber: value(row, "شماره شناسنامه/ثبت مدیون"),
     birthCertificateSerial: value(row, "سریال شناسنامه مدیون"),
@@ -150,9 +150,6 @@ export function mapDbExcelRow(row: DbExcelRow, fileName: string, excelRowNumber:
     ...mapGuarantor(row, 2),
     ...mapGuarantor(row, 3),
 
-    dbExcelData: row as unknown as Prisma.InputJsonObject,
-    dbExcelSourceFile: fileName,
-    dbExcelSourceRow: excelRowNumber,
   };
 
   return mapped;
