@@ -81,7 +81,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
         rawData["نام خانوادگی"] = customer.lastName || rawData["نام خانوادگی"] || "";
       }
     }
-    return NextResponse.json({ success: true, record: serializeRecord({ ...record, rawData }));
+    return NextResponse.json({ success: true, record: serializeRecord({ ...record, rawData }) });
   } catch (error) {
     console.error("Load archive record error:", error);
     return NextResponse.json({
@@ -168,7 +168,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
         remainingAmount: value(raw, "مانده تسهيلات", "مانده تسهیلات"),
         nationalId: value(raw, "کد ملي ", "کد ملي مشتري", "کد ملی"),
-
+        },
       });
       const nationalCode = value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري");
       if (nationalCode) {
