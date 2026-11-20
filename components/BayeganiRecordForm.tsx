@@ -197,6 +197,17 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const selected = counters.find((counter) => counter.code === value);
         if (selected) next["نام باجه"] = selected.name;
       }
+      if (key === "نوع تسهیلات" || key === "جنسیت") {
+        const selectedFacility = facilityCodes.find(
+          (item) => `${item.code}-${item.name}` === next["نوع تسهیلات"]
+        );
+        const facilityName = selectedFacility?.name
+          || next["نوع تسهیلات"].split("-").slice(1).join("-").trim();
+        const gender = next["جنسیت"];
+        next["عنوان تسهیلات"] = facilityName && gender
+          ? `${facilityName} ${gender === "زن" ? "سرکار خانم" : "جناب آقای"}`
+          : "";
+      }
       if (key === "تاریخ شروع" || key === "مدت") {
         next["پایان قرارداد"] = addMonthsToDate(next["تاریخ شروع"] || "", next["مدت"] || "");
       }
