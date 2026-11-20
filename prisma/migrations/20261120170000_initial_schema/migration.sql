@@ -195,7 +195,7 @@ BEGIN
   ) THEN
     ALTER TABLE "Customer" ALTER COLUMN "contractType" DROP NOT NULL;
   END IF;
-END $;
+END $$;
 
 ALTER TABLE "Customer" DROP CONSTRAINT IF EXISTS "Customer_pkey";
 ALTER TABLE "Customer"
