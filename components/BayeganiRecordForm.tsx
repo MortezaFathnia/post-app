@@ -15,10 +15,11 @@ type ApiRecord = {
   rawData: Record<string, unknown> | null;
 };
 type CounterOption = { name: string; code: string };
+type FacilityCodeOption = { id: number; code: string; name: string };
 
 const initialFields: Record<string, string> = {
   "شماره تسهیلات": "",
-  "شماره مشتری": "",
+  "نوع تسهیلات": "",
   "کد بایگانی": "",
   "عنوان تسهیلات": "",
   "سریال": "",
@@ -91,7 +92,25 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   const [counters, setCounters] = useState<CounterOption[]>([]);
   const [counterQuery, setCounterQuery] = useState("");
   const [counterOpen, setCounterOpen] = useState(false);
+  const [facilityCodes, setFacilityCodes] = useState<FacilityCodeOption[]>([]);
+  const [facilityQuery, setFacilityQuery] = useState("");
+  const [facilityOpen, setFacilityOpen] = useState(false);
 
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/facility-codes", { cache: "no-store" })
+      .then(async (res) => {
+        const result = await res.json();
+        if (!res.ok || !result.success) throw new Error(result.error || "دریافت فهرست نوع تسهیلات ناموفق بود.");
+        if (active) {
+          const options = Array.isArray(result.facilityCodes) ? result.facilityCodes : [];
+          setFacilityCodes(options);
+        }
+      })
+      .catch(() => { /* Keep the form usable if facility-code lookup is unavailable. */ });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -183,7 +202,6 @@ export default function BayeganiRecordForm({ recordId }: Props) {
       if (key === "شماره تسهیلات" || key === "شماره تسهيلات") {
         const parts = value.trim().split(".");
         const derivedCustomerNumber = parts.length >= 3 ? (parts[2] || "").trim() : "";
-        if (derivedCustomerNumber) next["شماره مشتری"] = derivedCustomerNumber;
       }
       return next;
     });
@@ -233,7 +251,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
     || !currentCounterIsComplete
     ? completeCounters
     : [...completeCounters, currentCounter];
-  const entries = Object.entries(fields).filter(([key]) => key !== "مبلغ" && !isHiddenField(key));
+  const entries = Object.entries(fields).filter(([key]) => key !== "شماره مشتری" && key !== "مبلغ" && !isHiddenField(key));
   const hasChanges = JSON.stringify(fields) !== JSON.stringify(originalFields);
   const requiredFields = Object.keys(initialFields).filter((key) => key !== "تعداد اقساط" && key !== "توضیحات");
   const hasAllRequiredFields = requiredFields.every((key) => String(fields[key] ?? "").trim().length > 0);
@@ -350,6 +368,90 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                         const query = counterQuery.trim().toLocaleLowerCase();
                         return !query || `${counter.code} ${counter.name}`.toLocaleLowerCase().includes(query)
                           || `${counter.code}-${counter.name}`.toLocaleLowerCase().includes(query);
+                      }).length === 0 && (
+                        <p className="px-3 py-4 text-center text-sm text-slate-500">موردی پیدا نشد.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : key === "نوع تسهیلات" ? (
+                <div className="relative">
+                  <input
+                    role="combobox"
+                    aria-autocomplete="list"
+                    aria-expanded={facilityOpen}
+                    aria-controls="bayegani-facility-code-options"
+                    value={facilityQuery || value}
+                    onFocus={() => setFacilityOpen(true)}
+                    onChange={(event) => {
+                      const query = event.target.value;
+                      setFacilityQuery(query);
+                      setFacilityOpen(true);
+                      const exact = facilityCodes.find((item) =>
+                        `${item.code}-${item.name}`.toLocaleLowerCase() === query.trim().toLocaleLowerCase()
+                        || item.name.toLocaleLowerCase() === query.trim().toLocaleLowerCase()
+                      );
+                      changeField(key, exact ? `${exact.code}-${exact.name}` : "");
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") setFacilityOpen(false);
+                      if (event.key === "Enter" && facilityOpen) {
+                        const query = facilityQuery.trim().toLocaleLowerCase();
+                        const first = facilityCodes.find((item) =>
+                          `${item.code} ${item.name}`.toLocaleLowerCase().includes(query)
+                          || `${item.code}-${item.name}`.toLocaleLowerCase().includes(query)
+                        );
+                        if (first) {
+                          event.preventDefault();
+                          const selected = `${first.code}-${first.name}`;
+                          setFacilityQuery(selected);
+                          changeField(key, selected);
+                          setFacilityOpen(false);
+                        }
+                      }
+                    }}
+                    onBlur={() => {
+                      window.setTimeout(() => setFacilityOpen(false), 120);
+                    }}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    placeholder="کد یا نام نوع تسهیلات را جستجو کنید..."
+                    autoComplete="off"
+                  />
+                  {facilityOpen && (
+                    <div
+                      id="bayegani-facility-code-options"
+                      role="listbox"
+                      className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+                    >
+                      {facilityCodes.filter((item) => {
+                        const query = facilityQuery.trim().toLocaleLowerCase();
+                        return !query || `${item.code} ${item.name}`.toLocaleLowerCase().includes(query)
+                          || `${item.code}-${item.name}`.toLocaleLowerCase().includes(query);
+                      }).slice(0, 50).map((item) => {
+                        const option = `${item.code}-${item.name}`;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            role="option"
+                            aria-selected={value === option}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              setFacilityQuery(option);
+                              changeField(key, option);
+                              setFacilityOpen(false);
+                            }}
+                            className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-right text-sm text-slate-700 transition hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                          >
+                            <span className="font-medium">{option}</span>
+                            {value === option && <span className="text-xs text-blue-600">انتخاب‌شده</span>}
+                          </button>
+                        );
+                      })}
+                      {facilityCodes.filter((item) => {
+                        const query = facilityQuery.trim().toLocaleLowerCase();
+                        return !query || `${item.code} ${item.name}`.toLocaleLowerCase().includes(query)
+                          || `${item.code}-${item.name}`.toLocaleLowerCase().includes(query);
                       }).length === 0 && (
                         <p className="px-3 py-4 text-center text-sm text-slate-500">موردی پیدا نشد.</p>
                       )}
