@@ -166,6 +166,37 @@ ALTER TABLE "Customer"
   ADD COLUMN IF NOT EXISTS "role" "CustomerRole",
   ADD COLUMN IF NOT EXISTS "contractCode" TEXT;
 
+-- The existing Customer table may still carry required legacy columns that
+-- are intentionally no longer part of the role-based Prisma Customer model.
+-- Keep the columns for compatibility, but remove their obsolete NOT NULL
+-- checks so new Customer records do not need legacy id/type/contractType values.
+ALTER TABLE "Customer"
+  DROP CONSTRAINT IF EXISTS "Customer_id_not_null",
+  DROP CONSTRAINT IF EXISTS "Customer_type_not_null",
+  DROP CONSTRAINT IF EXISTS "Customer_contractType_not_null";
+
+DO $
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'Customer' AND column_name = 'id'
+  ) THEN
+    ALTER TABLE "Customer" ALTER COLUMN "id" DROP NOT NULL;
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'Customer' AND column_name = 'type'
+  ) THEN
+    ALTER TABLE "Customer" ALTER COLUMN "type" DROP NOT NULL;
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'Customer' AND column_name = 'contractType'
+  ) THEN
+    ALTER TABLE "Customer" ALTER COLUMN "contractType" DROP NOT NULL;
+  END IF;
+END $;
+
 ALTER TABLE "Customer" DROP CONSTRAINT IF EXISTS "Customer_pkey";
 ALTER TABLE "Customer"
   ALTER COLUMN "nationalCode" SET NOT NULL,
