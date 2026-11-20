@@ -7,8 +7,8 @@ function serialNumber(value: string | null): bigint | null {
   const normalized = value
     .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
     .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
-    .replace(/[\\u200e\\u200f\\u202a-\\u202e\\u2066-\\u2069\\s,٬]/g, "");
-  return /^\\d+$/.test(normalized) ? BigInt(normalized) : null;
+    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069\s,٬]/g, "");
+  return /^\d+$/.test(normalized) ? BigInt(normalized) : null;
 }
 
 function compareSerial(a: string | null, b: string | null): number {
