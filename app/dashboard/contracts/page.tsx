@@ -31,33 +31,25 @@ function getApplicantName(customer: {
   type: string;
   name: string | null;
   companyName: string | null;
-}) {
-  if (customer.type === "COMPANY") {
-    return customer.companyName || "-";
-  }
-
+} | null) {
+  if (!customer) return "-";
+  if (customer.type === "COMPANY") return customer.companyName || "-";
   return customer.name || "-";
 }
 
 export default async function ContractsPage() {
-  const contracts = await prisma.customer.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: {
-      id: true,
-      type: true,
-      name: true,
-      companyName: true,
-
-      contractType: true,
-      loanType: true,
-
-      contractCode: true,
-      contractNumber: true,
-      contractDate: true,
-
-      createdAt: true,
+  const contracts = await prisma.contractDetails.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      customer: {
+        select: {
+          type: true,
+          name: true,
+          companyName: true,
+          contractType: true,
+          loanType: true,
+        },
+      },
     },
   });
 
@@ -65,22 +57,22 @@ export default async function ContractsPage() {
 
   const morabahaCount = contracts.filter(
     (contract) =>
-      contract.contractType === "MORABAHA",
+      contract.customer?.contractType === "MORABAHA",
   ).length;
 
   const creditCardCount = contracts.filter(
     (contract) =>
-      contract.contractType === "CREDIT_CARD",
+      contract.customer?.contractType === "CREDIT_CARD",
   ).length;
 
   const maturityCount = contracts.filter(
     (contract) =>
-      contract.loanType === "MATURITY",
+      contract.customer?.loanType === "MATURITY",
   ).length;
 
   const installmentCount = contracts.filter(
     (contract) =>
-      contract.loanType === "INSTALLMENT",
+      contract.customer?.loanType === "INSTALLMENT",
   ).length;
 
   return (
@@ -268,7 +260,7 @@ export default async function ContractsPage() {
 
                     {/* Applicant */}
                     <td className="px-5 py-4 font-medium text-gray-700">
-                      {getApplicantName(contract)}
+                      {getApplicantName(contract.customer)}
                     </td>
 
                     {/* Contract type */}
@@ -282,14 +274,14 @@ export default async function ContractsPage() {
                         }
                       >
                         {getContractTypeTitle(
-                          contract.contractType,
+                          contract.customer?.contractType ?? "",
                         )}
                       </span>
                     </td>
 
                     {/* Loan type */}
                     <td className="px-5 py-4">
-                      {contract.loanType ? (
+                      {contract.customer?.loanType ? (
                         <span
                           className={
                             contract.loanType ===
@@ -299,7 +291,7 @@ export default async function ContractsPage() {
                           }
                         >
                           {getLoanTypeTitle(
-                            contract.loanType,
+                            contract.customer?.loanType ?? null,
                           )}
                         </span>
                       ) : (
