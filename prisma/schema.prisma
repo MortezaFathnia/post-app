@@ -261,6 +261,7 @@ model BayeganiRecord {
   @@index([nationalId])
   @@index([archiveCode])
   @@index([serialSort])
+  @@index([contractCode])
 }
 
 
