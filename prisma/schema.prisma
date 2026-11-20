@@ -37,7 +37,7 @@ model Customer {
   birthCertificateNumber     String?
   birthPlace                 String?
   birthCertificateSerial     String?
-  nationalCode               String?
+  nationalCode               String?        @unique
   passportNumber             String?
   occupation                 String?
   installmentAmount          String?
@@ -199,7 +199,8 @@ model Customer {
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 
-  @@index([nationalCode])
+  bayeganiRecords BayeganiRecord[]
+
 }
 
 model DebtDocument {
@@ -243,6 +244,7 @@ model BayeganiRecord {
   approvedAmount    String?
   remainingAmount   String?
   nationalId        String?
+  customer          Customer? @relation(fields: [nationalId], references: [nationalCode], onDelete: SetNull, onUpdate: Cascade)
   rawData           Json
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -253,6 +255,7 @@ model BayeganiRecord {
   @@unique([facilityNumber, serial])
   @@index([facilityNumber])
   @@index([customerNumber])
+  @@index([nationalId])
   @@index([archiveCode])
   @@index([serialSort])
 }

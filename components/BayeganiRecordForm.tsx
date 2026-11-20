@@ -22,9 +22,6 @@ const initialFields: Record<string, string> = {
   "نوع تسهیلات": "",
   "جنسیت": "",
   "عنوان تسهیلات": "",
-  "نام": "",
-  "نام خانوادگی": "",
-  "کد ملی": "",
   "سریال": "",
   "طبقه": "",
   "نام باجه": "",
@@ -36,6 +33,7 @@ const initialFields: Record<string, string> = {
   "مدت": "",
   "تعداد اقساط": "",
   "مبلغ مصوب": "",
+  "کد ملی": "",
   "توضیحات": "",
 };
 
@@ -50,16 +48,6 @@ function buildNewArchiveCode(raw: Record<string, unknown>) {
   const floor = String(raw["طبقه"] ?? "").trim();
   const serial = String(raw["سریال"] ?? "").trim();
   return [counterCode, floor, serial].every(Boolean) ? [counterCode, floor, serial].join("-") : "";
-}
-
-function buildFacilityTitle(raw: Record<string, unknown>, options: FacilityCodeOption[] = []) {
-  const typeValue = String(raw["نوع تسهیلات"] ?? "").trim();
-  const selected = options.find((item) => `${item.code}-${item.name}` === typeValue);
-  const facilityName = selected?.name || typeValue.split("-").slice(1).join("-").trim() || typeValue;
-  const gender = String(raw["جنسیت"] ?? "").trim();
-  return facilityName && gender
-    ? `${facilityName} ${gender === "زن" ? "سرکار خانم" : "جناب آقای"}`
-    : "";
 }
 
 function normalizeAmount(value: string) {
@@ -178,7 +166,6 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         delete next["تیک"];
         next["پایان قرارداد"] = addMonthsToDate(next["تاریخ شروع"] || "", next["مدت"] || "") || next["پایان قرارداد"];
         next["وضعیت کنونی"] = next["وضعیت کنونی"] || "فعال";
-        next["عنوان تسهیلات"] = buildFacilityTitle(next, facilityCodes) || next["عنوان تسهیلات"];
         next["نام باجه"] = normalizeCounterName(next["نام باجه"] || "");
         next["کد باجه"] = normalizePersianText(next["کد باجه"] || "");
         const archiveCode = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
@@ -211,7 +198,15 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         if (selected) next["نام باجه"] = selected.name;
       }
       if (key === "نوع تسهیلات" || key === "جنسیت") {
-        next["عنوان تسهیلات"] = buildFacilityTitle(next, facilityCodes);
+        const selectedFacility = facilityCodes.find(
+          (item) => `${item.code}-${item.name}` === next["نوع تسهیلات"]
+        );
+        const facilityName = selectedFacility?.name
+          || next["نوع تسهیلات"].split("-").slice(1).join("-").trim();
+        const gender = next["جنسیت"];
+        next["عنوان تسهیلات"] = facilityName && gender
+          ? `${facilityName} ${gender === "زن" ? "سرکار خانم" : "جناب آقای"}`
+          : "";
       }
       if (key === "تاریخ شروع" || key === "مدت") {
         next["پایان قرارداد"] = addMonthsToDate(next["تاریخ شروع"] || "", next["مدت"] || "");
@@ -232,12 +227,8 @@ export default function BayeganiRecordForm({ recordId }: Props) {
       setError("شماره تسهیلات باید دقیقاً شامل ۴ بخش عددی باشد که با نقطه (.) از هم جدا شده‌اند؛ مانند 1538.232.3323421.1");
       return;
     }
-    if (!fields["نام"].trim() || !fields["نام خانوادگی"].trim()) {
-      setError("لطفاً نام و نام خانوادگی را وارد کنید.");
-      return;
-    }
-    if (!/^[0-9]{10}$/.test(fields["کد ملی"])) {
-      setError("کد ملی الزامی است و باید دقیقاً شامل ۱۰ رقم انگلیسی باشد.");
+    if (fields["کد ملی"] && !/^[0-9]{10}$/.test(fields["کد ملی"])) {
+      setError("کد ملی باید دقیقاً شامل ۱۰ رقم انگلیسی باشد.");
       return;
     }
     setSaving(true);
@@ -246,12 +237,12 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         ? await fetch(`/api/bayegani/${recordId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "عنوان تسهیلات": buildFacilityTitle(fields, facilityCodes), "کد بایگانی": buildNewArchiveCode(fields) || fields["کد بایگانی"] }) }),
+            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "کد بایگانی": buildNewArchiveCode(fields) || fields["کد بایگانی"] }) }),
           })
         : await fetch("/api/bayegani/manual", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "عنوان تسهیلات": buildFacilityTitle(fields, facilityCodes), "کد بایگانی": buildNewArchiveCode(fields) || fields["کد بایگانی"] }) }),
+            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "کد بایگانی": buildNewArchiveCode(fields) || fields["کد بایگانی"] }) }),
           });
       const result = await readApiResponse(response);
       if (!response.ok || !result.success) throw new Error(result.error || "ذخیره اطلاعات ناموفق بود.");
@@ -508,7 +499,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                   maxLength={key === "کد ملی" ? 10 : undefined}
                   inputMode={key === "کد ملی" ? "numeric" : undefined}
                   title={key === "کد ملی" ? "کد ملی باید دقیقاً ۱۰ رقم انگلیسی باشد." : undefined}
-                  readOnly={key === "عنوان تسهیلات" || key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد"}
+                  readOnly={key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد"}
                   onChange={(event) => changeField(key, event.target.value)}
                   onKeyDown={(event) => {
                     if (key === "مبلغ مصوب" && event.key === "*") {
@@ -516,7 +507,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                       changeField(key, `${normalizeAmount(fields["مبلغ مصوب"])}000`);
                     }
                   }}
-                  className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "عنوان تسهیلات" || key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
+                  className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
                   placeholder={key}
                 />
               )}

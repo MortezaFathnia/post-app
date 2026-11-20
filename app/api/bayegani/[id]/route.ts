@@ -148,6 +148,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (archiveCode) raw["کد بایگانی"] = archiveCode;
 
     const record = await prisma.$transaction(async (tx) => {
+      const nationalCode = value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري");
+      if (nationalCode) {
+        await tx.customer.upsert({
+          where: { nationalCode },
+          create: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null, nationalCode },
+          update: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null },
+        });
+      }
       const updatedRecord = await tx.bayeganiRecord.update({
         where: { id: recordId },
         data: {
@@ -167,26 +175,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         installmentCount: value(raw, "تعداد اقساط") || null,
         approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
         remainingAmount: value(raw, "مانده تسهيلات", "مانده تسهیلات"),
-        nationalId: value(raw, "کد ملي ", "کد ملي مشتري", "کد ملی"),
+        nationalId: nationalCode || null,
         },
       });
-      const nationalCode = value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري");
-      if (nationalCode) {
-        const customerData = {
-          name: value(raw, "نام") || null,
-          lastName: value(raw, "نام خانوادگی") || null,
-          nationalCode,
-        };
-        const existingCustomer = await tx.customer.findFirst({
-          where: { nationalCode },
-          select: { id: true },
-        });
-        if (existingCustomer) {
-          await tx.customer.update({ where: { id: existingCustomer.id }, data: customerData });
-        } else {
-          await tx.customer.create({ data: customerData });
-        }
-      }
       return updatedRecord;
     });
 
