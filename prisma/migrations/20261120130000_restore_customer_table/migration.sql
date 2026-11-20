@@ -164,3 +164,8 @@ CREATE TABLE IF NOT EXISTS "Customer" (
   "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "Customer_pkey" PRIMARY KEY ("id")
 );
+
+-- Existing Customer tables are not changed by CREATE TABLE IF NOT EXISTS.
+-- Add this field explicitly so restored databases match the Prisma model.
+ALTER TABLE "Customer"
+  ADD COLUMN IF NOT EXISTS "lastName" TEXT;
