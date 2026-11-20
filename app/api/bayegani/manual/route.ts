@@ -136,6 +136,18 @@ export async function POST(request: NextRequest) {
         create: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null, nationalCode },
         update: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null },
       });
+      if (facilityNumber) {
+        await tx.contractDetails.upsert({
+          where: { contractCode: facilityNumber },
+          create: { contractCode: facilityNumber },
+          update: {},
+        });
+        await tx.contractCustomer.upsert({
+          where: { contractCode_nationalCode: { contractCode: facilityNumber, nationalCode } },
+          create: { contractCode: facilityNumber, nationalCode, role: "BORROWER" },
+          update: { role: "BORROWER" },
+        });
+      }
 
       const createdRecord = await tx.bayeganiRecord.create({
         data: {
@@ -155,6 +167,7 @@ export async function POST(request: NextRequest) {
           duration: value(raw, "مدت"), installmentCount: value(raw, "تعداد اقساط") || null, approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
           remainingAmount: value(raw, "مانده تسهیلات", "مانده تسهيلات"),
           nationalId: nationalCode,
+          contractCode: facilityNumber || null,
           rawData: raw as never,
         },
       });
