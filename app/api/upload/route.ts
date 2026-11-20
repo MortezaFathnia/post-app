@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { mapDbExcelRow } from "@/lib/excel/mappping";
@@ -167,29 +168,124 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const createdCustomers = [];
+    const result = await prisma.$transaction(async (tx) => {
+      const createdCustomers = [];
 
-    for (const { data } of customers) {
-      const created = await prisma.customer.create({
-        data: {
-          ...data,
-          // Keep the contract number entered on the existing upload page.
-          contractNumber,
-          // Preserve the Excel contract code when the optional input is blank.
-          contractCode: contractCode || data.contractCode || null,
-        },
+      for (const { data } of customers) {
+        const created = await tx.customer.create({
+          data: {
+            ...data,
+            // Keep legacy fields populated while existing templates are migrated.
+            contractNumber,
+            contractCode: contractCode || data.contractCode || null,
+          },
+        });
+        createdCustomers.push(created);
+      }
+
+      const firstCustomer = createdCustomers[0];
+      const firstData = customers[0].data;
+      const resolvedContractCode = contractCode || firstData.contractCode || null;
+
+      const contractPayload = {
+        customerId: firstCustomer.id,
+        contractCode: resolvedContractCode,
+        contractNumber,
+        contractDate: firstData.contractDate,
+        requestNumber: firstData.requestNumber,
+        requestDate: firstData.requestDate,
+        approvalNumber: firstData.approvalNumber,
+        approvalDate: firstData.approvalDate,
+        maturityDate: firstData.maturityDate,
+        facilityDescription: firstData.facilityDescription,
+        economicSector: firstData.economicSector,
+        useOfFunds: firstData.useOfFunds,
+        transactionDescription: firstData.transactionDescription,
+        salePrice: firstData.salePrice,
+        salePriceWords: firstData.salePriceWords,
+        purchasePrice: firstData.purchasePrice,
+        profitAmount: firstData.profitAmount,
+        interestRate: firstData.interestRate,
+        latePaymentBaseRate: firstData.latePaymentBaseRate,
+        latePaymentRate: firstData.latePaymentRate,
+        prepayment: firstData.prepayment,
+        payableAmount: firstData.payableAmount,
+        facilityAmount: firstData.facilityAmount,
+        contractDuration: firstData.contractDuration,
+        repaymentMethod: firstData.repaymentMethod,
+        gracePeriod: firstData.gracePeriod,
+        installmentCount: firstData.installmentCount,
+        installmentInterval: firstData.installmentInterval,
+        firstInstallmentDate: firstData.firstInstallmentDate,
+        firstQardInstallmentDate: firstData.firstQardInstallmentDate,
+        bankParticipationPercent: firstData.bankParticipationPercent,
+        proposedPartnershipProfit: firstData.proposedPartnershipProfit,
+        proposedMudarabahProfit: firstData.proposedMudarabahProfit,
+        collateralType: firstData.collateralType,
+        collateralDescription: firstData.collateralDescription,
+        collateralValue: firstData.collateralValue,
+      };
+
+      const contract = resolvedContractCode
+        ? await tx.contractDetails.upsert({
+            where: { contractCode: resolvedContractCode },
+            create: contractPayload,
+            update: contractPayload,
+          })
+        : await tx.contractDetails.create({ data: contractPayload });
+
+      const bankPayload = {
+        contractDetailsId: contract.id,
+        bankName: firstData.bankName,
+        branchName: firstData.branchName,
+        branchCode: firstData.branchCode,
+        branchPostalCode: firstData.branchPostalCode,
+        branchPhone: firstData.branchPhone,
+        branchAddress: firstData.branchAddress,
+        branchManager: firstData.branchManager,
+        counterName: firstData.counterName,
+        counterCode: firstData.counterCode,
+        brokerName: firstData.brokerName,
+        brokerCustomerCode: firstData.brokerCustomerCode,
+        bankRepresentative: firstData.bankRepresentative,
+      };
+
+      await tx.bankDetails.upsert({
+        where: { contractDetailsId: contract.id },
+        create: bankPayload,
+        update: bankPayload,
       });
 
-      createdCustomers.push(created);
-    }
+      const bayeganiRecords = [];
+      for (const { data, rowNumber, values } of customers) {
+        const record = await tx.bayeganiRecord.create({
+          data: {
+            sourceFile: file.name,
+            sheetName: "DB",
+            sourceRow: rowNumber,
+            contractCode: resolvedContractCode,
+            nationalId: data.nationalCode,
+            facilityTitle: data.facilityDescription,
+            status: "فعال",
+            rawData: values as Prisma.InputJsonObject,
+          },
+        });
+        bayeganiRecords.push(record);
+      }
 
-    const firstCustomer = createdCustomers[0];
+      return { createdCustomers, firstCustomer, contract, bayeganiRecords };
+    });
+
+    const { createdCustomers, firstCustomer, contract, bayeganiRecords } = result;
 
     return NextResponse.json(
       {
         success: true,
         message: `${createdCustomers.length} رکورد از جدول اول صفحه DB با موفقیت ذخیره شد.`,
         count: createdCustomers.length,
+        contractDetailsId: contract.id,
+        bankDetailsSaved: true,
+        bayeganiRecordCount: bayeganiRecords.length,
         id: firstCustomer.id,
         ids: createdCustomers.map((customer) => customer.id),
         contractNumber: firstCustomer.contractNumber,
