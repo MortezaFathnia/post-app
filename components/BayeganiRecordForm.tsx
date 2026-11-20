@@ -15,18 +15,19 @@ type ApiRecord = {
   rawData: Record<string, unknown> | null;
 };
 type CounterOption = { name: string; code: string };
-type FacilityOption = { code: string; name: string };
+type FacilityCodeOption = { id: number; code: string; name: string };
 
 const initialFields: Record<string, string> = {
   "شماره تسهیلات": "",
   "نوع تسهیلات": "",
-  "کد بایگانی": "",
+  "جنسیت": "",
   "عنوان تسهیلات": "",
   "سریال": "",
   "طبقه": "",
   "نام باجه": "",
   "کد باجه": "",
   "وضعیت کنونی": "فعال",
+  "کد بایگانی": "",
   "تاریخ شروع": "",
   "پایان قرارداد": "",
   "مدت": "",
@@ -92,10 +93,25 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   const [counters, setCounters] = useState<CounterOption[]>([]);
   const [counterQuery, setCounterQuery] = useState("");
   const [counterOpen, setCounterOpen] = useState(false);
-  const [facilityCodes, setFacilityCodes] = useState<FacilityOption[]>([]);
-  const [facilityTypeQuery, setFacilityTypeQuery] = useState("");
-  const [facilityTypeOpen, setFacilityTypeOpen] = useState(false);
+  const [facilityCodes, setFacilityCodes] = useState<FacilityCodeOption[]>([]);
+  const [facilityQuery, setFacilityQuery] = useState("");
+  const [facilityOpen, setFacilityOpen] = useState(false);
 
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/facility-codes", { cache: "no-store" })
+      .then(async (res) => {
+        const result = await res.json();
+        if (!res.ok || !result.success) throw new Error(result.error || "دریافت فهرست نوع تسهیلات ناموفق بود.");
+        if (active) {
+          const options = Array.isArray(result.facilityCodes) ? result.facilityCodes : [];
+          setFacilityCodes(options);
+        }
+      })
+      .catch(() => { /* Keep the form usable if facility-code lookup is unavailable. */ });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -181,13 +197,19 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const selected = counters.find((counter) => counter.code === value);
         if (selected) next["نام باجه"] = selected.name;
       }
+      if (key === "نوع تسهیلات" || key === "جنسیت") {
+        const selectedFacility = facilityCodes.find(
+          (item) => `${item.code}-${item.name}` === next["نوع تسهیلات"]
+        );
+        const facilityName = selectedFacility?.name
+          || next["نوع تسهیلات"].split("-").slice(1).join("-").trim();
+        const gender = next["جنسیت"];
+        next["عنوان تسهیلات"] = facilityName && gender
+          ? `${facilityName} ${gender === "زن" ? "سرکار خانم" : "جناب آقای"}`
+          : "";
+      }
       if (key === "تاریخ شروع" || key === "مدت") {
         next["پایان قرارداد"] = addMonthsToDate(next["تاریخ شروع"] || "", next["مدت"] || "");
-      }
-      if (key === "شماره تسهیلات" || key === "شماره تسهيلات") {
-        const parts = value.trim().split(".");
-        const derivedCustomerNumber = parts.length >= 3 ? (parts[2] || "").trim() : "";
-        if (derivedCustomerNumber) next["شماره مشتری"] = derivedCustomerNumber;
       }
       return next;
     });
@@ -198,6 +220,11 @@ export default function BayeganiRecordForm({ recordId }: Props) {
     setError(""); setSuccess("");
     if (!recordId && !hasAllRequiredFields) {
       setError("لطفاً تمام فیلدهای الزامی را تکمیل کنید. فقط تعداد اقساط و توضیحات اختیاری هستند.");
+      return;
+    }
+    const facilityNumber = String(fields["شماره تسهیلات"] ?? fields["شماره تسهيلات"] ?? "").trim();
+    if (!/^\\d+\\.\\d+\\.\\d+\\.\\d+$/.test(facilityNumber)) {
+      setError("شماره تسهیلات باید دقیقاً شامل ۴ بخش عددی باشد که با نقطه (.) از هم جدا شده‌اند؛ مانند 1538.232.3323421.1");
       return;
     }
     if (fields["کد ملی"] && !/^[0-9]{10}$/.test(fields["کد ملی"])) {
@@ -237,7 +264,9 @@ export default function BayeganiRecordForm({ recordId }: Props) {
     || !currentCounterIsComplete
     ? completeCounters
     : [...completeCounters, currentCounter];
-  const entries = Object.entries(fields).filter(([key]) => key !== "مبلغ" && !isHiddenField(key));
+  const entries = Object.keys(initialFields)
+    .filter((key) => key !== "شماره مشتری" && key !== "مبلغ" && !isHiddenField(key))
+    .map((key) => [key, fields[key] ?? ""] as [string, string]);
   const hasChanges = JSON.stringify(fields) !== JSON.stringify(originalFields);
   const requiredFields = Object.keys(initialFields).filter((key) => key !== "تعداد اقساط" && key !== "توضیحات");
   const hasAllRequiredFields = requiredFields.every((key) => String(fields[key] ?? "").trim().length > 0);
@@ -256,7 +285,17 @@ export default function BayeganiRecordForm({ recordId }: Props) {
           {entries.map(([key, value]) => (
             <label key={key} className="block">
               <span className="mb-1.5 block text-sm font-medium text-slate-700">{key === "نام باجه" ? "کد باجه-نام باجه" : key}</span>
-              {key === "نوع تسهیلات" ? (\n                <div className="relative">\n                  <input role="combobox" aria-autocomplete="list" aria-expanded={facilityTypeOpen} value={facilityTypeQuery} onFocus={() => setFacilityTypeOpen(true)} onChange={(event) => { setFacilityTypeQuery(event.target.value); setFacilityTypeOpen(true); changeField(key, event.target.value); }} onKeyDown={(event) => { if (event.key === "Escape") setFacilityTypeOpen(false); if (event.key === "Enter" && facilityTypeOpen) { const first = facilityCodes.find((item) => `${item.code} ${item.name}`.toLowerCase().includes(facilityTypeQuery.trim().toLowerCase())); if (first) { event.preventDefault(); setFacilityTypeQuery(`${first.code}-${first.name}`); changeField(key, `${first.code}-${first.name}`); setFacilityTypeOpen(false); } } }} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="کد یا نام نوع تسهیلات..." autoComplete="off" />\n                  {facilityTypeOpen && <div className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">{facilityCodes.filter((item) => { const q = facilityTypeQuery.trim().toLowerCase(); return !q || `${item.code} ${item.name} ${item.code}-${item.name}`.toLowerCase().includes(q); }).slice(0,50).map((item) => <button key={item.code} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => { setFacilityTypeQuery(`${item.code}-${item.name}`); changeField(key, `${item.code}-${item.name}`); setFacilityTypeOpen(false); }} className="flex w-full rounded-lg px-3 py-2.5 text-right text-sm text-slate-700 hover:bg-blue-50"><span className="font-medium">{item.code}-{item.name}</span></button>)}{facilityCodes.filter((item) => { const q = facilityTypeQuery.trim().toLowerCase(); return !q || `${item.code} ${item.name} ${item.code}-${item.name}`.toLowerCase().includes(q); }).length===0 && <p className="px-3 py-4 text-center text-sm text-slate-500">موردی پیدا نشد.</p>}</div>}\n                </div>\n              ) : key === "وضعیت کنونی" ? (
+              {key === "جنسیت" ? (
+                <select
+                  value={value}
+                  onChange={(event) => changeField(key, event.target.value)}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">انتخاب جنسیت</option>
+                  <option value="مرد">مرد</option>
+                  <option value="زن">زن</option>
+                </select>
+              ) : key === "وضعیت کنونی" ? (
                 <select
                   value={value || "فعال"}
                   onChange={(event) => changeField(key, event.target.value)}
@@ -283,7 +322,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                       );
                       if (exact) {
                         setFields((current) => {
-                          const next = { ...current, "نام باجه": exact.name, "کد باجه": exact.code };
+                          const next: Record<string, string> = { ...current, "نام باجه": exact.name, "کد باجه": exact.code };
                           next["کد بایگانی"] = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
                           return next;
                         });
@@ -301,7 +340,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                           event.preventDefault();
                           setCounterQuery(`${first.code}-${first.name}`);
                           setFields((current) => {
-                            const next = { ...current, "نام باجه": first.name, "کد باجه": first.code };
+                            const next: Record<string, string> = { ...current, "نام باجه": first.name, "کد باجه": first.code };
                             next["کد بایگانی"] = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
                             return next;
                           });
@@ -336,7 +375,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                             onClick={() => {
                               setCounterQuery(`${counter.code}-${counter.name}`);
                               setFields((current) => {
-                                const next = { ...current, "نام باجه": counter.name, "کد باجه": counter.code };
+                                const next: Record<string, string> = { ...current, "نام باجه": counter.name, "کد باجه": counter.code };
                                 next["کد بایگانی"] = buildNewArchiveCode(next) || next["کد بایگانی"] || "";
                                 return next;
                               });
@@ -360,6 +399,90 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                     </div>
                   )}
                 </div>
+              ) : key === "نوع تسهیلات" ? (
+                <div className="relative">
+                  <input
+                    role="combobox"
+                    aria-autocomplete="list"
+                    aria-expanded={facilityOpen}
+                    aria-controls="bayegani-facility-code-options"
+                    value={facilityQuery || value}
+                    onFocus={() => setFacilityOpen(true)}
+                    onChange={(event) => {
+                      const query = event.target.value;
+                      setFacilityQuery(query);
+                      setFacilityOpen(true);
+                      const exact = facilityCodes.find((item) =>
+                        `${item.code}-${item.name}`.toLocaleLowerCase() === query.trim().toLocaleLowerCase()
+                        || item.name.toLocaleLowerCase() === query.trim().toLocaleLowerCase()
+                      );
+                      changeField(key, exact ? `${exact.code}-${exact.name}` : "");
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") setFacilityOpen(false);
+                      if (event.key === "Enter" && facilityOpen) {
+                        const query = facilityQuery.trim().toLocaleLowerCase();
+                        const first = facilityCodes.find((item) =>
+                          `${item.code} ${item.name}`.toLocaleLowerCase().includes(query)
+                          || `${item.code}-${item.name}`.toLocaleLowerCase().includes(query)
+                        );
+                        if (first) {
+                          event.preventDefault();
+                          const selected = `${first.code}-${first.name}`;
+                          setFacilityQuery(selected);
+                          changeField(key, selected);
+                          setFacilityOpen(false);
+                        }
+                      }
+                    }}
+                    onBlur={() => {
+                      window.setTimeout(() => setFacilityOpen(false), 120);
+                    }}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    placeholder="کد یا نام نوع تسهیلات را جستجو کنید..."
+                    autoComplete="off"
+                  />
+                  {facilityOpen && (
+                    <div
+                      id="bayegani-facility-code-options"
+                      role="listbox"
+                      className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+                    >
+                      {facilityCodes.filter((item) => {
+                        const query = facilityQuery.trim().toLocaleLowerCase();
+                        return !query || `${item.code} ${item.name}`.toLocaleLowerCase().includes(query)
+                          || `${item.code}-${item.name}`.toLocaleLowerCase().includes(query);
+                      }).slice(0, 50).map((item) => {
+                        const option = `${item.code}-${item.name}`;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            role="option"
+                            aria-selected={value === option}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              setFacilityQuery(option);
+                              changeField(key, option);
+                              setFacilityOpen(false);
+                            }}
+                            className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-right text-sm text-slate-700 transition hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                          >
+                            <span className="font-medium">{option}</span>
+                            {value === option && <span className="text-xs text-blue-600">انتخاب‌شده</span>}
+                          </button>
+                        );
+                      })}
+                      {facilityCodes.filter((item) => {
+                        const query = facilityQuery.trim().toLocaleLowerCase();
+                        return !query || `${item.code} ${item.name}`.toLocaleLowerCase().includes(query)
+                          || `${item.code}-${item.name}`.toLocaleLowerCase().includes(query);
+                      }).length === 0 && (
+                        <p className="px-3 py-4 text-center text-sm text-slate-500">موردی پیدا نشد.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
               ) : key === "تاریخ شروع" ? (
                 <PersianDatePicker
                   value={value}
@@ -371,7 +494,8 @@ export default function BayeganiRecordForm({ recordId }: Props) {
               ) : (
                 <input
                   value={key === "مبلغ مصوب" ? formatAmount(value) : value}
-                  pattern={key === "کد ملی" ? "[0-9]{10}" : undefined}
+                  pattern={key === "کد ملی" ? "[0-9]{10}" : key === "شماره تسهیلات" ? "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+" : undefined}
+                  title={key === "شماره تسهیلات" ? "شماره تسهیلات باید ۴ بخش عددی جداشده با نقطه داشته باشد؛ مانند 1538.232.3323421.1" : key === "کد ملی" ? "کد ملی باید دقیقاً شامل ۱۰ رقم انگلیسی باشد." : undefined}
                   maxLength={key === "کد ملی" ? 10 : undefined}
                   inputMode={key === "کد ملی" ? "numeric" : undefined}
                   title={key === "کد ملی" ? "کد ملی باید دقیقاً ۱۰ رقم انگلیسی باشد." : undefined}

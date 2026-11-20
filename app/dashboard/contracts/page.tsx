@@ -31,33 +31,26 @@ function getApplicantName(customer: {
   type: string;
   name: string | null;
   companyName: string | null;
-}) {
-  if (customer.type === "COMPANY") {
-    return customer.companyName || "-";
-  }
-
+} | null) {
+  if (!customer) return "-";
+  if (customer.type === "COMPANY") return customer.companyName || "-";
   return customer.name || "-";
 }
 
 export default async function ContractsPage() {
-  const contracts = await prisma.customer.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: {
-      id: true,
-      type: true,
-      name: true,
-      companyName: true,
-
-      contractType: true,
-      loanType: true,
-
-      contractCode: true,
-      contractNumber: true,
-      contractDate: true,
-
-      createdAt: true,
+  const contracts = await prisma.contractDetails.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      customer: {
+        select: {
+          id: true,
+          type: true,
+          name: true,
+          companyName: true,
+          contractType: true,
+          loanType: true,
+        },
+      },
     },
   });
 
@@ -65,22 +58,22 @@ export default async function ContractsPage() {
 
   const morabahaCount = contracts.filter(
     (contract) =>
-      contract.contractType === "MORABAHA",
+      contract.customer?.contractType === "MORABAHA",
   ).length;
 
   const creditCardCount = contracts.filter(
     (contract) =>
-      contract.contractType === "CREDIT_CARD",
+      contract.customer?.contractType === "CREDIT_CARD",
   ).length;
 
   const maturityCount = contracts.filter(
     (contract) =>
-      contract.loanType === "MATURITY",
+      contract.customer?.loanType === "MATURITY",
   ).length;
 
   const installmentCount = contracts.filter(
     (contract) =>
-      contract.loanType === "INSTALLMENT",
+      contract.customer?.loanType === "INSTALLMENT",
   ).length;
 
   return (
@@ -268,38 +261,38 @@ export default async function ContractsPage() {
 
                     {/* Applicant */}
                     <td className="px-5 py-4 font-medium text-gray-700">
-                      {getApplicantName(contract)}
+                      {getApplicantName(contract.customer)}
                     </td>
 
                     {/* Contract type */}
                     <td className="px-5 py-4">
                       <span
                         className={
-                          contract.contractType ===
+                          contract.customer?.contractType ===
                           "MORABAHA"
                             ? "rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700"
                             : "rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700"
                         }
                       >
                         {getContractTypeTitle(
-                          contract.contractType,
+                          contract.customer?.contractType ?? "",
                         )}
                       </span>
                     </td>
 
                     {/* Loan type */}
                     <td className="px-5 py-4">
-                      {contract.loanType ? (
+                      {contract.customer?.loanType ? (
                         <span
                           className={
-                            contract.loanType ===
+                            contract.customer?.loanType ===
                             "MATURITY"
                               ? "rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700"
                               : "rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-700"
                           }
                         >
                           {getLoanTypeTitle(
-                            contract.loanType,
+                            contract.customer?.loanType ?? null,
                           )}
                         </span>
                       ) : (
@@ -316,14 +309,14 @@ export default async function ContractsPage() {
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
                         <Link
-                          href={`/template/${contract.id}`}
+                          href={`/template/${contract.customer?.id}`}
                           className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100"
                         >
                           مشاهده
                         </Link>
 
                         <Link
-                          href={`/template/${contract.id}/contract`}
+                          href={`/template/${contract.customer?.id}/contract`}
                           className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-blue-700"
                         >
                           قرارداد

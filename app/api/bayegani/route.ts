@@ -117,7 +117,7 @@ function mapRow(rawData: Record<string, unknown>) {
     installmentCount: findValue(rawData, "تعداد اقساط") || null,
     approvedAmount: findValue(rawData, "مبلغ مصوب", "مبلغ"),
     remainingAmount: findValue(rawData, "مانده تسهيلات", "مانده تسهیلات"),
-    nationalId: findValue(rawData, "کد ملي ", "کد ملي مشتري", "کد ملی"),
+    nationalId: findValue(rawData, "کد ملي ", "کد ملي مشتري", "کد ملی") || null,
   };
 }
 
@@ -373,15 +373,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "ردیف اطلاعاتی قابل‌واردکردن در فایل پیدا نشد." }, { status: 400 });
     }
 
-    // Replace the archive dataset only after the workbook has been parsed and validated.
-    // Keep every row, including repeated serial values, for manual correction.
-    const operations = [prisma.bayeganiRecord.deleteMany()];
-    for (let offset = 0; offset < records.length; offset += 300) {
-      const batch = records.slice(offset, offset + 300);
-      operations.push(prisma.bayeganiRecord.createMany({ data: batch as never[], skipDuplicates: false }));
+    const importedCustomers = new Map<string, { name: string | null; lastName: string | null }>();
+    for (const record of records) {
+      const nationalCode = cell(record.nationalId);
+      if (!nationalCode) continue;
+      const rawData = record.rawData && typeof record.rawData === "object" ? record.rawData as Record<string, unknown> : {};
+      importedCustomers.set(nationalCode, { name: findValue(rawData, "نام") || null, lastName: findValue(rawData, "نام خانوادگی") || null });
     }
-    const results = await prisma.$transaction(operations);
-    const imported = results.slice(1).reduce((sum, result) => sum + result.count, 0);
+    // Create/update parent Customer rows before importing related Bayegani records.
+    const imported = await prisma.$transaction(async (tx) => {
+      for (const [nationalCode, customer] of importedCustomers) {
+        await tx.customer.upsert({ where: { nationalCode }, create: { nationalCode, ...customer }, update: customer });
+      }
+      await tx.bayeganiRecord.deleteMany();
+      let count = 0;
+      for (let offset = 0; offset < records.length; offset += 300) {
+        const batch = records.slice(offset, offset + 300);
+        const result = await tx.bayeganiRecord.createMany({ data: batch as never[], skipDuplicates: false });
+        count += result.count;
+      }
+      return count;
+    });
 
     const normalized = await normalizeExistingRecords();
 

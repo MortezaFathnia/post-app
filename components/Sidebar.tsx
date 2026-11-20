@@ -7,8 +7,16 @@ import { useTheme } from "@/components/ThemeProvider";
 
 const menuItems = [
   { title: "داشبورد", href: "/dashboard", icon: "▦", description: "نمای کلی سامانه" },
-  { title: "قراردادها", href: "/dashboard/contracts", icon: "▤", description: "مشاهده قراردادهای ثبت‌شده" },
-  { title: "ثبت قرارداد", href: "/dashboard/upload", icon: "+", description: "ثبت از طریق فایل Excel" },
+  {
+    title: "قراردادها",
+    href: "/dashboard/contracts",
+    icon: "▤",
+    description: "مدیریت قراردادها",
+    children: [
+      { title: "فهرست قراردادها", href: "/dashboard/contracts", icon: "▤", description: "مشاهده قراردادهای ثبت‌شده" },
+      { title: "ثبت قرارداد", href: "/dashboard/upload", icon: "+", description: "ثبت از طریق فایل Excel" },
+    ],
+  },
   {
     title: "ضمانتنامه",
     href: "/dashboard/guarantees/extension",
@@ -40,6 +48,7 @@ const menuItems = [
     children: [
       { title: "مدیریت کد و نام باجه", href: "/dashboard/settings", icon: "▤", description: "فهرست باجه‌ها" },
       { title: "فهرست بانک‌ها", href: "/dashboard/settings/banks", icon: "▤", description: "نام و شناسه بانک‌ها" },
+      { title: "مدیریت کد و نام تسهیلات", href: "/dashboard/settings/facility-codes", icon: "▤", description: "فهرست مرجع انواع تسهیلات" },
     ],
   },
 ];

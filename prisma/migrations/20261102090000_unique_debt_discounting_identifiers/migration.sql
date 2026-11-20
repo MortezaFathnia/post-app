@@ -1,5 +1,4 @@
--- This migration is intentionally a no-op.
--- It precedes the migration that creates DebtDiscountingRecord, so creating
--- an index here breaks fresh shadow-database replay.
+-- This migration originally ran before DebtDiscountingRecord was created.
 -- The final unique constraint is applied by
 -- 20261110100000_unique_debt_check_number_administrative_number.
+-- Keep this migration as a no-op so fresh shadow databases can replay history safely.

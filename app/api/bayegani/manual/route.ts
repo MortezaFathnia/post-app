@@ -129,7 +129,15 @@ export async function POST(request: NextRequest) {
       });
       const nextSourceRow = (lastManualRecord?.sourceRow ?? 0) + 1;
 
-      return tx.bayeganiRecord.create({
+      const nationalCode = value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري");
+      if (!nationalCode) throw new Error("کد ملی برای ثبت مشتری الزامی است.");
+      await tx.customer.upsert({
+        where: { nationalCode },
+        create: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null, nationalCode },
+        update: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null },
+      });
+
+      const createdRecord = await tx.bayeganiRecord.create({
         data: {
           sourceFile: "ورود دستی", sheetName: "ورود دستی", sourceRow: nextSourceRow,
           facilityNumber: facilityNumber || null,
@@ -145,10 +153,11 @@ export async function POST(request: NextRequest) {
           endDate: value(raw, "پایان قرارداد", " پایان قرارداد", "تاریخ پایان قرارداد"),
           duration: value(raw, "مدت"), installmentCount: value(raw, "تعداد اقساط") || null, approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
           remainingAmount: value(raw, "مانده تسهیلات", "مانده تسهيلات"),
-          nationalId: value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري") || null,
+          nationalId: nationalCode,
           rawData: raw as never,
         },
       });
+      return createdRecord;
     }, { isolationLevel: "Serializable" });
     // Convert every BigInt value (including nested values) before building the JSON response.
     // This keeps PostgreSQL BIGINT fields intact in the database and exposes them as strings.

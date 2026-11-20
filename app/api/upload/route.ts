@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { mapDbExcelRow } from "@/lib/excel/mappping";
@@ -150,7 +151,16 @@ export async function POST(request: NextRequest) {
     const customers = rows.map(({ values, rowNumber }) => ({
       data: mapDbExcelRow(values, file.name, rowNumber),
       rowNumber,
+      values,
     }));
+
+    const resolvedContractCode = contractCode || customers[0]?.data.contractCode || "";
+    if (!resolvedContractCode) {
+      return NextResponse.json(
+        { success: false, error: "کد قرارداد الزامی است؛ آن را وارد کنید یا در فایل Excel قرار دهید." },
+        { status: 400 },
+      );
+    }
 
     const invalidRows = customers
       .filter(({ data }) => !data.name)
@@ -167,29 +177,139 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const createdCustomers = [];
+    const result = await prisma.$transaction(async (tx) => {
+      const createdCustomers = [];
 
-    for (const { data } of customers) {
-      const created = await prisma.customer.create({
-        data: {
+      for (const { data } of customers) {
+        const customerData = {
           ...data,
-          // Keep the contract number entered on the existing upload page.
+          // Keep legacy fields populated while existing templates are migrated.
           contractNumber,
-          // Preserve the Excel contract code when the optional input is blank.
-          contractCode: contractCode || data.contractCode || null,
-        },
+          contractCode: resolvedContractCode,
+        };
+        const created = data.nationalCode
+          ? await tx.customer.upsert({
+              where: { nationalCode: data.nationalCode },
+              create: customerData,
+              update: customerData,
+            })
+          : await tx.customer.create({ data: customerData });
+        createdCustomers.push(created);
+      }
+
+      const firstCustomer = createdCustomers[0];
+      const firstData = customers[0].data;
+
+      const contractPayload = {
+        customerId: firstCustomer.id,
+        contractCode: resolvedContractCode,
+        contractNumber,
+        contractDate: firstData.contractDate,
+        requestNumber: firstData.requestNumber,
+        requestDate: firstData.requestDate,
+        approvalNumber: firstData.approvalNumber,
+        approvalDate: firstData.approvalDate,
+        maturityDate: firstData.maturityDate,
+        facilityDescription: firstData.facilityDescription,
+        economicSector: firstData.economicSector,
+        useOfFunds: firstData.useOfFunds,
+        transactionDescription: firstData.transactionDescription,
+        salePrice: firstData.salePrice,
+        salePriceWords: firstData.salePriceWords,
+        purchasePrice: firstData.purchasePrice,
+        profitAmount: firstData.profitAmount,
+        interestRate: firstData.interestRate,
+        latePaymentBaseRate: firstData.latePaymentBaseRate,
+        latePaymentRate: firstData.latePaymentRate,
+        prepayment: firstData.prepayment,
+        payableAmount: firstData.payableAmount,
+        facilityAmount: firstData.facilityAmount,
+        contractDuration: firstData.contractDuration,
+        repaymentMethod: firstData.repaymentMethod,
+        gracePeriod: firstData.gracePeriod,
+        installmentCount: firstData.installmentCount,
+        installmentInterval: firstData.installmentInterval,
+        firstInstallmentDate: firstData.firstInstallmentDate,
+        firstQardInstallmentDate: firstData.firstQardInstallmentDate,
+        bankParticipationPercent: firstData.bankParticipationPercent,
+        proposedPartnershipProfit: firstData.proposedPartnershipProfit,
+        proposedMudarabahProfit: firstData.proposedMudarabahProfit,
+        collateralType: firstData.collateralType,
+        collateralDescription: firstData.collateralDescription,
+        collateralValue: firstData.collateralValue,
+      };
+
+      const contract = resolvedContractCode
+        ? await tx.contractDetails.upsert({
+            where: { contractCode: resolvedContractCode },
+            create: contractPayload,
+            update: contractPayload,
+          })
+        : await tx.contractDetails.create({ data: contractPayload });
+
+      const bankPayload = {
+        contractDetailsId: contract.id,
+        bankName: firstData.bankName,
+        branchName: firstData.branchName,
+        branchCode: firstData.branchCode,
+        branchPostalCode: firstData.branchPostalCode,
+        branchPhone: firstData.branchPhone,
+        branchAddress: firstData.branchAddress,
+        branchManager: firstData.branchManager,
+        counterName: firstData.counterName,
+        counterCode: firstData.counterCode,
+        brokerName: firstData.brokerName,
+        brokerCustomerCode: firstData.brokerCustomerCode,
+        bankRepresentative: firstData.bankRepresentative,
+      };
+
+      await tx.bankDetails.upsert({
+        where: { contractDetailsId: contract.id },
+        create: bankPayload,
+        update: bankPayload,
       });
 
-      createdCustomers.push(created);
-    }
+      const bayeganiRecords = [];
+      for (const { data, rowNumber, values } of customers) {
+        const recordData = {
+          contractCode: resolvedContractCode,
+          nationalId: data.nationalCode,
+          facilityTitle: data.facilityDescription,
+          status: "فعال",
+          rawData: values as Prisma.InputJsonObject,
+        };
+        const record = await tx.bayeganiRecord.upsert({
+          where: {
+            sourceFile_sheetName_sourceRow: {
+              sourceFile: file.name,
+              sheetName: "DB",
+              sourceRow: rowNumber,
+            },
+          },
+          create: {
+            sourceFile: file.name,
+            sheetName: "DB",
+            sourceRow: rowNumber,
+            ...recordData,
+          },
+          update: recordData,
+        });
+        bayeganiRecords.push(record);
+      }
 
-    const firstCustomer = createdCustomers[0];
+      return { createdCustomers, firstCustomer, contract, bayeganiRecords };
+    });
+
+    const { createdCustomers, firstCustomer, contract, bayeganiRecords } = result;
 
     return NextResponse.json(
       {
         success: true,
-        message: `${createdCustomers.length} رکورد از جدول اول صفحه DB با موفقیت ذخیره شد.`,
+        message: `${createdCustomers.length} رکورد مشتری به‌همراه اطلاعات قرارداد، بانک و بایگانی با موفقیت ذخیره شد.`,
         count: createdCustomers.length,
+        contractDetailsId: contract.id,
+        bankDetailsSaved: true,
+        bayeganiRecordCount: bayeganiRecords.length,
         id: firstCustomer.id,
         ids: createdCustomers.map((customer) => customer.id),
         contractNumber: firstCustomer.contractNumber,

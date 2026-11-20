@@ -1,3 +1,2 @@
--- This migration is intentionally a no-op.
--- DebtDiscountingFacility no longer stores customer information.
--- Facility details are sourced from BayeganiRecord.
+-- No-op: customer data is no longer part of DebtDiscountingFacility.
+-- The following migration removes the legacy customer columns.
