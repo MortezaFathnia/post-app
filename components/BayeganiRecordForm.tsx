@@ -138,7 +138,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const record = result.record as ApiRecord;
         const raw = record.rawData && typeof record.rawData === "object" ? removeUnwantedColumns(record.rawData) : {};
         const legacyArchiveCode = String(raw["کد بایگانی جدید"] ?? raw["کد بایگانی"] ?? "").trim();
-        delete raw["کد بایگانی جدید"];
+        delete raw["کد بایگانی جدید"];\n        delete raw["شماره مشتری"];
         if (legacyArchiveCode) raw["کد بایگانی"] = legacyArchiveCode;
         const next: Record<string, string> = { ...initialFields };
         next["مبلغ مصوب"] = normalizeAmount(String(raw["مبلغ مصوب"] ?? raw["مبلغ"] ?? ""));
