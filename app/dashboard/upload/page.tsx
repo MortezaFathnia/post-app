@@ -6,7 +6,7 @@ import UploadLoadingOverlay from "@/components/UploadLoadingOverlay";
 
 type UploadResponse = {
   success: boolean;
-  id?: number;
+  contractDetailsId?: number;
   error?: string;
 };
 
@@ -49,13 +49,13 @@ export default function UploadPage() {
       const result =
         (await response.json()) as UploadResponse;
 
-      if (!response.ok || !result.success || !result.id) {
+      if (!response.ok || !result.success || !result.contractDetailsId) {
         throw new Error(
           result.error || "خطا در ثبت قرارداد",
         );
       }
 
-      router.push(`/template/${result.id}`);
+      router.push(`/template/${result.contractDetailsId}`);
       router.refresh();
     } catch (err) {
       setError(
