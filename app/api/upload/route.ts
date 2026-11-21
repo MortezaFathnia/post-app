@@ -392,6 +392,9 @@ export async function POST(request: NextRequest) {
       });
 
       const bayeganiRecords = [];
+      let skippedDuplicateBayeganiRecords = 0;
+      let updatedBayeganiRecords = 0;
+
       for (const { data, rowNumber, values } of customers) {
         const mappedRecordData = mapBayeganiExcelRow(
           values,
@@ -402,36 +405,70 @@ export async function POST(request: NextRequest) {
           ...mappedRecordData,
           // Prefer the facility number from the archive row itself.
           // The upload form value is only a fallback when the Excel row omits it.
-          facilityNumber: mappedRecordData.facilityNumber || contractNumber,
+          facilityNumber: (mappedRecordData.facilityNumber || contractNumber).trim(),
+          serial: mappedRecordData.serial?.trim() || null,
         };
-        const record = await tx.bayeganiRecord.upsert({
+
+        const sourceKey = {
+          sourceFile: file.name,
+          sheetName: "DB",
+          sourceRow: rowNumber,
+        };
+        const existingSourceRecord = await tx.bayeganiRecord.findUnique({
           where: {
-            sourceFile_sheetName_sourceRow: {
-              sourceFile: file.name,
-              sheetName: "DB",
-              sourceRow: rowNumber,
-            },
+            sourceFile_sheetName_sourceRow: sourceKey,
           },
-          create: {
-            sourceFile: file.name,
-            sheetName: "DB",
-            sourceRow: rowNumber,
-            ...recordData,
-          },
-          update: recordData,
+          select: { id: true },
         });
-        bayeganiRecords.push(record);
+
+        // Enforce the same facility-number + serial uniqueness rule as BayeganiRecord.
+        // If this pair already belongs to another row, ignore the incoming duplicate.
+        const existingFacilitySerial =
+          recordData.facilityNumber && recordData.serial
+            ? await tx.bayeganiRecord.findFirst({
+                where: {
+                  facilityNumber: recordData.facilityNumber,
+                  serial: recordData.serial,
+                },
+                select: { id: true },
+              })
+            : null;
+
+        if (
+          existingFacilitySerial &&
+          existingFacilitySerial.id !== existingSourceRecord?.id
+        ) {
+          skippedDuplicateBayeganiRecords++;
+          continue;
+        }
+
+        if (existingSourceRecord) {
+          const record = await tx.bayeganiRecord.update({
+            where: { id: existingSourceRecord.id },
+            data: recordData,
+          });
+          bayeganiRecords.push(record);
+          updatedBayeganiRecords++;
+        } else {
+          const record = await tx.bayeganiRecord.create({
+            data: {
+              ...sourceKey,
+              ...recordData,
+            },
+          });
+          bayeganiRecords.push(record);
+        }
       }
 
-      return { createdCustomers, firstCustomer, contract, bayeganiRecords };
+      return { createdCustomers, firstCustomer, contract, bayeganiRecords, skippedDuplicateBayeganiRecords, updatedBayeganiRecords };
     });
 
-    const { createdCustomers, firstCustomer, contract, bayeganiRecords } = result;
+    const { createdCustomers, firstCustomer, contract, bayeganiRecords, skippedDuplicateBayeganiRecords, updatedBayeganiRecords } = result;
 
     return NextResponse.json(
       {
         success: true,
-        message: `${createdCustomers.length} رکورد مشتری به‌همراه اطلاعات قرارداد، بانک و بایگانی با موفقیت ذخیره شد.`,
+        message: `${createdCustomers.length} رکورد مشتری ذخیره شد؛ ${bayeganiRecords.length} رکورد بایگانی ثبت/به‌روزرسانی شد و ${skippedDuplicateBayeganiRecords} ردیف تکراری بایگانی نادیده گرفته شد.`,
         count: createdCustomers.length,
         contractDetailsId: contract.id,
         bankDetailsSaved: true,
