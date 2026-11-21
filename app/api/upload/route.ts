@@ -473,6 +473,8 @@ export async function POST(request: NextRequest) {
         contractDetailsId: contract.id,
         bankDetailsSaved: true,
         bayeganiRecordCount: bayeganiRecords.length,
+        skippedDuplicateBayeganiRecordCount: skippedDuplicateBayeganiRecords,
+        updatedBayeganiRecordCount: updatedBayeganiRecords,
         id: firstCustomer.id,
         ids: createdCustomers.map((customer) => customer.id),
         contractNumber: contract.contractNumber,
