@@ -25,10 +25,14 @@ function findGregorianDateForJalali(year: number, month: number, day: number): D
     month: "numeric",
     day: "numeric",
   });
-  const start = Date.UTC(year + 620, 0, 1, 12);
-  const end = Date.UTC(year + 623, 0, 1, 12);
-  for (let time = start; time < end; time += 86400000) {
-    const date = new Date(time);
+  // Jalali new year falls around March 20/21. Month lengths before the
+  // requested date are deterministic, so only a small boundary window is needed.
+  const daysBeforeMonth = month <= 6
+    ? (month - 1) * 31
+    : 186 + (month - 7) * 30;
+  const approximateTime = Date.UTC(year + 621, 2, 19 + daysBeforeMonth + day - 1, 12);
+  for (let offset = -3; offset <= 3; offset += 1) {
+    const date = new Date(approximateTime + offset * 86400000);
     const parts = formatter.formatToParts(date);
     const read = (type: string) => Number(parts.find((part) => part.type === type)?.value);
     if (read("year") === year && read("month") === month && read("day") === day) return date;
