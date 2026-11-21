@@ -103,10 +103,32 @@ export function getTemplateData(customer: TemplateDataSource) {
   const calculatedFirstInstallmentDate = customer.loanType === "INSTALLMENT"
     ? (rawFirstInstallmentDate || getOneMonthLaterPersianDate(new Date()))
     : rawFirstInstallmentDate;
+  const todayPersianDate = new Intl.DateTimeFormat("fa-IR", {
+    timeZone: "Asia/Tehran",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  const contractDate = firstNonEmpty(
+    customer.contractDate,
+    customer["تاریخ قرارداد"],
+    rawDbData["تاریخ قرارداد"],
+    todayPersianDate,
+  );
+  const startDate = firstNonEmpty(
+    customer.startDate,
+    customer["تاریخ شروع"],
+    rawDbData["تاریخ شروع"],
+    todayPersianDate,
+  );
 
   return {
     ...rawDbData,
     ...customer,
+    contractDate,
+    startDate,
+    "تاریخ قرارداد": contractDate,
+    "تاریخ شروع": startDate,
     applicantName: applicantName ?? "",
     fullName: applicantName ?? "",
     customerTypeTitle: customer.type === "COMPANY" ? "حقوقی" : "حقیقی",
