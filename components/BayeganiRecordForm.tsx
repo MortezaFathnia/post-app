@@ -130,22 +130,35 @@ export default function BayeganiRecordForm({ recordId }: Props) {
 
   useEffect(() => {
     if (recordId) return;
+    const facilityNumber = String(fields["شماره تسهیلات"] ?? "").trim();
+    if (!/^\d+\.\d+\.\d+\.\d+$/.test(facilityNumber)) {
+      setFields((current) => current["سریال"] ? { ...current, "سریال": "" } : current);
+      return;
+    }
     let active = true;
-    fetch("/api/bayegani/manual", { cache: "no-store" })
+    const controller = new AbortController();
+    fetch(`/api/bayegani/manual?facilityNumber=${encodeURIComponent(facilityNumber)}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
       .then(async (res) => {
         const result = await readApiResponse(res);
-        if (!res.ok || !result.success) throw new Error(result.error || "دریافت سریال بعدی ناموفق بود.");
+        if (!res.ok || !result.success) throw new Error(result.error || "دریافت آخرین سریال تسهیلات ناموفق بود.");
         if (active) {
-          const next = { ...initialFields, "سریال": result.nextSerial || "1", "تاریخ شروع": getTodayDateJalali() };
-          setFields(next);
-          setOriginalFields(next);
+          setFields((current) => ({
+            ...current,
+            "سریال": result.nextSerial || "1",
+            "تاریخ شروع": current["تاریخ شروع"] || getTodayDateJalali(),
+          }));
         }
       })
       .catch((e: unknown) => {
-        if (active) setError(e instanceof Error ? e.message : "دریافت سریال بعدی ناموفق بود.");
+        if (active && !(e instanceof DOMException && e.name === "AbortError")) {
+          setError(e instanceof Error ? e.message : "دریافت آخرین سریال تسهیلات ناموفق بود.");
+        }
       });
-    return () => { active = false; };
-  }, [recordId]);
+    return () => { active = false; controller.abort(); };
+  }, [recordId, fields["شماره تسهیلات"]]);
 
   useEffect(() => {
     if (!recordId) return;
