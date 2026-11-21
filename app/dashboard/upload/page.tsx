@@ -60,9 +60,9 @@ export default function UploadPage() {
         );
       }
 
-      setLastSerial(result.lastSerial ?? null);
-      setUploadedContractId(result.contractDetailsId);
-      router.refresh();
+      // Upload is complete. Open the template-selection page; it reads the
+      // latest serial directly from BayeganiRecord for this facility.
+      router.push(`/template/${result.contractDetailsId}`);
     } catch (err) {
       setError(
         err instanceof Error
