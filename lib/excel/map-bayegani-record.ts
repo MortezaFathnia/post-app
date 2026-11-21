@@ -88,7 +88,7 @@ export function mapBayeganiExcelRow(
     : counterCode || counterName;
 
   const facilityTypeValue = read(row, "نوع تسهیلات", "نوع تسهيلات", "نوع تسهیلات(انتخاب شود)");
-  const facilityCode = facilityTypeValue?.match(/^(\\d+)\\s*-/)?.[1] ?? null;
+  const facilityCode = facilityTypeValue?.match(/^(\d+)\s*-/)?.[1] ?? null;
 
   const facilityNumber = read(
     row,
