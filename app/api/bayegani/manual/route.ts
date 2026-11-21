@@ -60,22 +60,23 @@ function getHighestSerial(records: Array<{ serial: string | null; serialSort: bi
   return highest;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const facilityNumber = String(request.nextUrl.searchParams.get("facilityNumber") ?? "").trim();
-    if (!facilityNumber) {
-      return NextResponse.json({ success: false, error: "ابتدا شماره تسهیلات را وارد کنید تا آخرین سریال همان تسهیلات دریافت شود." }, { status: 400 });
-    }
+    // Serial numbers are globally unique, so use the latest serial across the entire archive.
     const existing = await prisma.bayeganiRecord.findMany({
-      where: { facilityNumber },
+      where: { serial: { not: null } },
       select: { serial: true, serialSort: true },
     });
     const highestSerial = getHighestSerial(existing);
-    return NextResponse.json({ success: true, lastSerial: highestSerial.toString(), nextSerial: (highestSerial + 1n).toString() });
+    return NextResponse.json({
+      success: true,
+      lastSerial: highestSerial.toString(),
+      nextSerial: (highestSerial + 1n).toString(),
+    });
   } catch (error) {
     console.error("Latest Bayegani serial lookup failed:", error);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "دریافت آخرین سریال ناموفق بود." },
+      { success: false, error: error instanceof Error ? error.message : "دریافت آخرین سریال بایگانی ناموفق بود." },
       { status: 500 },
     );
   }
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
     for (const key of ["column1", "column3", "column23", "column24"]) delete raw[key];
     const facilityNumber = value(raw, "شماره تسهیلات", "شماره تسهيلات");
     if (!facilityNumber) return NextResponse.json({ success: false, error: "کد قرارداد الزامی است." }, { status: 400 });
-    // Multiple archive rows may share a facility number; the serial is unique within that facility.
+    // Serial numbers are globally unique across all BayeganiRecord rows.
     if (!value(raw, "تاریخ شروع", "تاريخ شروع")) {
       const parts = new Intl.DateTimeFormat("en-u-ca-persian", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
       const part = (type: string) => parts.find((item) => item.type === type)?.value || "";
@@ -105,11 +106,11 @@ export async function POST(request: NextRequest) {
     raw["مبلغ مصوب"] = value(raw, "مبلغ مصوب", "مبلغ");
     delete raw["مبلغ"];
     delete raw["کد بایگانی جدید"];
-    // Serial is assigned by the server from the highest numeric serial already stored.
-    // Serializable isolation prevents two simultaneous manual inserts from taking the same number.
+    // Serial is assigned globally from the highest numeric serial in the archive.
+    // Serializable isolation plus the unique database index protects against duplicate serials.
     const record = await prisma.$transaction(async (tx) => {
       const existing = await tx.bayeganiRecord.findMany({
-        where: { facilityNumber },
+        where: { serial: { not: null } },
         select: { serial: true, serialSort: true },
       });
       const highestSerial = getHighestSerial(existing);
