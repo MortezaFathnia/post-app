@@ -81,6 +81,22 @@ export async function POST(request: NextRequest) {
     const raw = { ...(body.rawData as Record<string, unknown>) };
     for (const key of ["column1", "column3", "column23", "column24"]) delete raw[key];
     const facilityNumber = value(raw, "شماره تسهیلات", "شماره تسهيلات");
+    if (!facilityNumber) return NextResponse.json({ success: false, error: "کد قرارداد الزامی است." }, { status: 400 });
+    const duplicateContract = await prisma.bayeganiRecord.findFirst({ where: { OR: [{ facilityNumber }, { contractCode: facilityNumber }] }, select: { id: true } });
+    if (duplicateContract) return NextResponse.json({ success: false, error: "این کد قرارداد قبلاً در بایگانی ثبت شده است؛ کد قرارداد باید یکتا باشد." }, { status: 409 });
+    if (!value(raw, "تاریخ شروع", "تاريخ شروع")) {
+      const parts = new Intl.DateTimeFormat("en-u-ca-persian", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+      const part = (type: string) => parts.find((item) => item.type === type)?.value || "";
+      raw["تاریخ شروع"] = `${part("year")}/${part("month")}/${part("day")}`;
+    }
+    if (!facilityNumber) return NextResponse.json({ success: false, error: "کد قرارداد الزامی است." }, { status: 400 });
+    const duplicateContract = await prisma.bayeganiRecord.findFirst({ where: { OR: [{ facilityNumber }, { contractCode: facilityNumber }] }, select: { id: true } });
+    if (duplicateContract) return NextResponse.json({ success: false, error: "این کد قرارداد قبلاً در بایگانی ثبت شده است؛ کد قرارداد باید یکتا باشد." }, { status: 409 });
+    if (!value(raw, "تاریخ شروع", "تاريخ شروع")) {
+      const parts = new Intl.DateTimeFormat("en-u-ca-persian", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+      const part = (type: string) => parts.find((item) => item.type === type)?.value || "";
+      raw["تاریخ شروع"] = `${part("year")}/${part("month")}/${part("day")}`;
+    }
     const derivedCustomerNumber = customerNumberFromFacility(facilityNumber);
     if (derivedCustomerNumber) raw["شماره مشتری"] = derivedCustomerNumber;
     const customerNumber = derivedCustomerNumber || value(raw, "شماره مشتری", "شماره مشتري");
