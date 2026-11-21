@@ -6,9 +6,9 @@ ALTER TABLE "ContractCustomer" DROP CONSTRAINT IF EXISTS "ContractCustomer_contr
 DROP INDEX IF EXISTS "ContractCustomer_contractCode_role_key";
 
 ALTER TABLE "ContractDetails" RENAME COLUMN "contractCode" TO "facilityNumber";
+ALTER INDEX IF EXISTS "ContractDetails_contractCode_key" RENAME TO "ContractDetails_facilityNumber_key";
 ALTER TABLE "ContractCustomer" RENAME COLUMN "contractCode" TO "facilityNumber";
 
-ALTER TABLE "ContractCustomer" RENAME CONSTRAINT "ContractCustomer_pkey" TO "ContractCustomer_pkey";
 ALTER TABLE "ContractCustomer"
   ADD CONSTRAINT "ContractCustomer_facilityNumber_fkey"
   FOREIGN KEY ("facilityNumber") REFERENCES "ContractDetails"("facilityNumber")
