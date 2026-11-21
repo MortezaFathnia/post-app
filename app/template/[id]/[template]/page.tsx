@@ -45,10 +45,10 @@ function resolveArchiveClassification(
   facilityType: string,
   duration: string,
 ): string {
-  const normalizedType = facilityType.trim().replace(/^\\d+\\s*-\\s*/, "");
+  const normalizedType = facilityType.trim().replace(/^\d+\s*-\s*/, "");
   const months = Number(normalizeDigits(duration).replace(/[^0-9.]/g, ""));
   const typeRule = rules.find(
-    (rule) => rule.facilityType?.trim().replace(/^\\d+\\s*-\\s*/, "") === normalizedType
+    (rule) => rule.facilityType?.trim().replace(/^\d+\s*-\s*/, "") === normalizedType
       && normalizedType !== "",
   );
   if (typeRule) return String(typeRule.classification);
@@ -56,11 +56,11 @@ function resolveArchiveClassification(
   for (const rule of rules) {
     const range = rule.duration?.trim();
     if (!range || !Number.isFinite(months)) continue;
-    const match = range.match(/^(\\d+)\\s*[-–]\\s*(\\d+)$/);
+    const match = range.match(/^(\d+)\s*[-–]\s*(\d+)$/);
     if (match && months >= Number(match[1]) && months <= Number(match[2])) {
       return String(rule.classification);
     }
-    const greaterThan = range.match(/^>\\s*(\\d+)$/);
+    const greaterThan = range.match(/^>\s*(\d+)$/);
     if (greaterThan && months > Number(greaterThan[1])) {
       return String(rule.classification);
     }
@@ -101,7 +101,22 @@ export default async function TemplatePage({ params }: PageProps) {
     where: { id: contractId },
     include: {
       customerLinks: {
-        where: contract.contractCode
+        where: { role: "BORROWER" },
+        include: { customer: true },
+        take: 1,
+      },
+    },
+  });
+
+  if (!contract) {
+    notFound();
+  }
+
+  // The contract code is the facility number used by BayeganiRecord.
+  // Select the highest serial belonging to this facility only.
+  const [archiveRecords, classificationRules] = await Promise.all([
+    prisma.bayeganiRecord.findMany({
+      where: contract.contractCode
         ? {
             OR: [
               { facilityNumber: contract.contractCode },
@@ -117,7 +132,6 @@ export default async function TemplatePage({ params }: PageProps) {
         id: true,
         facilityNumber: true,
         serial: true,
-        serialSort: true,
         archiveCode: true,
         facilityTitle: true,
         classification: true,
@@ -144,7 +158,7 @@ export default async function TemplatePage({ params }: PageProps) {
   const archiveRawData = latestArchiveRecord?.rawData
     && typeof latestArchiveRecord.rawData === "object"
     && !Array.isArray(latestArchiveRecord.rawData)
-      ? latestArchiveRecord.rawData as Record<string, unknown>
+      ? latestArchiveRecord.rawData as unknown as Record<string, unknown>
       : {};
   const archiveFacilityType = String(
     archiveRawData["نوع تسهیلات"]
@@ -164,12 +178,32 @@ export default async function TemplatePage({ params }: PageProps) {
     archiveDuration,
   ) || latestArchiveRecord?.classification || "";
 
+  const templateDefinition = getContractTemplate(contract.contractType, template);
+  if (!templateDefinition) {
+    notFound();
+  }
+
+  const folder = getTemplateFolder(contract.contractType);
+  const templatePath = path.join(
+    process.cwd(),
+    "templates",
+    folder,
+    templateDefinition.file,
+  );
+
+  let templateHtml: string;
+  try {
+    templateHtml = await readFile(templatePath, "utf8");
+  } catch {
+    throw new Error(`Template file not found: ${templatePath}`);
+  }
+
   const borrower = contract.customerLinks[0]?.customer;
   const templateSource = {
     ...(borrower ?? {}),
     ...contract,
     ...archiveRawData,
-    // Fill template placeholders from the newest BayeganiRecord for this facility.
+    // Fill template placeholders from the latest BayeganiRecord for this facility.
     facilityNumber: latestArchiveRecord?.facilityNumber ?? contract.contractCode ?? "",
     "شماره تسهیلات": latestArchiveRecord?.facilityNumber ?? contract.contractCode ?? "",
     lastSerial: latestArchiveRecord?.serial ?? "",
