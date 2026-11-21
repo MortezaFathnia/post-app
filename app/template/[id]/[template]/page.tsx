@@ -143,11 +143,11 @@ export default async function TemplatePage({ params }: PageProps) {
   // Select the highest serial belonging to this facility only.
   const [archiveRecords, classificationRules] = await Promise.all([
     prisma.bayeganiRecord.findMany({
-      where: contract.contractCode
+      where: contract.facilityNumber
         ? {
             OR: [
-              { facilityNumber: contract.contractCode },
-              { contractCode: contract.contractCode },
+              { facilityNumber: contract.facilityNumber },
+              { facilityNumber: contract.facilityNumber },
             ],
           }
         : { id: -1 },
@@ -231,8 +231,8 @@ export default async function TemplatePage({ params }: PageProps) {
     ...contract,
     ...archiveRawData,
     // Fill template placeholders from the latest BayeganiRecord for this facility.
-    facilityNumber: latestArchiveRecord?.facilityNumber ?? contract.contractCode ?? "",
-    "شماره تسهیلات": latestArchiveRecord?.facilityNumber ?? contract.contractCode ?? "",
+    facilityNumber: latestArchiveRecord?.facilityNumber ?? contract.facilityNumber ?? "",
+    "شماره تسهیلات": latestArchiveRecord?.facilityNumber ?? contract.facilityNumber ?? "",
     lastSerial: latestArchiveRecord?.serial ?? "",
     serial: latestArchiveRecord?.serial ?? "",
     "سریال": latestArchiveRecord?.serial ?? "",
