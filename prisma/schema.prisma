@@ -7,11 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum CustomerType {
-  INDIVIDUAL
-  COMPANY
-}
-
 enum ContractType {
   MORABAHA
   CREDIT_CARD
