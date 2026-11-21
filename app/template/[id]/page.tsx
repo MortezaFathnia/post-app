@@ -31,11 +31,22 @@ function addMonthsToPersianDate(startDate: unknown, durationValue: unknown): str
   const dateMatch = dateText.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
   const monthsMatch = durationText.match(/\d+(?:\.\d+)?/);
   if (!dateMatch || !monthsMatch) return "";
-  const year = Number(dateMatch[1]);
-  const month = Number(dateMatch[2]);
-  const day = Number(dateMatch[3]);
+  let year = Number(dateMatch[1]);
+  let month = Number(dateMatch[2]);
+  let day = Number(dateMatch[3]);
   const months = Number(monthsMatch[0]);
   if (year < 1200 || month < 1 || month > 12 || day < 1 || day > 31 || !Number.isFinite(months) || months < 0) return "";
+  // Stored dates are normally Persian-calendar strings; also accept ISO/Gregorian dates.
+  if (year >= 1700) {
+    const gregorianDate = new Date(Date.UTC(year, month - 1, day, 12));
+    const persianParts = new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", {
+      timeZone: "UTC", year: "numeric", month: "numeric", day: "numeric",
+    }).formatToParts(gregorianDate);
+    const part = (type: string) => Number(persianParts.find((item) => item.type === type)?.value);
+    year = part("year");
+    month = part("month");
+    day = part("day");
+  }
   const wholeMonths = Math.trunc(months);
   const targetMonthIndex = year * 12 + (month - 1) + wholeMonths;
   const targetYear = Math.floor(targetMonthIndex / 12);
@@ -53,7 +64,6 @@ function addMonthsToPersianDate(startDate: unknown, durationValue: unknown): str
   }
   if (!lastDay) return "";
   const targetDay = Math.min(day, lastDay);
-  const targetDate = new Date(Date.UTC(targetYear - 621, 2, 20, 12));
   // Locate the Gregorian day corresponding to the target Persian calendar date.
   const searchStart = Date.UTC(targetYear - 622, 0, 1);
   const searchEnd = Date.UTC(targetYear - 620, 0, 1);
@@ -66,7 +76,7 @@ function addMonthsToPersianDate(startDate: unknown, durationValue: unknown): str
       }).format(new Date(time));
     }
   }
-  return targetDate.toISOString().slice(0, 10);
+  return "";
 }
 
 function resolveArchiveClassification(rules: ClassificationRule[], facilityType: unknown, duration: unknown): string {
