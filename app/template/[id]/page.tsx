@@ -137,6 +137,15 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
   const applicantName = getApplicantName(
     contract.customerLinks[0]?.customer ?? null,
   );
+  const todayPersianDate = new Intl.DateTimeFormat("fa-IR", {
+    timeZone: "Asia/Tehran",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  const displayedContractDate = contract.contractDate || todayPersianDate;
+  const displayedStartDate = bayeganiRecords.find((record) => record.startDate)?.startDate
+    || todayPersianDate;
 
   return (
     <div dir="rtl" className="min-h-screen bg-slate-50 text-slate-900">
@@ -197,7 +206,8 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                 label="نوع تسهیلات"
                 value={getLoanTypeTitle(contract.loanType)}
               />
-              <InfoItem label="تاریخ قرارداد" value={contract.contractDate} />
+              <InfoItem label="تاریخ قرارداد" value={displayedContractDate} />
+              <InfoItem label="تاریخ شروع" value={displayedStartDate} />
             </div>
           </section>
 
