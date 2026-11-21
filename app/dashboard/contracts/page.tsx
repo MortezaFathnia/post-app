@@ -188,7 +188,7 @@ export default async function ContractsPage() {
                 </th>
 
                 <th className="px-5 py-4 text-right font-semibold text-gray-700">
-                  کد قرارداد
+                  شماره تسهیلات
                 </th>
 
                 <th className="px-5 py-4 text-right font-semibold text-gray-700">
@@ -260,7 +260,7 @@ export default async function ContractsPage() {
 
                     {/* Contract code */}
                     <td className="whitespace-nowrap px-4 py-3 text-slate-600">
-                      {contract.contractReference || contract.facilityNumber || "-"}
+                      {contract.facilityNumber || "-"}
                     </td>
 
                     {/* Applicant */}
