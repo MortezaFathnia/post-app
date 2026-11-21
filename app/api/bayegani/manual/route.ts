@@ -150,6 +150,11 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      const facilityTypeValue = value(raw, "نوع تسهیلات", "نوع تسهيلات");
+      const facilityCodeCandidate = facilityTypeValue.match(/^(\d+)\s*-/)?.[1];
+      const matchedFacilityCode = facilityCodeCandidate
+        ? await tx.facilityCode.findUnique({ where: { code: facilityCodeCandidate }, select: { code: true } })
+        : null;
       const createdRecord = await tx.bayeganiRecord.create({
         data: {
           sourceFile: "ورود دستی", sheetName: "ورود دستی", sourceRow: nextSourceRow,
@@ -168,6 +173,7 @@ export async function POST(request: NextRequest) {
           duration: value(raw, "مدت"), installmentCount: value(raw, "تعداد اقساط") || null, approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
           remainingAmount: value(raw, "مانده تسهیلات", "مانده تسهيلات"),
           nationalId: nationalCode,
+          facilityCode: matchedFacilityCode?.code ?? null,
           rawData: raw as never,
         },
       });
