@@ -214,6 +214,76 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
     ? archiveStartDate!
     : todayPersianDate;
 
+  // Persist the exact values shown in "اطلاعات بایگانی تسهیلات" so the
+  // BayeganiRecord table and the template-selection page stay in sync.
+  // Serial is intentionally excluded: it remains the latest serial already
+  // stored in BayeganiRecord and is never replaced from rawData here.
+  const archiveFieldUpdates = bayeganiRecords.map((record) => {
+    const rawData = record.rawData && typeof record.rawData === "object" && !Array.isArray(record.rawData)
+      ? record.rawData as Record<string, unknown>
+      : {};
+    const facilityType = rawData["نوع تسهیلات"] ?? record.facilityTitle ?? rawData["عنوان تسهیلات"] ?? "";
+    const duration = [
+      record.duration,
+      rawData["مدت"],
+      rawData["مدت تسهیلات(به ماه)"],
+      rawData["مدت تسهیلات (به ماه)"],
+      rawData["مدت تسهیلات به ماه"],
+      rawData["مدت قرارداد"],
+    ].find((value) => value !== null && value !== undefined && String(value).trim() && !["0", "۰", "٠"].includes(String(value).trim())) ?? "";
+    const rawStartDate = [
+      record.startDate,
+      rawData["تاریخ شروع"],
+      rawData["تاریخ شروع قرارداد"],
+      rawData["تاریخ آغاز"],
+    ].find((value) => hasUsableDate(value));
+    const startDate = hasUsableDate(rawStartDate) ? String(rawStartDate).trim() : todayPersianDate;
+    const installmentCount = getArchiveInstallmentCount(contract.loanType, duration, record.installmentCount);
+    const calculatedEndDate = sumDatesJalali(startDate, duration);
+    const endDate = calculatedEndDate || (hasUsableDate(record.endDate) ? record.endDate! : "");
+    const classification = resolveArchiveClassification(classificationRules, facilityType, duration) || record.classification || "";
+    const rawCounterCode = Object.entries(rawData).find(([key, value]) =>
+      ["کد باجه", "کد باجه عامل"].includes(key.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\\u200c\\s]+/g, " ").trim()) &&
+      value !== null && value !== undefined && String(value).trim()
+    )?.[1];
+    const counterCode = record.counterCode || (rawCounterCode ? String(rawCounterCode).trim() : "") ||
+      record.counterLabel?.match(/^(\d+)\s*-/)?.[1] || "";
+    const rawCounterName = Object.entries(rawData).find(([key, value]) =>
+      ["نام باجه", "نام باجه عامل"].includes(key.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\\u200c\\s]+/g, " ").trim()) &&
+      value !== null && value !== undefined && String(value).trim()
+    )?.[1];
+    const counterName = record.counterLabel?.match(/^\d+\s*-(.*)$/)?.[1]?.trim() ||
+      (rawCounterName ? String(rawCounterName).trim() : "");
+    const counterLabel = record.counterLabel || (counterCode && counterName ? `${counterCode}-${counterName}` : "");
+    const archiveCode = [counterCode, classification, record.serial || ""].every(Boolean)
+      ? [counterCode, classification, record.serial].join("-")
+      : record.archiveCode || "";
+
+    return {
+      where: { id: record.id },
+      data: {
+        facilityTitle: getUploadedArchiveTitle(rawData, applicantName),
+        archiveCode,
+        counterCode: counterCode || null,
+        counterName: counterName || null,
+        counterLabel: counterLabel || null,
+        classification: classification || null,
+        startDate,
+        endDate: endDate || null,
+        duration: String(duration || "") || null,
+        installmentCount: installmentCount === "—" ? null : installmentCount,
+      },
+    };
+  });
+
+  if (archiveFieldUpdates.length > 0) {
+    await prisma.$transaction(
+      archiveFieldUpdates.map(({ where, data }) =>
+        prisma.bayeganiRecord.update({ where, data }),
+      ),
+    );
+  }
+
   return (
     <div dir="rtl" className="min-h-screen bg-slate-50 text-slate-900">
       <Sidebar />
@@ -300,7 +370,7 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                     value !== null && value !== undefined && String(value).trim()
                   )?.[1];
                   const counterCode = record.counterCode || (rawCounterCode ? String(rawCounterCode).trim() : "") ||
-                    record.counterLabel?.match(/^(\\d+)\\s*-/)?.[1] || "";
+                    record.counterLabel?.match(/^(\d+)\s*-/)?.[1] || "";
                   const generatedArchiveCode = [counterCode, classification !== "—" ? classification : "", record.serial || ""]
                     .every(Boolean)
                     ? [counterCode, classification, record.serial].join("-")

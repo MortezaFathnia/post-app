@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { mapDbExcelRow } from "@/lib/excel/mappping";
@@ -392,15 +393,16 @@ export async function POST(request: NextRequest) {
 
       const bayeganiRecords = [];
       for (const { data, rowNumber, values } of customers) {
+        const mappedRecordData = mapBayeganiExcelRow(
+          values,
+          resolvedContractCode,
+          values as Prisma.InputJsonObject,
+        );
         const recordData = {
-          ...mapBayeganiExcelRow(
-            values,
-            resolvedContractCode,
-            values as Prisma.InputJsonObject,
-          ),
-          // The upload form's contract number is the facility number for
-          // every archive row created from this workbook.
-          facilityNumber: contractNumber,
+          ...mappedRecordData,
+          // Prefer the facility number from the archive row itself.
+          // The upload form value is only a fallback when the Excel row omits it.
+          facilityNumber: mappedRecordData.facilityNumber || contractNumber,
         };
         const record = await tx.bayeganiRecord.upsert({
           where: {
