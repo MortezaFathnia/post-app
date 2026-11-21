@@ -40,28 +40,54 @@ function normalizeDigits(value: unknown): string {
     .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)));
 }
 
+function normalizeClassificationText(value: unknown): string {
+  return normalizeDigits(value)
+    .replace(/[يى]/g, "ی")
+    .replace(/ك/g, "ک")
+    .replace(/[\u200c\s]+/g, " ")
+    .trim()
+    .replace(/^\d+\s*[-–]\s*/, "")
+    .toLocaleLowerCase();
+}
+
 function resolveArchiveClassification(
   rules: ClassificationRule[],
   facilityType: string,
   duration: string,
 ): string {
-  const normalizedType = facilityType.trim().replace(/^\d+\s*-\s*/, "");
-  const months = Number(normalizeDigits(duration).replace(/[^0-9.]/g, ""));
-  const typeRule = rules.find(
-    (rule) => rule.facilityType?.trim().replace(/^\d+\s*-\s*/, "") === normalizedType
-      && normalizedType !== "",
-  );
+  const normalizedType = normalizeClassificationText(facilityType);
+  const monthsText = normalizeDigits(duration).replace(/[^0-9.]/g, "");
+  const months = Number(monthsText);
+
+  // Prefer an exact facility-type rule from FacilityClassification.
+  const typeRule = normalizedType
+    ? rules.find((rule) => normalizeClassificationText(rule.facilityType) === normalizedType)
+    : undefined;
   if (typeRule) return String(typeRule.classification);
 
+  // If no type rule matches, use the duration range configured in FacilityClassification.
+  if (!monthsText || !Number.isFinite(months)) return "";
   for (const rule of rules) {
-    const range = rule.duration?.trim();
-    if (!range || !Number.isFinite(months)) continue;
-    const match = range.match(/^(\d+)\s*[-–]\s*(\d+)$/);
-    if (match && months >= Number(match[1]) && months <= Number(match[2])) {
+    const range = normalizeDigits(rule.duration).trim().replace(/\s/g, "");
+    if (!range) continue;
+
+    const between = range.match(/^(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)$/);
+    if (between && months >= Number(between[1]) && months <= Number(between[2])) {
       return String(rule.classification);
     }
-    const greaterThan = range.match(/^>\s*(\d+)$/);
+
+    const greaterThan = range.match(/^>\s*(\d+(?:\.\d+)?)$/);
     if (greaterThan && months > Number(greaterThan[1])) {
+      return String(rule.classification);
+    }
+
+    const atLeast = range.match(/^>=\s*(\d+(?:\.\d+)?)$/);
+    if (atLeast && months >= Number(atLeast[1])) {
+      return String(rule.classification);
+    }
+
+    const exact = range.match(/^\d+(?:\.\d+)?$/);
+    if (exact && months === Number(range)) {
       return String(rule.classification);
     }
   }
