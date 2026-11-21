@@ -164,22 +164,22 @@ export default async function ContractsPage() {
       </div>
 
       {/* Contracts table */}
-      <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
-        <div className="border-b px-5 py-4">
-          <h2 className="font-semibold text-gray-900">
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-100 p-5">
+          <h2 className="font-bold text-slate-900">
             لیست قراردادها
           </h2>
 
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-slate-500">
             تعداد: {totalContracts} قرارداد
           </p>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1100px] text-sm">
-            <thead className="border-b bg-gray-50">
+          <table className="w-full min-w-[1200px] text-right text-sm">
+            <thead className="border-b border-slate-100 bg-slate-50 text-slate-600">
               <tr>
-                <th className="px-5 py-4 text-right font-semibold text-gray-700">
+                <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700">
                   #
                 </th>
 
@@ -213,7 +213,7 @@ export default async function ContractsPage() {
               </tr>
             </thead>
 
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-slate-100">
               {contracts.length === 0 ? (
                 <tr>
                   <td
@@ -246,30 +246,30 @@ export default async function ContractsPage() {
                 contracts.map((contract, index) => (
                   <tr
                     key={contract.id}
-                    className="transition hover:bg-gray-50"
+                    className="transition hover:bg-slate-50"
                   >
                     {/* Row */}
-                    <td className="px-5 py-4 text-gray-400">
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-400">
                       {index + 1}
                     </td>
 
                     {/* Contract number */}
-                    <td className="whitespace-nowrap px-5 py-4 font-medium text-gray-900">
+                    <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900">
                       {contract.contractNumber || "-"}
                     </td>
 
                     {/* Contract code */}
-                    <td className="whitespace-nowrap px-5 py-4 text-gray-600">
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">
                       {contract.contractCode || "-"}
                     </td>
 
                     {/* Applicant */}
-                    <td className="px-5 py-4 font-medium text-gray-700">
+                    <td className="px-4 py-3 font-medium text-slate-700">
                       {getApplicantName(contract.customerLinks[0]?.customer ?? null)}
                     </td>
 
                     {/* Contract type */}
-                    <td className="px-5 py-4">
+                    <td className="whitespace-nowrap px-4 py-3">
                       <span
                         className={
                           contract.contractType ===
@@ -314,14 +314,14 @@ export default async function ContractsPage() {
                       <div className="flex items-center gap-2">
                         <Link
                           href={`/template/${contract.id}`}
-                          className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100"
+                          className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
                         >
                           مشاهده
                         </Link>
 
                         <Link
                           href={`/template/${contract.id}/contract`}
-                          className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-blue-700"
+                          className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
                         >
                           قرارداد
                         </Link>
@@ -334,6 +334,7 @@ export default async function ContractsPage() {
           </table>
         </div>
       </div>
+    </section>
     </div>
   );
 }
