@@ -521,7 +521,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                   maxLength={key === "کد ملی" ? 10 : undefined}
                   inputMode={key === "کد ملی" ? "numeric" : undefined}
                   title={key === "کد ملی" ? "کد ملی باید دقیقاً ۱۰ رقم انگلیسی باشد." : undefined}
-                  readOnly={key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد" || key === "عنوان تسهیلات"}
+                  disabled={key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد" || key === "عنوان تسهیلات"}
                   onChange={(event) => changeField(key, event.target.value)}
                   onKeyDown={(event) => {
                     if (key === "مبلغ مصوب" && event.key === "*") {
