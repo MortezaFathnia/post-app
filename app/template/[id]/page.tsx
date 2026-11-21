@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import { prisma } from "@/lib/prisma";
 import { getContractTemplateSet } from "@/lib/templates/contract-templates";
+import { getTodayDateJalali, sumDatesJalali } from "@/lib/date/jalali";
 
 type PageProps = {
   params: Promise<{
@@ -22,63 +23,6 @@ function normalizeClassificationText(value: unknown): string {
   return normalizeClassificationDigits(value).replace(/[يى]/g, "ی").replace(/ك/g, "ک")
     .replace(/[\u200c\s]+/g, " ").trim().replace(/^\d+\s*[-–]\s*/, "").toLocaleLowerCase();
 }
-function addMonthsToPersianDate(startDate: unknown, durationValue: unknown): string {
-  const normalizeDigits = (value: unknown) => String(value ?? "")
-    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
-    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)));
-  const dateText = normalizeDigits(startDate).trim();
-  const durationText = normalizeDigits(durationValue).trim();
-  const dateMatch = dateText.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
-  const monthsMatch = durationText.match(/\d+(?:\.\d+)?/);
-  if (!dateMatch || !monthsMatch) return "";
-  let year = Number(dateMatch[1]);
-  let month = Number(dateMatch[2]);
-  let day = Number(dateMatch[3]);
-  const months = Number(monthsMatch[0]);
-  if (year < 1200 || month < 1 || month > 12 || day < 1 || day > 31 || !Number.isFinite(months) || months < 0) return "";
-  // Stored dates are normally Persian-calendar strings; also accept ISO/Gregorian dates.
-  if (year >= 1700) {
-    const gregorianDate = new Date(Date.UTC(year, month - 1, day, 12));
-    const persianParts = new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", {
-      timeZone: "UTC", year: "numeric", month: "numeric", day: "numeric",
-    }).formatToParts(gregorianDate);
-    const part = (type: string) => Number(persianParts.find((item) => item.type === type)?.value);
-    year = part("year");
-    month = part("month");
-    day = part("day");
-  }
-  const wholeMonths = Math.trunc(months);
-  const targetMonthIndex = year * 12 + (month - 1) + wholeMonths;
-  const targetYear = Math.floor(targetMonthIndex / 12);
-  const targetMonth = (targetMonthIndex % 12) + 1;
-  const formatter = new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", {
-    timeZone: "UTC", year: "numeric", month: "numeric", day: "numeric",
-  });
-  const start = Date.UTC(targetYear - 622, 0, 1);
-  const end = Date.UTC(targetYear - 620, 0, 1);
-  let lastDay = 0;
-  for (let time = start; time < end; time += 86400000) {
-    const parts = formatter.formatToParts(new Date(time));
-    const part = (type: string) => Number(parts.find((item) => item.type === type)?.value);
-    if (part("year") === targetYear && part("month") === targetMonth) lastDay = Math.max(lastDay, part("day"));
-  }
-  if (!lastDay) return "";
-  const targetDay = Math.min(day, lastDay);
-  // Locate the Gregorian day corresponding to the target Persian calendar date.
-  const searchStart = Date.UTC(targetYear - 622, 0, 1);
-  const searchEnd = Date.UTC(targetYear - 620, 0, 1);
-  for (let time = searchStart; time < searchEnd; time += 86400000) {
-    const parts = formatter.formatToParts(new Date(time));
-    const part = (type: string) => Number(parts.find((item) => item.type === type)?.value);
-    if (part("year") === targetYear && part("month") === targetMonth && part("day") === targetDay) {
-      return new Intl.DateTimeFormat("fa-IR", {
-        timeZone: "UTC", calendar: "persian", year: "numeric", month: "2-digit", day: "2-digit",
-      }).format(new Date(time));
-    }
-  }
-  return "";
-}
-
 function resolveArchiveClassification(rules: ClassificationRule[], facilityType: unknown, duration: unknown): string {
   const normalizedType = normalizeClassificationText(facilityType);
   const typeRule = normalizedType ? rules.find((rule) => normalizeClassificationText(rule.facilityType) === normalizedType) : undefined;
@@ -256,12 +200,7 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
   const applicantName = getApplicantName(
     contract.customerLinks[0]?.customer ?? null,
   );
-  const todayPersianDate = new Intl.DateTimeFormat("fa-IR", {
-    timeZone: "Asia/Tehran",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
+  const todayPersianDate = getTodayDateJalali();
   const hasUsableDate = (value: string | null | undefined) =>
     Boolean(value?.trim()) && !["0", "٠", "۰", "—", "-"].includes(value!.trim());
 
@@ -378,8 +317,9 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                         ? record.rawData as Record<string, unknown> : {};
                       const facilityType = rawData["نوع تسهیلات"] ?? record.facilityTitle ?? rawData["عنوان تسهیلات"] ?? "";
                       const duration = record.duration ?? rawData["مدت"] ?? rawData["مدت تسهیلات(به ماه)"] ?? "";
-                      const displayedStartDate = hasUsableDate(record.startDate) ? record.startDate : todayPersianDate;
-                      const calculatedEndDate = addMonthsToPersianDate(displayedStartDate, duration);
+                      const rawStartDate = record.startDate ?? rawData["تاریخ شروع"] ?? rawData["تاریخ شروع قرارداد"];
+                      const displayedStartDate = hasUsableDate(rawStartDate) ? String(rawStartDate).trim() : todayPersianDate;
+                      const calculatedEndDate = sumDatesJalali(displayedStartDate, duration);
                       const displayedEndDate = calculatedEndDate || (hasUsableDate(record.endDate) ? record.endDate! : "—");
                       const classification = resolveArchiveClassification(classificationRules, facilityType, duration) || record.classification || "—";
                       const rawCounterCode = Object.entries(rawData).find(([key, value]) =>
