@@ -145,10 +145,7 @@ export default async function TemplatePage({ params }: PageProps) {
     prisma.bayeganiRecord.findMany({
       where: contract.facilityNumber
         ? {
-            OR: [
-              { facilityNumber: contract.facilityNumber },
-              { facilityNumber: contract.facilityNumber },
-            ],
+            facilityNumber: contract.facilityNumber,
           }
         : { id: -1 },
       orderBy: [
