@@ -216,16 +216,15 @@ export async function POST(request: NextRequest) {
       const firstCustomer = createdCustomers[0];
       const firstData = customers[0].data;
 
-      // Keep each uploaded file as a separate contract record. contractCode remains
-      // the unique internal relation key; contractReference preserves the entered code.
-      let internalContractCode = resolvedContractCode;
+      // Keep each uploaded file as a separate contract record. facilityNumber is the unique internal relation key.
+      let internalFacilityNumber = resolvedContractCode;
       let duplicateIndex = 2;
-      while (await tx.contractDetails.findUnique({ where: { contractCode: internalContractCode }, select: { id: true } })) {
-        internalContractCode = `${resolvedContractCode}#${duplicateIndex++}`;
+      while (await tx.contractDetails.findUnique({ where: { facilityNumber: internalFacilityNumber }, select: { id: true } })) {
+        internalFacilityNumber = `${resolvedContractCode}#${duplicateIndex++}`;
       }
 
       const contractPayload = {
-        contractCode: internalContractCode,
+        facilityNumber: internalFacilityNumber,
         contractReference: resolvedContractCode,
         contractNumber,
         contractType: firstData.contractType,
@@ -269,11 +268,11 @@ export async function POST(request: NextRequest) {
 
       // Link the debtor to the contract using the association model.
       await tx.contractCustomer.deleteMany({
-        where: { contractCode: resolvedContractCode, role: "BORROWER" },
+        where: { facilityNumber: internalFacilityNumber, role: "BORROWER" },
       });
       await tx.contractCustomer.create({
         data: {
-          contractCode: resolvedContractCode,
+          facilityNumber: internalFacilityNumber,
           nationalCode: firstCustomer.nationalCode,
           role: "BORROWER",
         },
@@ -366,10 +365,10 @@ export async function POST(request: NextRequest) {
         });
 
         await tx.contractCustomer.deleteMany({
-          where: { contractCode: resolvedContractCode, role },
+          where: { facilityNumber: internalFacilityNumber, role },
         });
         await tx.contractCustomer.create({
-          data: { contractCode: resolvedContractCode, nationalCode, role },
+          data: { facilityNumber: internalFacilityNumber, nationalCode, role },
         });
         linkedNationalCodes.add(nationalCode);
       }
