@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { normalizeCounterName, normalizePersianText } from "@/lib/normalize-persian";
-import { addMonthsToDate } from "@/lib/date-months";
+import { getTodayDateJalali, sumDatesJalali } from "@/lib/date/jalali";
 import PersianDatePicker from "@/components/PersianDatePicker";
 
 type Props = { recordId?: string };
@@ -40,14 +40,6 @@ const initialFields: Record<string, string> = {
   "کد ملی": "",
   "توضیحات": "",
 };
-
-function getTodayPersianDate() {
-  const parts = new Intl.DateTimeFormat("en-u-ca-persian", {
-    timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit",
-  }).formatToParts(new Date());
-  const part = (type: string) => parts.find((item) => item.type === type)?.value || "";
-  return `${part("year")}/${part("month")}/${part("day")}`;
-}
 
 const hiddenFields = new Set(["کد باجه", "column1", "column3", "column23", "column24"]);
 
@@ -145,7 +137,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const result = await readApiResponse(res);
         if (!res.ok || !result.success) throw new Error(result.error || "دریافت سریال بعدی ناموفق بود.");
         if (active) {
-          const next = { ...initialFields, "سریال": result.nextSerial || "1", "تاریخ شروع": getTodayPersianDate() };
+          const next = { ...initialFields, "سریال": result.nextSerial || "1", "تاریخ شروع": getTodayDateJalali() };
           setFields(next);
           setOriginalFields(next);
         }
@@ -177,7 +169,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
           next[fieldName] = value == null ? "" : String(value);
         }
         delete next["تیک"];
-        next["پایان قرارداد"] = addMonthsToDate(next["تاریخ شروع"] || "", next["مدت"] || "") || next["پایان قرارداد"];
+        next["پایان قرارداد"] = sumDatesJalali(next["تاریخ شروع"] || "", next["مدت"] || "") || next["پایان قرارداد"];
         next["وضعیت کنونی"] = next["وضعیت کنونی"] || "فعال";
         next["نام باجه"] = normalizeCounterName(next["نام باجه"] || "");
         next["کد باجه"] = normalizePersianText(next["کد باجه"] || "");
