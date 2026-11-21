@@ -197,7 +197,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
         remainingAmount: value(raw, "مانده تسهيلات", "مانده تسهیلات"),
         nationalId: nationalCode || null,
-        contractCode: facilityNumber || null,
         },
       });
       return updatedRecord;
