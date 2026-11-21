@@ -316,8 +316,20 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                       const rawData = record.rawData && typeof record.rawData === "object" && !Array.isArray(record.rawData)
                         ? record.rawData as Record<string, unknown> : {};
                       const facilityType = rawData["نوع تسهیلات"] ?? record.facilityTitle ?? rawData["عنوان تسهیلات"] ?? "";
-                      const duration = record.duration ?? rawData["مدت"] ?? rawData["مدت تسهیلات(به ماه)"] ?? "";
-                      const rawStartDate = record.startDate ?? rawData["تاریخ شروع"] ?? rawData["تاریخ شروع قرارداد"];
+                      const duration = [
+                        record.duration,
+                        rawData["مدت"],
+                        rawData["مدت تسهیلات(به ماه)"],
+                        rawData["مدت تسهیلات (به ماه)"],
+                        rawData["مدت تسهیلات به ماه"],
+                        rawData["مدت قرارداد"],
+                      ].find((value) => value !== null && value !== undefined && String(value).trim() && !["0", "۰", "٠"].includes(String(value).trim())) ?? "";
+                      const rawStartDate = [
+                        record.startDate,
+                        rawData["تاریخ شروع"],
+                        rawData["تاریخ شروع قرارداد"],
+                        rawData["تاریخ آغاز"],
+                      ].find((value) => hasUsableDate(value));
                       const displayedStartDate = hasUsableDate(rawStartDate) ? String(rawStartDate).trim() : todayPersianDate;
                       const calculatedEndDate = sumDatesJalali(displayedStartDate, duration);
                       const displayedEndDate = calculatedEndDate || (hasUsableDate(record.endDate) ? record.endDate! : "—");
