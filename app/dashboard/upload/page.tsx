@@ -7,6 +7,7 @@ import UploadLoadingOverlay from "@/components/UploadLoadingOverlay";
 type UploadResponse = {
   success: boolean;
   contractDetailsId?: number;
+  lastSerial?: string | null;
   error?: string;
 };
 
@@ -17,11 +18,15 @@ export default function UploadPage() {
   const [contractNumber, setContractNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [lastSerial, setLastSerial] = useState<string | null>(null);
+  const [uploadedContractId, setUploadedContractId] = useState<number | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setError("");
+    setLastSerial(null);
+    setUploadedContractId(null);
 
     if (!contractNumber.trim()) {
       setError("شماره قرارداد الزامی است.");
@@ -55,7 +60,8 @@ export default function UploadPage() {
         );
       }
 
-      router.push(`/template/${result.contractDetailsId}`);
+      setLastSerial(result.lastSerial ?? null);
+      setUploadedContractId(result.contractDetailsId);
       router.refresh();
     } catch (err) {
       setError(
@@ -147,6 +153,28 @@ export default function UploadPage() {
                 </p>
               )}
             </div>
+
+
+            {uploadedContractId !== null && (
+              <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-4 text-sm text-green-800">
+                <p className="font-semibold">فایل با موفقیت ثبت شد.</p>
+                <p className="mt-2">
+                  آخرین سریال ثبت‌شده برای شماره تسهیلات
+                  <span className="mx-1 font-semibold" dir="ltr">{contractNumber}</span>
+                  :
+                  <span className="mx-2 font-bold" dir="ltr">
+                    {lastSerial ?? "سریال ثبت‌شده‌ای وجود ندارد"}
+                  </span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => router.push(`/template/${uploadedContractId}`)}
+                  className="mt-3 rounded-lg bg-green-700 px-4 py-2 font-medium text-white transition hover:bg-green-800"
+                >
+                  مشاهده قرارداد
+                </button>
+              </div>
+            )}
 
             {/* Error */}
             {error && (
