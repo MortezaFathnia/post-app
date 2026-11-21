@@ -105,6 +105,19 @@ function getLoanTypeTitle(loanType: string | null) {
   }
 }
 
+function getArchiveInstallmentCount(
+  loanType: string | null,
+  duration: unknown,
+  fallback: string | null,
+): string {
+  if (loanType === "INSTALLMENT") {
+    const months = String(duration ?? "").trim();
+    return months || fallback || "—";
+  }
+  if (loanType === "MATURITY") return "1";
+  return fallback || "—";
+}
+
 function getApplicantName(customer: {
   name: string | null;
   lastName: string | null;
@@ -331,6 +344,11 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                         rawData["تاریخ آغاز"],
                       ].find((value) => hasUsableDate(value));
                       const displayedStartDate = hasUsableDate(rawStartDate) ? String(rawStartDate).trim() : todayPersianDate;
+                      const displayedInstallmentCount = getArchiveInstallmentCount(
+                        contract.loanType,
+                        duration,
+                        record.installmentCount,
+                      );
                       const calculatedEndDate = sumDatesJalali(displayedStartDate, duration);
                       const displayedEndDate = calculatedEndDate || (hasUsableDate(record.endDate) ? record.endDate! : "—");
                       const classification = resolveArchiveClassification(classificationRules, facilityType, duration) || record.classification || "—";
@@ -358,7 +376,7 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                         <td className="whitespace-nowrap px-4 py-3">{displayedStartDate}</td>
                         <td className="whitespace-nowrap px-4 py-3">{displayedEndDate}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.duration || "—"}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{record.installmentCount || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{displayedInstallmentCount}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.approvedAmount || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.remainingAmount || "—"}</td>
                       </tr>
