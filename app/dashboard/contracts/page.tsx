@@ -333,7 +333,6 @@ export default async function ContractsPage() {
             </tbody>
           </table>
         </div>
-      </div>
     </section>
     </div>
   );
