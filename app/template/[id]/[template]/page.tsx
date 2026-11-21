@@ -5,6 +5,7 @@ import path from "path";
 import { prisma } from "@/lib/prisma";
 import { getContractTemplate } from "@/lib/templates/contract-templates";
 import { getTemplateData } from "@/lib/templates/template-data";
+import { sumDatesJalali } from "@/lib/date/jalali";
 
 import TemplateToolbar from "./TemplateToolbar";
 
@@ -250,7 +251,16 @@ export default async function TemplatePage({ params }: PageProps) {
     counterLabel: latestArchiveRecord?.counterLabel ?? "",
     status: latestArchiveRecord?.status ?? "",
     startDate: latestArchiveRecord?.startDate ?? "",
-    endDate: latestArchiveRecord?.endDate ?? "",
+    endDate: sumDatesJalali(
+      latestArchiveRecord?.startDate
+        ?? archiveRawData["تاریخ شروع"]
+        ?? archiveRawData["تاریخ شروع قرارداد"]
+        ?? "",
+      latestArchiveRecord?.duration
+        ?? archiveRawData["مدت"]
+        ?? archiveRawData["مدت تسهیلات(به ماه)"]
+        ?? "",
+    ) || latestArchiveRecord?.endDate || "",
     installmentCount: latestArchiveRecord?.installmentCount ?? "",
     approvedAmount: latestArchiveRecord?.approvedAmount ?? "",
     remainingAmount: latestArchiveRecord?.remainingAmount ?? "",
