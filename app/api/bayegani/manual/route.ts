@@ -83,38 +83,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const existing = await prisma.bayeganiRecord.findMany({
-      select: { serial: true, serialSort: true },
-    });
-    let highestSerial = 0n;
-    for (const item of existing) {
-      if (item.serialSort !== null && item.serialSort > highestSerial) {
-        highestSerial = item.serialSort;
-        continue;
-      }
-      if (item.serial) {
-        const digits = item.serial
-          .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
-          .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
-          .replace(/[^0-9]/g, "");
-        if (/^\d{1,18}$/.test(digits)) {
-          const numeric = BigInt(digits);
-          if (numeric > highestSerial) highestSerial = numeric;
-        }
-      }
-    }
-    return NextResponse.json({ success: true, lastSerial: highestSerial.toString(), nextSerial: (highestSerial + 1n).toString() });
-  } catch (error) {
-    console.error("Latest Bayegani serial lookup failed:", error);
-    return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "دریافت آخرین سریال ناموفق بود." },
-      { status: 500 },
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
     const body = await request.json() as { rawData?: unknown };
     if (!body.rawData || typeof body.rawData !== "object" || Array.isArray(body.rawData)) {
       return NextResponse.json({ success: false, error: "اطلاعات واردشده معتبر نیست." }, { status: 400 });
@@ -123,8 +91,7 @@ export async function POST(request: NextRequest) {
     for (const key of ["column1", "column3", "column23", "column24"]) delete raw[key];
     const facilityNumber = value(raw, "شماره تسهیلات", "شماره تسهيلات");
     if (!facilityNumber) return NextResponse.json({ success: false, error: "کد قرارداد الزامی است." }, { status: 400 });
-    const duplicateContract = await prisma.bayeganiRecord.findFirst({ where: { OR: [{ facilityNumber }, { contractCode: facilityNumber }] }, select: { id: true } });
-    if (duplicateContract) return NextResponse.json({ success: false, error: "این کد قرارداد قبلاً در بایگانی ثبت شده است؛ کد قرارداد باید یکتا باشد." }, { status: 409 });
+    // Multiple archive rows may share a facility number; the serial is unique within that facility.
     if (!value(raw, "تاریخ شروع", "تاريخ شروع")) {
       const parts = new Intl.DateTimeFormat("en-u-ca-persian", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
       const part = (type: string) => parts.find((item) => item.type === type)?.value || "";
