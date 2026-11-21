@@ -34,7 +34,7 @@ function normalizeCounter(raw: Record<string, unknown>) {
   return { name, code, label: code && name ? `${code}-${name}` : "" };
 }
 
-function customerNumberFromFacility(facilityNumber: string): string {
+\nfunction resolveClassification(rules: Array<{classification:number;facilityType:string|null;duration:string|null}>, facilityType: string, duration: string) {\n  const typeName = facilityType.split("-").slice(1).join("-").trim() || facilityType.trim();\n  const digits = duration.replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));\n  const months = Number(digits.trim());\n  const typeRule = rules.find((rule) => rule.facilityType?.trim() && rule.facilityType.trim() === typeName);\n  if (typeRule) return String(typeRule.classification);\n  for (const rule of rules) {\n    const range = rule.duration?.trim(); if (!range || !Number.isFinite(months)) continue;\n    const m = range.match(/^(\\d+)\\s*[-–]\\s*(\\d+)$/);\n    if (m && months >= Number(m[1]) && months <= Number(m[2])) return String(rule.classification);\n    const gt = range.match(/^>\\s*(\\d+)$/); if (gt && months > Number(gt[1])) return String(rule.classification);\n  }\n  return "";\n}\n\nfunction customerNumberFromFacility(facilityNumber: string): string {
   const parts = facilityNumber.trim().split(".");
   return parts.length >= 3 ? (parts[2] || "").trim() : "";
 }
