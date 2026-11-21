@@ -404,17 +404,12 @@ export async function POST(request: NextRequest) {
 
       // Determine the highest existing serial for this facility. serialSort is
       // preferred, with a digit-normalized serial fallback for older rows.
+      // Serial numbers are global across the archive, not scoped to the
+      // newly entered facility number. A new facility must continue after
+      // the highest serial already present anywhere in BayeganiRecord.
       const previousSerials = await tx.bayeganiRecord.findMany({
-        where: {
-          facilityNumber: internalFacilityNumber,
-          serial: { not: null },
-        },
-        select: { id: true, serial: true, serialSort: true, createdAt: true },
-        orderBy: [
-          { serialSort: { sort: "desc", nulls: "last" } },
-          { createdAt: "desc" },
-          { id: "desc" },
-        ],
+        where: { serial: { not: null } },
+        select: { id: true, facilityNumber: true, serial: true, serialSort: true, createdAt: true },
       });
 
       const toSerialNumber = (value: string | null | undefined): bigint | null => {
@@ -426,13 +421,28 @@ export async function POST(request: NextRequest) {
         return normalized ? BigInt(normalized) : null;
       };
 
+      const getRecordSerial = (record: (typeof previousSerials)[number]) =>
+        record.serialSort ?? toSerialNumber(record.serial);
+
       let highestSerial: bigint | null = null;
       for (const existing of previousSerials) {
-        const candidate = existing.serialSort ?? toSerialNumber(existing.serial);
+        const candidate = getRecordSerial(existing);
         if (candidate !== null && (highestSerial === null || candidate > highestSerial)) {
           highestSerial = candidate;
         }
       }
+
+      // If this exact facility already exists, reuse its own highest serial.
+      // Otherwise the first row starts at the archive-wide highest + 1.
+      const existingFacilityRecords = previousSerials
+        .filter((record) => record.facilityNumber === internalFacilityNumber)
+        .sort((left, right) => {
+          const leftSerial = getRecordSerial(left) ?? -1n;
+          const rightSerial = getRecordSerial(right) ?? -1n;
+          if (leftSerial !== rightSerial) return leftSerial > rightSerial ? -1 : 1;
+          return right.createdAt.getTime() - left.createdAt.getTime() || right.id - left.id;
+        });
+      const existingLastRecord = existingFacilityRecords[0] ?? null;
 
       let createdBayeganiRecords = 0;
       for (const [index, { rowNumber, values }] of customers.entries()) {
@@ -448,15 +458,11 @@ export async function POST(request: NextRequest) {
           : null;
 
         // Reuse the last serial already stored for this exact facility.
-        // Do not increment it just because the contract is uploaded again.
-        // Only additional rows in the same upload receive subsequent serials.
-        const existingLastRecord = index === 0 ? previousSerials[0] : undefined;
-        const workbookSerial = toSerialNumber(mappedRecordData.serial);
-        const rowSerial = existingLastRecord
-          ? toSerialNumber(existingLastRecord.serial) ?? existingLastRecord.serialSort
-          : highestSerial === null
-            ? (workbookSerial ?? 1n)
-            : highestSerial + 1n;
+        // For a new facility, continue the global archive serial sequence.
+        const reuseExistingFacilitySerial = index === 0 ? existingLastRecord : null;
+        const rowSerial = reuseExistingFacilitySerial
+          ? getRecordSerial(reuseExistingFacilitySerial)
+          : (highestSerial ?? 0n) + 1n;
 
         if (rowSerial === null) {
           throw new Error(`سریال معتبر برای شماره تسهیلات ${internalFacilityNumber} پیدا نشد.`);
@@ -471,12 +477,12 @@ export async function POST(request: NextRequest) {
           serialSort: rowSerial,
         };
 
-        if (existingLastRecord) {
+        if (reuseExistingFacilitySerial) {
           // The facility already has a serial (e.g. 3548). Update that archive
           // row in place so the serial remains exactly the value from the DB
           // and the [facilityNumber, serial] unique key is not duplicated.
           const record = await tx.bayeganiRecord.update({
-            where: { id: existingLastRecord.id },
+            where: { id: reuseExistingFacilitySerial.id },
             data: recordData,
           });
           bayeganiRecords.push(record);
