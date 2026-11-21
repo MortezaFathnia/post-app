@@ -216,12 +216,8 @@ export async function POST(request: NextRequest) {
       const firstCustomer = createdCustomers[0];
       const firstData = customers[0].data;
 
-      // Keep each uploaded file as a separate contract record. facilityNumber is the unique internal relation key.
-      let internalFacilityNumber = resolvedContractCode;
-      let duplicateIndex = 2;
-      while (await tx.contractDetails.findUnique({ where: { facilityNumber: internalFacilityNumber }, select: { id: true } })) {
-        internalFacilityNumber = `${resolvedContractCode}#${duplicateIndex++}`;
-      }
+      // facilityNumber is the same identifier used by BayeganiRecord.facilityNumber.
+      const internalFacilityNumber = contractNumber;
 
       const contractPayload = {
         facilityNumber: internalFacilityNumber,
@@ -264,7 +260,11 @@ export async function POST(request: NextRequest) {
         collateralValue: firstData.collateralValue,
       };
 
-      const contract = await tx.contractDetails.create({ data: contractPayload });
+      const contract = await tx.contractDetails.upsert({
+        where: { facilityNumber: internalFacilityNumber },
+        create: contractPayload,
+        update: contractPayload,
+      });
 
       // Link the debtor to the contract using the association model.
       await tx.contractCustomer.deleteMany({
