@@ -150,6 +150,7 @@ CREATE INDEX "ContractCustomer_nationalCode_idx"
 ALTER TABLE "BayeganiRecord"
   ADD CONSTRAINT "BayeganiRecord_facilityNumber_fkey"
   FOREIGN KEY ("facilityNumber") REFERENCES "ContractDetails"("facilityNumber")
-  ON DELETE SET NULL ON UPDATE CASCADE;
+  ON DELETE SET NULL ON UPDATE CASCADE
+  NOT VALID;
 
 COMMIT;
