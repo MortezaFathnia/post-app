@@ -101,47 +101,14 @@ export default async function TemplatePage({ params }: PageProps) {
     where: { id: contractId },
     include: {
       customerLinks: {
-        where: { role: "BORROWER" },
-        include: { customer: true },
-        take: 1,
-      },
-    },
-  });
-
-  if (!contract) {
-    notFound();
-  }
-
-  const templateDefinition = getContractTemplate(contract.contractType, template);
-  if (!templateDefinition) {
-    notFound();
-  }
-
-  const folder = getTemplateFolder(contract.contractType);
-  const templatePath = path.join(
-    process.cwd(),
-    "templates",
-    folder,
-    templateDefinition.file,
-  );
-
-  let templateHtml: string;
-  try {
-    templateHtml = await readFile(templatePath, "utf8");
-  } catch {
-    throw new Error(`Template file not found: ${templatePath}`);
-  }
-
-  // The contract code is the facility number used by BayeganiRecord.
-  // Select the record with the highest serial for this facility, not a global serial.
-  const [archiveRecords, classificationRules] = await Promise.all([
-    prisma.bayeganiRecord.findMany({
-      where: {
-        OR: [
-          { facilityNumber: contract.contractCode ?? "" },
-          { contractCode: contract.contractCode ?? "" },
-        ],
-      },
+        where: contract.contractCode
+        ? {
+            OR: [
+              { facilityNumber: contract.contractCode },
+              { contractCode: contract.contractCode },
+            ],
+          }
+        : { id: -1 },
       orderBy: [
         { serialSort: { sort: "desc", nulls: "last" } },
         { createdAt: "desc" },
@@ -180,8 +147,8 @@ export default async function TemplatePage({ params }: PageProps) {
       ? latestArchiveRecord.rawData as Record<string, unknown>
       : {};
   const archiveFacilityType = String(
-    latestArchiveRecord?.facilityTitle
-      ?? archiveRawData["نوع تسهیلات"]
+    archiveRawData["نوع تسهیلات"]
+      ?? latestArchiveRecord?.facilityTitle
       ?? archiveRawData["عنوان تسهیلات"]
       ?? "",
   );
@@ -204,12 +171,17 @@ export default async function TemplatePage({ params }: PageProps) {
     ...archiveRawData,
     // Fill template placeholders from the newest BayeganiRecord for this facility.
     facilityNumber: latestArchiveRecord?.facilityNumber ?? contract.contractCode ?? "",
+    "شماره تسهیلات": latestArchiveRecord?.facilityNumber ?? contract.contractCode ?? "",
     lastSerial: latestArchiveRecord?.serial ?? "",
     serial: latestArchiveRecord?.serial ?? "",
+    "سریال": latestArchiveRecord?.serial ?? "",
     archiveCode: latestArchiveRecord?.archiveCode ?? "",
+    "کد بایگانی": latestArchiveRecord?.archiveCode ?? "",
     facilityTitle: latestArchiveRecord?.facilityTitle ?? archiveFacilityType,
     facilityType: archiveFacilityType,
+    "نوع تسهیلات": archiveFacilityType,
     duration: archiveDuration,
+    "مدت": archiveDuration,
     classification: resolvedClassification,
     class: resolvedClassification,
     "طبقه": resolvedClassification,
