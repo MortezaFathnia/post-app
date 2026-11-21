@@ -27,7 +27,20 @@ export function mapBayeganiExcelRow(
     facilityNumber: read(row, "شماره تسهیلات", "شماره تسهیلات اعطایی", "شماره پرونده تسهیلات", "شماره قرارداد تسهیلات"),
     archiveCode: read(row, "کد بایگانی", "شماره بایگانی", "کد آرشیو"),
     facilityTitle: read(row, "عنوان تسهیلات", "عنوان قرارداد", "مورد مصرف(انتخاب شود)", "مورد مصرف"),
-    serial: read(row, "سریال", "شماره سریال", "سریال تسهیلات"),
+    serial:
+      read(row, "سریال", "شماره سریال", "سریال تسهیلات", "سریال پرونده", "شماره سریال تسهیلات") ??
+      Object.entries(row).find(([header, value]) => {
+        const normalizedHeader = header
+          .replace(/[يى]/g, "ی")
+          .replace(/ك/g, "ک")
+          .replace(/[\u200c\s]+/g, " ")
+          .trim()
+          .toLocaleLowerCase();
+        return normalizedHeader.includes("سریال") &&
+          value !== null &&
+          value !== undefined &&
+          String(value).trim() !== "";
+      })?.[1]?.toString().trim() ?? null,
     classification: read(row, "طبقه", "طبقه تسهیلات", "طبقه‌بندی", "طبقه بندی"),
     counterName: read(row, "نام باجه", "نام باجه عامل"),
     counterCode: read(row, "کد باجه", "کد باجه عامل"),
