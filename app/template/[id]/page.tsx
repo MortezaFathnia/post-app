@@ -179,7 +179,7 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
       select: {
         id: true, sourceFile: true, sourceRow: true, serialSort: true, facilityNumber: true,
         contractCode: true, customerNumber: true, archiveCode: true, facilityTitle: true,
-        serial: true, classification: true, counterLabel: true, status: true, startDate: true,
+        serial: true, classification: true, counterCode: true, counterLabel: true, status: true, startDate: true,
         endDate: true, duration: true, installmentCount: true, approvedAmount: true,
         remainingAmount: true, rawData: true,
       },
@@ -322,11 +322,22 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                       const facilityType = rawData["نوع تسهیلات"] ?? record.facilityTitle ?? rawData["عنوان تسهیلات"] ?? "";
                       const duration = record.duration ?? rawData["مدت"] ?? rawData["مدت تسهیلات(به ماه)"] ?? "";
                       const classification = resolveArchiveClassification(classificationRules, facilityType, duration) || record.classification || "—";
+                      const rawCounterCode = Object.entries(rawData).find(([key, value]) =>
+                        ["کد باجه", "کد باجه عامل"].includes(key.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\\u200c\\s]+/g, " ").trim()) &&
+                        value !== null && value !== undefined && String(value).trim()
+                      )?.[1];
+                      const counterCode = record.counterCode || (rawCounterCode ? String(rawCounterCode).trim() : "") ||
+                        record.counterLabel?.match(/^(\\d+)\\s*-/)?.[1] || "";
+                      const generatedArchiveCode = [counterCode, classification !== "—" ? classification : "", record.serial || ""]
+                        .every(Boolean)
+                        ? [counterCode, classification, record.serial].join("-")
+                        : "";
+                      const displayedArchiveCode = generatedArchiveCode || record.archiveCode || "—";
                       return (
                       <tr key={record.id} className="text-slate-700">
                         <td className="whitespace-nowrap px-4 py-3">{record.sourceFile}</td>
                         <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.facilityNumber || "—"}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{record.archiveCode || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3 font-semibold">{displayedArchiveCode}</td>
                         <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.serial || "—"}</td>
                         <td className="px-4 py-3">{getUploadedArchiveTitle(rawData, applicantName)}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.counterLabel || "—"}</td>
