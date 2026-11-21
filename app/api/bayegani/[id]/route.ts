@@ -176,6 +176,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           });
         }
       }
+      const facilityTypeValue = value(raw, "نوع تسهیلات", "نوع تسهيلات");
+      const facilityCodeCandidate = facilityTypeValue.match(/^(\d+)\s*-/)?.[1];
+      const matchedFacilityCode = facilityCodeCandidate
+        ? await tx.facilityCode.findUnique({ where: { code: facilityCodeCandidate }, select: { code: true } })
+        : null;
       const updatedRecord = await tx.bayeganiRecord.update({
         where: { id: recordId },
         data: {
@@ -197,6 +202,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
         remainingAmount: value(raw, "مانده تسهيلات", "مانده تسهیلات"),
         nationalId: nationalCode || null,
+        facilityCode: matchedFacilityCode?.code ?? null,
         },
       });
       return updatedRecord;
