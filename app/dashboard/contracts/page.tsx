@@ -260,7 +260,7 @@ export default async function ContractsPage() {
 
                     {/* Contract code */}
                     <td className="whitespace-nowrap px-4 py-3 text-slate-600">
-                      {contract.contractReference || contract.contractCode || "-"}
+                      {contract.contractReference || contract.facilityNumber || "-"}
                     </td>
 
                     {/* Applicant */}
