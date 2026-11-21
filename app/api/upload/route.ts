@@ -392,11 +392,16 @@ export async function POST(request: NextRequest) {
 
       const bayeganiRecords = [];
       for (const { data, rowNumber, values } of customers) {
-        const recordData = mapBayeganiExcelRow(
-          values,
-          resolvedContractCode,
-          values as Prisma.InputJsonObject,
-        );
+        const recordData = {
+          ...mapBayeganiExcelRow(
+            values,
+            resolvedContractCode,
+            values as Prisma.InputJsonObject,
+          ),
+          // The upload form's contract number is the facility number for
+          // every archive row created from this workbook.
+          facilityNumber: contractNumber,
+        };
         const record = await tx.bayeganiRecord.upsert({
           where: {
             sourceFile_sheetName_sourceRow: {
