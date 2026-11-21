@@ -45,6 +45,43 @@ function resolveArchiveClassification(rules: ClassificationRule[], facilityType:
   return "";
 }
 
+function getUploadedArchiveTitle(rawData: unknown, fallbackApplicantName: string): string {
+  if (!rawData || typeof rawData !== "object" || Array.isArray(rawData)) return fallbackApplicantName;
+  const data = rawData as Record<string, unknown>;
+  const normalize = (value: string) => value
+    .replace(/[يى]/g, "ی")
+    .replace(/ك/g, "ک")
+    .replace(/[\\u200c\\s]+/g, " ")
+    .trim()
+    .toLocaleLowerCase();
+  const values = new Map(Object.entries(data).map(([key, value]) => [normalize(key), value]));
+  const read = (...headers: string[]) => {
+    for (const header of headers) {
+      const value = values.get(normalize(header));
+      if (value !== undefined && value !== null && String(value).trim()) return String(value).trim();
+    }
+    return "";
+  };
+
+  const facilityType = read(
+    "نوع تسهیلات",
+    "نوع تسهیلات(انتخاب شود)",
+    "نوع وام",
+    "عنوان تسهیلات",
+  );
+  const fullApplicantName = read(
+    "نام و نام خانوادگی متقاضی",
+    "نام و نام خانوادگی مدیون",
+    "نام و نام خانوادگی مشتری",
+    "نام مدیون",
+    "نام متقاضی",
+  );
+  const firstName = read("نام متقاضی", "نام مدیون", "نام مشتری", "نام");
+  const lastName = read("نام خانوادگی متقاضی", "نام خانوادگی مدیون", "نام خانوادگی مشتری", "نام خانوادگی");
+  const applicantName = fullApplicantName || [firstName, lastName].filter(Boolean).join(" ") || fallbackApplicantName;
+  return [facilityType, applicantName].filter(Boolean).join(" ") || "—";
+}
+
 function getContractTypeTitle(contractType: string) {
   switch (contractType) {
     case "MORABAHA":
@@ -291,7 +328,7 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                         <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.facilityNumber || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.archiveCode || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.serial || "—"}</td>
-                        <td className="px-4 py-3">{record.facilityTitle || "—"}</td>
+                        <td className="px-4 py-3">{getUploadedArchiveTitle(rawData, applicantName)}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.counterLabel || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{classification}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.status || "—"}</td>
