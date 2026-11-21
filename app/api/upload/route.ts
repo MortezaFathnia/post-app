@@ -409,7 +409,12 @@ export async function POST(request: NextRequest) {
           facilityNumber: internalFacilityNumber,
           serial: { not: null },
         },
-        select: { serial: true, serialSort: true },
+        select: { id: true, serial: true, serialSort: true, createdAt: true },
+        orderBy: [
+          { serialSort: { sort: "desc", nulls: "last" } },
+          { createdAt: "desc" },
+          { id: "desc" },
+        ],
       });
 
       const toSerialNumber = (value: string | null | undefined): bigint | null => {
@@ -430,7 +435,7 @@ export async function POST(request: NextRequest) {
       }
 
       let createdBayeganiRecords = 0;
-      for (const { rowNumber, values } of customers) {
+      for (const [index, { rowNumber, values }] of customers.entries()) {
         const mappedRecordData = mapBayeganiExcelRow(
           values,
           values as Prisma.InputJsonObject,
@@ -442,32 +447,51 @@ export async function POST(request: NextRequest) {
             })
           : null;
 
-        // If the archive has no prior serial, retain the first numeric serial
-        // supplied by the workbook; subsequent rows increment it sequentially.
+        // Reuse the last serial already stored for this exact facility.
+        // Do not increment it just because the contract is uploaded again.
+        // Only additional rows in the same upload receive subsequent serials.
+        const existingLastRecord = index === 0 ? previousSerials[0] : undefined;
         const workbookSerial = toSerialNumber(mappedRecordData.serial);
-        const nextSerial = highestSerial === null
-          ? (workbookSerial ?? 1n)
-          : highestSerial + 1n;
-        highestSerial = nextSerial;
+        const rowSerial = existingLastRecord
+          ? toSerialNumber(existingLastRecord.serial) ?? existingLastRecord.serialSort
+          : highestSerial === null
+            ? (workbookSerial ?? 1n)
+            : highestSerial + 1n;
+
+        if (rowSerial === null) {
+          throw new Error(`سریال معتبر برای شماره تسهیلات ${internalFacilityNumber} پیدا نشد.`);
+        }
+        highestSerial = rowSerial;
 
         const recordData = {
           ...mappedRecordData,
           facilityCode: matchedFacilityCode?.code ?? null,
           facilityNumber: internalFacilityNumber,
-          serial: nextSerial.toString(),
-          serialSort: nextSerial,
+          serial: rowSerial.toString(),
+          serialSort: rowSerial,
         };
 
-        const record = await tx.bayeganiRecord.create({
-          data: {
-            sourceFile: uploadSourceFile,
-            sheetName: "DB",
-            sourceRow: rowNumber,
-            ...recordData,
-          },
-        });
-        bayeganiRecords.push(record);
-        createdBayeganiRecords++;
+        if (existingLastRecord) {
+          // The facility already has a serial (e.g. 3548). Update that archive
+          // row in place so the serial remains exactly the value from the DB
+          // and the [facilityNumber, serial] unique key is not duplicated.
+          const record = await tx.bayeganiRecord.update({
+            where: { id: existingLastRecord.id },
+            data: recordData,
+          });
+          bayeganiRecords.push(record);
+        } else {
+          const record = await tx.bayeganiRecord.create({
+            data: {
+              sourceFile: uploadSourceFile,
+              sheetName: "DB",
+              sourceRow: rowNumber,
+              ...recordData,
+            },
+          });
+          bayeganiRecords.push(record);
+          createdBayeganiRecords++;
+        }
       }
 
       const lastSerial = highestSerial?.toString() ?? null;
