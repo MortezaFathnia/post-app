@@ -477,13 +477,12 @@ export async function POST(request: NextRequest) {
         firstCustomer,
         contract,
         bayeganiRecords,
-        skippedDuplicateBayeganiRecords,
-        updatedBayeganiRecords,
-        lastSerial: lastSerialRecord?.serial ?? null,
+        createdBayeganiRecords,
+        lastSerial,
       };
     });
 
-    const { createdCustomers, firstCustomer, contract, bayeganiRecords, skippedDuplicateBayeganiRecords, updatedBayeganiRecords, lastSerial } = result;
+    const { createdCustomers, firstCustomer, contract, bayeganiRecords, createdBayeganiRecords, lastSerial } = result;
 
     return NextResponse.json(
       {
