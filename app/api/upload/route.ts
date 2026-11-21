@@ -405,8 +405,12 @@ export async function POST(request: NextRequest) {
           resolvedContractCode,
           values as Prisma.InputJsonObject,
         );
+        const matchedFacilityCode = mappedRecordData.facilityCode
+          ? await tx.facilityCode.findUnique({ where: { code: mappedRecordData.facilityCode }, select: { code: true } })
+          : null;
         const recordData = {
           ...mappedRecordData,
+          facilityCode: matchedFacilityCode?.code ?? null,
           // Prefer the facility number from the archive row itself.
           // The upload form value is only a fallback when the Excel row omits it.
           facilityNumber: (mappedRecordData.facilityNumber || contractNumber).trim(),
