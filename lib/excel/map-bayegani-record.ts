@@ -87,6 +87,9 @@ export function mapBayeganiExcelRow(
     ? `${counterCode}-${counterName}`
     : counterCode || counterName;
 
+  const facilityTypeValue = read(row, "نوع تسهیلات", "نوع تسهيلات", "نوع تسهیلات(انتخاب شود)");
+  const facilityCode = facilityTypeValue?.match(/^(\\d+)\\s*-/)?.[1] ?? null;
+
   const facilityNumber = read(
     row,
     "شماره تسهیلات",
@@ -107,6 +110,7 @@ export function mapBayeganiExcelRow(
     nationalId: read(row, "کدملی/شناسه ملی مدیون", "کد ملی مدیون", "کد ملی", "شناسه ملی"),
     customerNumber,
     facilityNumber,
+    facilityCode,
     archiveCode: read(row, "کد بایگانی", "شماره بایگانی", "کد آرشیو"),
     facilityTitle,
     serial,
