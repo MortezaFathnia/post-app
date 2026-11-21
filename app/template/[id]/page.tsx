@@ -143,9 +143,18 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
-  const displayedContractDate = contract.contractDate || todayPersianDate;
-  const displayedStartDate = bayeganiRecords.find((record) => record.startDate)?.startDate
-    || todayPersianDate;
+  const hasUsableDate = (value: string | null | undefined) =>
+    Boolean(value?.trim()) && !["0", "٠", "۰", "—", "-"].includes(value!.trim());
+
+  const displayedContractDate = hasUsableDate(contract.contractDate)
+    ? contract.contractDate!
+    : todayPersianDate;
+  const archiveStartDate = bayeganiRecords.find((record) =>
+    hasUsableDate(record.startDate),
+  )?.startDate;
+  const displayedStartDate = hasUsableDate(archiveStartDate)
+    ? archiveStartDate!
+    : todayPersianDate;
 
   return (
     <div dir="rtl" className="min-h-screen bg-slate-50 text-slate-900">
@@ -255,7 +264,7 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                         <td className="whitespace-nowrap px-4 py-3">{record.counterLabel || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.classification || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.status || "—"}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{record.startDate || new Intl.DateTimeFormat("fa-IR", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date())}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{hasUsableDate(record.startDate) ? record.startDate : todayPersianDate}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.endDate || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.duration || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.installmentCount || "—"}</td>
