@@ -84,9 +84,10 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
         take: 1,
       },
       bayeganiRecords: {
-        orderBy: { createdAt: "desc" },
+        orderBy: [{ serialSort: "desc" }, { createdAt: "desc" }],
         select: {
           id: true,
+          serialSort: true,
           facilityNumber: true,
           contractCode: true,
           customerNumber: true,
@@ -222,14 +223,14 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                     {contract.bayeganiRecords.map((record) => (
                       <tr key={record.id} className="text-slate-700">
                         <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.facilityNumber || "—"}</td>
-                        <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.contractCode || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3 font-semibold">{contract.contractNumber || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.archiveCode || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.serial || "—"}</td>
                         <td className="px-4 py-3">{record.facilityTitle || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.counterLabel || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.classification || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.status || "—"}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{record.startDate || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{record.startDate || new Intl.DateTimeFormat("fa-IR", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date())}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.endDate || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.duration || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.installmentCount || "—"}</td>
