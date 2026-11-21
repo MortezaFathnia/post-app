@@ -166,30 +166,39 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
     notFound();
   }
 
-  // Show only the newest BayeganiRecord associated with this contract.
-  // Other uploaded records remain untouched in the database.
+  // Resolve the archive record by the exact facility code first.
+  // Example: facilityNumber "1538.123.3232132.10" must display its stored serial "3548".
+  const facilityCode = contract.contractNumber?.trim() || contract.contractCode?.trim() || "";
+  const archiveSelect = {
+    id: true, sourceFile: true, sourceRow: true, serialSort: true, facilityNumber: true,
+    contractCode: true, customerNumber: true, archiveCode: true, facilityTitle: true,
+    serial: true, classification: true, counterCode: true, counterLabel: true, status: true, startDate: true,
+    endDate: true, duration: true, installmentCount: true, approvedAmount: true,
+    remainingAmount: true, rawData: true,
+  } as const;
+
   const [bayeganiRecords, classificationRules] = await Promise.all([
-    prisma.bayeganiRecord.findMany({
-      where: { OR: [
-        ...(contract.contractCode ? [{ contractCode: contract.contractCode }] : []),
-        ...(contract.contractCode ? [{ facilityNumber: contract.contractCode }] : []),
-        ...(contract.contractNumber ? [{ facilityNumber: contract.contractNumber }] : []),
-      ] },
-      // For a facility code (facilityNumber), use the record with the highest
-      // stored serial. Example: 1538.123.3232132.8 -> serial 3548.
-      orderBy: [
-        { serialSort: { sort: "desc", nulls: "last" } },
-        { createdAt: "desc" },
-      ],
-      take: 1,
-      select: {
-        id: true, sourceFile: true, sourceRow: true, serialSort: true, facilityNumber: true,
-        contractCode: true, customerNumber: true, archiveCode: true, facilityTitle: true,
-        serial: true, classification: true, counterCode: true, counterLabel: true, status: true, startDate: true,
-        endDate: true, duration: true, installmentCount: true, approvedAmount: true,
-        remainingAmount: true, rawData: true,
-      },
-    }),
+    (async () => {
+      if (facilityCode) {
+        const exactFacilityRecord = await prisma.bayeganiRecord.findFirst({
+          where: { facilityNumber: facilityCode },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          select: archiveSelect,
+        });
+        if (exactFacilityRecord) return [exactFacilityRecord];
+      }
+
+      // Fallback only when no exact facilityNumber match exists.
+      return prisma.bayeganiRecord.findMany({
+        where: { OR: [
+          ...(contract.contractCode ? [{ contractCode: contract.contractCode }] : []),
+          ...(contract.contractCode ? [{ facilityNumber: contract.contractCode }] : []),
+        ] },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take: 1,
+        select: archiveSelect,
+      });
+    })(),
     prisma.facilityClassification.findMany({
       orderBy: { classification: "asc" },
       select: { classification: true, facilityType: true, duration: true },
