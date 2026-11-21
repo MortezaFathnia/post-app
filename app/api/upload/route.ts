@@ -216,8 +216,17 @@ export async function POST(request: NextRequest) {
       const firstCustomer = createdCustomers[0];
       const firstData = customers[0].data;
 
+      // Keep each uploaded file as a separate contract record. contractCode remains
+      // the unique internal relation key; contractReference preserves the entered code.
+      let internalContractCode = resolvedContractCode;
+      let duplicateIndex = 2;
+      while (await tx.contractDetails.findUnique({ where: { contractCode: internalContractCode }, select: { id: true } })) {
+        internalContractCode = `${resolvedContractCode}#${duplicateIndex++}`;
+      }
+
       const contractPayload = {
-        contractCode: resolvedContractCode,
+        contractCode: internalContractCode,
+        contractReference: resolvedContractCode,
         contractNumber,
         contractType: firstData.contractType,
         loanType: firstData.loanType,
@@ -256,11 +265,7 @@ export async function POST(request: NextRequest) {
         collateralValue: firstData.collateralValue,
       };
 
-      const contract = await tx.contractDetails.upsert({
-        where: { contractCode: resolvedContractCode },
-        create: contractPayload,
-        update: contractPayload,
-      });
+      const contract = await tx.contractDetails.create({ data: contractPayload });
 
       // Link the debtor to the contract using the association model.
       await tx.contractCustomer.deleteMany({
