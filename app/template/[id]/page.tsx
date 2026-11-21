@@ -52,7 +52,7 @@ function getUploadedArchiveTitle(rawData: unknown, fallbackApplicantName: string
   const normalize = (value: string) => value
     .replace(/[يى]/g, "ی")
     .replace(/ك/g, "ک")
-    .replace(/[\\u200c\\s]+/g, " ")
+    .replace(/[\u200c\s]+/g, " ")
     .trim()
     .toLocaleLowerCase();
   const values = new Map(Object.entries(data).map(([key, value]) => [normalize(key), value]));
@@ -166,8 +166,8 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
     notFound();
   }
 
-  // Include archive rows from every uploaded workbook associated with this
-  // contract, including rows identified directly by the facility number.
+  // Show only the newest BayeganiRecord associated with this contract.
+  // Other uploaded records remain untouched in the database.
   const [bayeganiRecords, classificationRules] = await Promise.all([
     prisma.bayeganiRecord.findMany({
       where: { OR: [
@@ -176,10 +176,10 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
         ...(contract.contractNumber ? [{ facilityNumber: contract.contractNumber }] : []),
       ] },
       orderBy: [
-        { sourceFile: "asc" },
-        { serialSort: { sort: "desc", nulls: "last" } },
         { createdAt: "desc" },
+        { serialSort: { sort: "desc", nulls: "last" } },
       ],
+      take: 1,
       select: {
         id: true, sourceFile: true, sourceRow: true, serialSort: true, facilityNumber: true,
         contractCode: true, customerNumber: true, archiveCode: true, facilityTitle: true,
@@ -243,13 +243,13 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
     const endDate = calculatedEndDate || (hasUsableDate(record.endDate) ? record.endDate! : "");
     const classification = resolveArchiveClassification(classificationRules, facilityType, duration) || record.classification || "";
     const rawCounterCode = Object.entries(rawData).find(([key, value]) =>
-      ["کد باجه", "کد باجه عامل"].includes(key.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\\u200c\\s]+/g, " ").trim()) &&
+      ["کد باجه", "کد باجه عامل"].includes(key.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\u200c\s]+/g, " ").trim()) &&
       value !== null && value !== undefined && String(value).trim()
     )?.[1];
     const counterCode = record.counterCode || (rawCounterCode ? String(rawCounterCode).trim() : "") ||
       record.counterLabel?.match(/^(\d+)\s*-/)?.[1] || "";
     const rawCounterName = Object.entries(rawData).find(([key, value]) =>
-      ["نام باجه", "نام باجه عامل"].includes(key.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\\u200c\\s]+/g, " ").trim()) &&
+      ["نام باجه", "نام باجه عامل"].includes(key.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\u200c\s]+/g, " ").trim()) &&
       value !== null && value !== undefined && String(value).trim()
     )?.[1];
     const counterName = record.counterLabel?.match(/^\d+\s*-(.*)$/)?.[1]?.trim() ||
@@ -366,7 +366,7 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                   const displayedEndDate = calculatedEndDate || (hasUsableDate(record.endDate) ? record.endDate! : "—");
                   const classification = resolveArchiveClassification(classificationRules, facilityType, duration) || record.classification || "—";
                   const rawCounterCode = Object.entries(rawData).find(([key, value]) =>
-                    ["کد باجه", "کد باجه عامل"].includes(key.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\\u200c\\s]+/g, " ").trim()) &&
+                    ["کد باجه", "کد باجه عامل"].includes(key.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\u200c\s]+/g, " ").trim()) &&
                     value !== null && value !== undefined && String(value).trim()
                   )?.[1];
                   const counterCode = record.counterCode || (rawCounterCode ? String(rawCounterCode).trim() : "") ||
@@ -381,7 +381,7 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                     <article key={record.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
                       <div className="flex flex-col gap-2 border-b border-slate-100 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                         <h3 className="font-bold text-slate-800">
-                          رکورد بایگانی {new Intl.NumberFormat("fa-IR").format(index + 1)}
+                          اطلاعات رکورد بایگانی
                         </h3>
                         <p className="break-all text-xs text-slate-500">
                           {record.sourceFile || "نام فایل ثبت نشده"}
