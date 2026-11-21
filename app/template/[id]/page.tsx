@@ -293,7 +293,7 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                         <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.serial || "—"}</td>
                         <td className="px-4 py-3">{record.facilityTitle || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.counterLabel || "—"}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{record.classification || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{classification}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.status || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{hasUsableDate(record.startDate) ? record.startDate : todayPersianDate}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.endDate || "—"}</td>
