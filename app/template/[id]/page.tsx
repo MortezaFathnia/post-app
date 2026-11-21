@@ -10,6 +10,69 @@ type PageProps = {
   }>;
 };
 
+
+type ClassificationRule = {
+  classification: number;
+  facilityType: string | null;
+  duration: string | null;
+};
+
+function normalizeClassificationDigits(value: unknown): string {
+  return String(value ?? "")
+    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)));
+}
+
+function normalizeClassificationText(value: unknown): string {
+  return normalizeClassificationDigits(value)
+    .replace(/[يى]/g, "ی")
+    .replace(/ك/g, "ک")
+    .replace(/[\\u200c\\s]+/g, " ")
+    .trim()
+    .replace(/^\\d+\\s*[-–]\\s*/, "")
+    .toLocaleLowerCase();
+}
+
+function resolveArchiveClassification(
+  rules: ClassificationRule[],
+  facilityType: unknown,
+  duration: unknown,
+): string {
+  const normalizedType = normalizeClassificationText(facilityType);
+  const typeRule = normalizedType
+    ? rules.find((rule) => normalizeClassificationText(rule.facilityType) === normalizedType)
+    : undefined;
+  if (typeRule) return String(typeRule.classification);
+
+  const durationText = normalizeClassificationDigits(duration).trim();
+  const monthsText = durationText.replace(/[^0-9.]/g, "");
+  const months = Number(monthsText);
+  if (!monthsText || !Number.isFinite(months)) return "";
+
+  for (const rule of rules) {
+    const range = normalizeClassificationDigits(rule.duration).trim().replace(/\\s/g, "");
+    if (!range) continue;
+
+    const between = range.match(/^(\\d+(?:\\.\\d+)?)\\s*[-–]\\s*(\\d+(?:\\.\\d+)?)$/);
+    if (between && months >= Number(between[1]) && months <= Number(between[2])) {
+      return String(rule.classification);
+    }
+    const greaterThan = range.match(/^>\\s*(\\d+(?:\\.\\d+)?)$/);
+    if (greaterThan && months > Number(greaterThan[1])) {
+      return String(rule.classification);
+    }
+    const atLeast = range.match(/^>=\\s*(\\d+(?:\\.\\d+)?)$/);
+    if (atLeast && months >= Number(atLeast[1])) {
+      return String(rule.classification);
+    }
+    const exact = range.match(/^\\d+(?:\\.\\d+)?$/);
+    if (exact && months === Number(range)) {
+      return String(rule.classification);
+    }
+  }
+  return "";
+}
+
 function getContractTypeTitle(contractType: string) {
   switch (contractType) {
     case "MORABAHA":
@@ -92,7 +155,7 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
 
   // Include archive rows from every uploaded workbook associated with this
   // contract, including rows identified directly by the facility number.
-  const bayeganiRecords = await prisma.bayeganiRecord.findMany({
+  const [bayeganiRecords, classificationRules] = await Promise.all([\n    prisma.bayeganiRecord.findMany({
     where: {
       OR: [
         ...(contract.contractCode ? [{ contractCode: contract.contractCode }] : []),
@@ -262,7 +325,7 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                         <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.serial || "—"}</td>
                         <td className="px-4 py-3">{record.facilityTitle || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.counterLabel || "—"}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{record.classification || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{classification}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.status || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{hasUsableDate(record.startDate) ? record.startDate : todayPersianDate}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.endDate || "—"}</td>
