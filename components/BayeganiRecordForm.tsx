@@ -54,7 +54,27 @@ function buildNewArchiveCode(raw: Record<string, unknown>) {
   return [counterCode, floor, serial].every(Boolean) ? [counterCode, floor, serial].join("-") : "";
 }
 
-\nfunction resolveClassification(rules: ClassificationOption[], facilityType: string, duration: string) {\n  const typeName = facilityType.split("-").slice(1).join("-").trim() || facilityType.trim();\n  const months = Number(duration.replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))).trim());\n  const typeRule = rules.find((rule) => rule.facilityType?.trim() && rule.facilityType.trim() === typeName);\n  if (typeRule) return String(typeRule.classification);\n  for (const rule of rules) {\n    const range = rule.duration?.trim(); if (!range || !Number.isFinite(months)) continue;\n    const m = range.match(/^(\\d+)\\s*[-–]\\s*(\\d+)$/);\n    if (m && months >= Number(m[1]) && months <= Number(m[2])) return String(rule.classification);\n    const gt = range.match(/^>\\s*(\\d+)$/); if (gt && months > Number(gt[1])) return String(rule.classification);\n  }\n  return "";\n}\n\nfunction normalizeAmount(value: string) {
+function resolveClassification(rules: ClassificationOption[], facilityType: string, duration: string) {
+  const typeName = facilityType.split("-").slice(1).join("-").trim() || facilityType.trim();
+  const normalizedDuration = duration
+    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+    .trim();
+  const months = Number(normalizedDuration);
+  const typeRule = rules.find((rule) => rule.facilityType?.trim() && rule.facilityType.trim() === typeName);
+  if (typeRule) return String(typeRule.classification);
+  for (const rule of rules) {
+    const range = rule.duration?.trim();
+    if (!range || !Number.isFinite(months)) continue;
+    const match = range.match(/^(\d+)\s*[-–]\s*(\d+)$/);
+    if (match && months >= Number(match[1]) && months <= Number(match[2])) return String(rule.classification);
+    const greaterThan = range.match(/^>\s*(\d+)$/);
+    if (greaterThan && months > Number(greaterThan[1])) return String(rule.classification);
+  }
+  return "";
+}
+
+function normalizeAmount(value: string) {
   return value
     .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
     .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
@@ -220,7 +240,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
           : "";
       }
       if (key === "تاریخ شروع" || key === "مدت") {
-        next["پایان قرارداد"] = addMonthsToDate(next["تاریخ شروع"] || "", next["مدت"] || "");
+        next["پایان قرارداد"] = sumDatesJalali(next["تاریخ شروع"] || "", next["مدت"] || "");
       }
       return next;
     });
