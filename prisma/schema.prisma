@@ -191,7 +191,7 @@ model Customer {
 }
 model ContractDetails {
   id                        Int              @id @default(autoincrement())
-  contractCode              String?          @unique
+  facilityNumber            String?          @unique
   contractReference         String?
   contractNumber            String?
   contractType              ContractType       @default(MORABAHA)
@@ -237,16 +237,16 @@ model ContractDetails {
 }
 
 model ContractCustomer {
-  contractCode  String
-  nationalCode  String
-  role          CustomerRole
-  contract      ContractDetails @relation(fields: [contractCode], references: [contractCode], onDelete: Cascade, onUpdate: Cascade)
+  facilityNumber String
+  nationalCode   String
+  role           CustomerRole
+  contract       ContractDetails @relation(fields: [facilityNumber], references: [facilityNumber], onDelete: Cascade, onUpdate: Cascade)
   customer      Customer        @relation(fields: [nationalCode], references: [nationalCode], onDelete: Cascade, onUpdate: Cascade)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  @@id([contractCode, nationalCode])
-  @@unique([contractCode, role])
+  @@id([facilityNumber, nationalCode])
+  @@unique([facilityNumber, role])
   @@index([nationalCode])
 }
 
@@ -294,8 +294,9 @@ model BayeganiRecord {
   approvedAmount            String?
   remainingAmount           String?
   nationalId                String?
-  contractCode              String?
-  contractDetails           ContractDetails?          @relation(fields: [contractCode], references: [contractCode], onDelete: SetNull, onUpdate: Cascade)
+  facilityCode              String?
+  facilityCodeDetails       FacilityCode?             @relation(fields: [facilityCode], references: [code], onDelete: SetNull, onUpdate: Cascade)
+  contractDetails           ContractDetails?          @relation(fields: [facilityNumber], references: [facilityNumber], onDelete: SetNull, onUpdate: Cascade)
   rawData                   Json
   createdAt                 DateTime                  @default(now())
   updatedAt                 DateTime                  @updatedAt
@@ -309,7 +310,7 @@ model BayeganiRecord {
   @@index([nationalId])
   @@index([archiveCode])
   @@index([serialSort])
-  @@index([contractCode])
+  @@index([facilityCode])
 }
 
 model DebtDiscountingFacility {
@@ -337,6 +338,7 @@ model FacilityCode {
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  bayeganiRecords BayeganiRecord[]
 }
 
 
