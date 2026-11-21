@@ -28,6 +28,46 @@ function getTemplateFolder(contractType: string): string {
   }
 }
 
+type ClassificationRule = {
+  classification: number;
+  facilityType: string | null;
+  duration: string | null;
+};
+
+function normalizeDigits(value: unknown): string {
+  return String(value ?? "")
+    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)));
+}
+
+function resolveArchiveClassification(
+  rules: ClassificationRule[],
+  facilityType: string,
+  duration: string,
+): string {
+  const normalizedType = facilityType.trim().replace(/^\d+\s*-\s*/, "");
+  const months = Number(normalizeDigits(duration).replace(/[^0-9.]/g, ""));
+  const typeRule = rules.find(
+    (rule) => rule.facilityType?.trim().replace(/^\d+\s*-\s*/, "") === normalizedType
+      && normalizedType !== "",
+  );
+  if (typeRule) return String(typeRule.classification);
+
+  for (const rule of rules) {
+    const range = rule.duration?.trim();
+    if (!range || !Number.isFinite(months)) continue;
+    const match = range.match(/^(\d+)\s*[-–]\s*(\d+)$/);
+    if (match && months >= Number(match[1]) && months <= Number(match[2])) {
+      return String(rule.classification);
+    }
+    const greaterThan = range.match(/^>\s*(\d+)$/);
+    if (greaterThan && months > Number(greaterThan[1])) {
+      return String(rule.classification);
+    }
+  }
+  return "";
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -72,6 +112,72 @@ export default async function TemplatePage({ params }: PageProps) {
     notFound();
   }
 
+  // The contract code is the facility number used by BayeganiRecord.
+  // Select the highest serial belonging to this facility only.
+  const [archiveRecords, classificationRules] = await Promise.all([
+    prisma.bayeganiRecord.findMany({
+      where: contract.contractCode
+        ? {
+            OR: [
+              { facilityNumber: contract.contractCode },
+              { contractCode: contract.contractCode },
+            ],
+          }
+        : { id: -1 },
+      orderBy: [
+        { serialSort: { sort: "desc", nulls: "last" } },
+        { createdAt: "desc" },
+      ],
+      select: {
+        id: true,
+        facilityNumber: true,
+        serial: true,
+        archiveCode: true,
+        facilityTitle: true,
+        classification: true,
+        counterName: true,
+        counterCode: true,
+        counterLabel: true,
+        status: true,
+        startDate: true,
+        endDate: true,
+        duration: true,
+        installmentCount: true,
+        approvedAmount: true,
+        remainingAmount: true,
+        rawData: true,
+      },
+    }),
+    prisma.facilityClassification.findMany({
+      orderBy: { classification: "asc" },
+      select: { classification: true, facilityType: true, duration: true },
+    }),
+  ]);
+
+  const latestArchiveRecord = archiveRecords[0] ?? null;
+  const archiveRawData = latestArchiveRecord?.rawData
+    && typeof latestArchiveRecord.rawData === "object"
+    && !Array.isArray(latestArchiveRecord.rawData)
+      ? latestArchiveRecord.rawData as unknown as Record<string, unknown>
+      : {};
+  const archiveFacilityType = String(
+    archiveRawData["نوع تسهیلات"]
+      ?? latestArchiveRecord?.facilityTitle
+      ?? archiveRawData["عنوان تسهیلات"]
+      ?? "",
+  );
+  const archiveDuration = String(
+    latestArchiveRecord?.duration
+      ?? archiveRawData["مدت"]
+      ?? archiveRawData["مدت تسهیلات(به ماه)"]
+      ?? "",
+  );
+  const resolvedClassification = resolveArchiveClassification(
+    classificationRules,
+    archiveFacilityType,
+    archiveDuration,
+  ) || latestArchiveRecord?.classification || "";
+
   const templateDefinition = getContractTemplate(contract.contractType, template);
   if (!templateDefinition) {
     notFound();
@@ -96,6 +202,32 @@ export default async function TemplatePage({ params }: PageProps) {
   const templateSource = {
     ...(borrower ?? {}),
     ...contract,
+    ...archiveRawData,
+    // Fill template placeholders from the latest BayeganiRecord for this facility.
+    facilityNumber: latestArchiveRecord?.facilityNumber ?? contract.contractCode ?? "",
+    "شماره تسهیلات": latestArchiveRecord?.facilityNumber ?? contract.contractCode ?? "",
+    lastSerial: latestArchiveRecord?.serial ?? "",
+    serial: latestArchiveRecord?.serial ?? "",
+    "سریال": latestArchiveRecord?.serial ?? "",
+    archiveCode: latestArchiveRecord?.archiveCode ?? "",
+    "کد بایگانی": latestArchiveRecord?.archiveCode ?? "",
+    facilityTitle: latestArchiveRecord?.facilityTitle ?? archiveFacilityType,
+    facilityType: archiveFacilityType,
+    "نوع تسهیلات": archiveFacilityType,
+    duration: archiveDuration,
+    "مدت": archiveDuration,
+    classification: resolvedClassification,
+    class: resolvedClassification,
+    "طبقه": resolvedClassification,
+    counterName: latestArchiveRecord?.counterName ?? "",
+    counterCode: latestArchiveRecord?.counterCode ?? "",
+    counterLabel: latestArchiveRecord?.counterLabel ?? "",
+    status: latestArchiveRecord?.status ?? "",
+    startDate: latestArchiveRecord?.startDate ?? "",
+    endDate: latestArchiveRecord?.endDate ?? "",
+    installmentCount: latestArchiveRecord?.installmentCount ?? "",
+    approvedAmount: latestArchiveRecord?.approvedAmount ?? "",
+    remainingAmount: latestArchiveRecord?.remainingAmount ?? "",
     // Customer no longer stores contract type/loan type; those belong to
     // ContractDetails. Derive the customer kind from the available company data.
     type: borrower?.companyName ? "COMPANY" : "INDIVIDUAL",
