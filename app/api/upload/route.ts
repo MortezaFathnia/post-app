@@ -413,7 +413,7 @@ export async function POST(request: NextRequest) {
           facilityCode: matchedFacilityCode?.code ?? null,
           // Prefer the facility number from the archive row itself.
           // The upload form value is only a fallback when the Excel row omits it.
-          facilityNumber: (mappedRecordData.facilityNumber || contractNumber).trim(),
+          facilityNumber: contractNumber,
           serial: mappedRecordData.serial?.trim() || null,
         };
 
