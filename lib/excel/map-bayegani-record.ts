@@ -53,7 +53,6 @@ function serialSortValue(serial: string | null): bigint | null {
 /** Maps the uploaded DB-sheet row into persisted archive columns. rawData remains the untouched source row. */
 export function mapBayeganiExcelRow(
   row: DbExcelRow,
-  contractCode: string,
   rawData: Prisma.InputJsonObject,
 ) {
   const fullApplicantName = read(
@@ -105,7 +104,6 @@ export function mapBayeganiExcelRow(
   );
 
   return {
-    contractCode,
     nationalId: read(row, "کدملی/شناسه ملی مدیون", "کد ملی مدیون", "کد ملی", "شناسه ملی"),
     customerNumber,
     facilityNumber,
