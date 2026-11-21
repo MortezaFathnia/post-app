@@ -34,7 +34,9 @@ function normalizeCounter(raw: Record<string, unknown>) {
   return { name, code, label: code && name ? `${code}-${name}` : "" };
 }
 
-\nfunction resolveClassification(rules: Array<{classification:number;facilityType:string|null;duration:string|null}>, facilityType: string, duration: string) {\n  const typeName = facilityType.split("-").slice(1).join("-").trim() || facilityType.trim();\n  const digits = duration.replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));\n  const months = Number(digits.trim());\n  const typeRule = rules.find((rule) => rule.facilityType?.trim() && rule.facilityType.trim() === typeName);\n  if (typeRule) return String(typeRule.classification);\n  for (const rule of rules) {\n    const range = rule.duration?.trim(); if (!range || !Number.isFinite(months)) continue;\n    const m = range.match(/^(\\d+)\\s*[-–]\\s*(\\d+)$/);\n    if (m && months >= Number(m[1]) && months <= Number(m[2])) return String(rule.classification);\n    const gt = range.match(/^>\\s*(\\d+)$/); if (gt && months > Number(gt[1])) return String(rule.classification);\n  }\n  return "";\n}\n\nfunction customerNumberFromFacility(facilityNumber: string): string {
+
+
+function customerNumberFromFacility(facilityNumber: string): string {
   const parts = facilityNumber.trim().split(".");
   return parts.length >= 3 ? (parts[2] || "").trim() : "";
 }
@@ -81,14 +83,6 @@ export async function POST(request: NextRequest) {
     const raw = { ...(body.rawData as Record<string, unknown>) };
     for (const key of ["column1", "column3", "column23", "column24"]) delete raw[key];
     const facilityNumber = value(raw, "شماره تسهیلات", "شماره تسهيلات");
-    if (!facilityNumber) return NextResponse.json({ success: false, error: "کد قرارداد الزامی است." }, { status: 400 });
-    const duplicateContract = await prisma.bayeganiRecord.findFirst({ where: { OR: [{ facilityNumber }, { contractCode: facilityNumber }] }, select: { id: true } });
-    if (duplicateContract) return NextResponse.json({ success: false, error: "این کد قرارداد قبلاً در بایگانی ثبت شده است؛ کد قرارداد باید یکتا باشد." }, { status: 409 });
-    if (!value(raw, "تاریخ شروع", "تاريخ شروع")) {
-      const parts = new Intl.DateTimeFormat("en-u-ca-persian", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
-      const part = (type: string) => parts.find((item) => item.type === type)?.value || "";
-      raw["تاریخ شروع"] = `${part("year")}/${part("month")}/${part("day")}`;
-    }
     if (!facilityNumber) return NextResponse.json({ success: false, error: "کد قرارداد الزامی است." }, { status: 400 });
     const duplicateContract = await prisma.bayeganiRecord.findFirst({ where: { OR: [{ facilityNumber }, { contractCode: facilityNumber }] }, select: { id: true } });
     if (duplicateContract) return NextResponse.json({ success: false, error: "این کد قرارداد قبلاً در بایگانی ثبت شده است؛ کد قرارداد باید یکتا باشد." }, { status: 409 });
