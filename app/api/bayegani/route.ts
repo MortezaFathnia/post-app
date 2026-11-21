@@ -89,6 +89,8 @@ function buildNewArchiveCode(rawData: Record<string, unknown>) {
 
 function mapRow(rawData: Record<string, unknown>) {
   const facilityNumber = findValue(rawData, "شماره تسهيلات", "شماره تسهیلات");
+  const facilityType = findValue(rawData, "نوع تسهیلات", "نوع تسهيلات");
+  const facilityCode = facilityType.match(/^(\d+)\s*-/)?.[1] ?? null;
   const derivedCustomerNumber = customerNumberFromFacility(facilityNumber);
   const customerNumber = derivedCustomerNumber || findValue(rawData, "شماره مشتری", "شماره مشتري");
   if (derivedCustomerNumber) rawData["شماره مشتری"] = derivedCustomerNumber;
@@ -101,6 +103,7 @@ function mapRow(rawData: Record<string, unknown>) {
 
   return {
     facilityNumber,
+    facilityCode,
     customerNumber,
     archiveCode,
     facilityTitle: findValue(rawData, "عنوان تسهیلات", "عنوان تسهيلات"),
@@ -394,10 +397,14 @@ export async function POST(request: NextRequest) {
           update: {},
         });
       }
+      const validFacilityCodes = new Set((await tx.facilityCode.findMany({ select: { code: true } })).map((item) => item.code));
       await tx.bayeganiRecord.deleteMany();
       let count = 0;
       for (let offset = 0; offset < records.length; offset += 300) {
-        const batch = records.slice(offset, offset + 300);
+        const batch = records.slice(offset, offset + 300).map((record) => ({
+          ...record,
+          facilityCode: validFacilityCodes.has(cell(record.facilityCode)) ? cell(record.facilityCode) : null,
+        }));
         const result = await tx.bayeganiRecord.createMany({ data: batch as never[], skipDuplicates: false });
         count += result.count;
       }
