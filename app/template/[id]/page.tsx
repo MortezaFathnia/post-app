@@ -182,7 +182,11 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
       if (facilityCode) {
         const exactFacilityRecord = await prisma.bayeganiRecord.findFirst({
           where: { facilityNumber: facilityCode },
-          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          orderBy: [
+            { serialSort: { sort: "desc", nulls: "last" } },
+            { createdAt: "desc" },
+            { id: "desc" },
+          ],
           select: archiveSelect,
         });
         if (exactFacilityRecord) return [exactFacilityRecord];
