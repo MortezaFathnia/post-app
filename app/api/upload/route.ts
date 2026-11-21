@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 import * as XLSX from "xlsx";
 import type { Prisma } from "@prisma/client";
 
@@ -396,87 +397,80 @@ export async function POST(request: NextRequest) {
       });
 
       const bayeganiRecords = [];
-      let skippedDuplicateBayeganiRecords = 0;
-      let updatedBayeganiRecords = 0;
+      const uploadId = randomUUID();
+      // Make each upload a distinct source batch so re-uploading the same
+      // Excel filename always appends new archive rows instead of updating old ones.
+      const uploadSourceFile = `${file.name}::${uploadId}`;
 
-      for (const { data, rowNumber, values } of customers) {
+      // Determine the highest existing serial for this facility. serialSort is
+      // preferred, with a digit-normalized serial fallback for older rows.
+      const previousSerials = await tx.bayeganiRecord.findMany({
+        where: {
+          facilityNumber: internalFacilityNumber,
+          serial: { not: null },
+        },
+        select: { serial: true, serialSort: true },
+      });
+
+      const toSerialNumber = (value: string | null | undefined): bigint | null => {
+        if (!value) return null;
+        const normalized = value
+          .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+          .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+          .replace(/[^0-9]/g, "");
+        return normalized ? BigInt(normalized) : null;
+      };
+
+      let highestSerial: bigint | null = null;
+      for (const existing of previousSerials) {
+        const candidate = existing.serialSort ?? toSerialNumber(existing.serial);
+        if (candidate !== null && (highestSerial === null || candidate > highestSerial)) {
+          highestSerial = candidate;
+        }
+      }
+
+      let createdBayeganiRecords = 0;
+      for (const { rowNumber, values } of customers) {
         const mappedRecordData = mapBayeganiExcelRow(
           values,
           values as Prisma.InputJsonObject,
         );
         const matchedFacilityCode = mappedRecordData.facilityCode
-          ? await tx.facilityCode.findUnique({ where: { code: mappedRecordData.facilityCode }, select: { code: true } })
+          ? await tx.facilityCode.findUnique({
+              where: { code: mappedRecordData.facilityCode },
+              select: { code: true },
+            })
           : null;
+
+        // If the archive has no prior serial, retain the first numeric serial
+        // supplied by the workbook; subsequent rows increment it sequentially.
+        const workbookSerial = toSerialNumber(mappedRecordData.serial);
+        const nextSerial = highestSerial === null
+          ? (workbookSerial ?? 1n)
+          : highestSerial + 1n;
+        highestSerial = nextSerial;
+
         const recordData = {
           ...mappedRecordData,
           facilityCode: matchedFacilityCode?.code ?? null,
-          // Prefer the facility number from the archive row itself.
-          // The upload form value is only a fallback when the Excel row omits it.
-          facilityNumber: contractNumber,
-          serial: mappedRecordData.serial?.trim() || null,
+          facilityNumber: internalFacilityNumber,
+          serial: nextSerial.toString(),
+          serialSort: nextSerial,
         };
 
-        const sourceKey = {
-          sourceFile: file.name,
-          sheetName: "DB",
-          sourceRow: rowNumber,
-        };
-        const existingSourceRecord = await tx.bayeganiRecord.findUnique({
-          where: {
-            sourceFile_sheetName_sourceRow: sourceKey,
+        const record = await tx.bayeganiRecord.create({
+          data: {
+            sourceFile: uploadSourceFile,
+            sheetName: "DB",
+            sourceRow: rowNumber,
+            ...recordData,
           },
-          select: { id: true },
         });
-
-        // Enforce the same facility-number + serial uniqueness rule as BayeganiRecord.
-        // If this pair already belongs to another row, ignore the incoming duplicate.
-        const existingFacilitySerial =
-          recordData.facilityNumber && recordData.serial
-            ? await tx.bayeganiRecord.findFirst({
-                where: {
-                  facilityNumber: recordData.facilityNumber,
-                  serial: recordData.serial,
-                },
-                select: { id: true },
-              })
-            : null;
-
-        if (
-          existingFacilitySerial &&
-          existingFacilitySerial.id !== existingSourceRecord?.id
-        ) {
-          skippedDuplicateBayeganiRecords++;
-          continue;
-        }
-
-        if (existingSourceRecord) {
-          const record = await tx.bayeganiRecord.update({
-            where: { id: existingSourceRecord.id },
-            data: recordData,
-          });
-          bayeganiRecords.push(record);
-          updatedBayeganiRecords++;
-        } else {
-          const record = await tx.bayeganiRecord.create({
-            data: {
-              ...sourceKey,
-              ...recordData,
-            },
-          });
-          bayeganiRecords.push(record);
-        }
+        bayeganiRecords.push(record);
+        createdBayeganiRecords++;
       }
 
-      // Return the most recently created non-empty serial for this exact facility number.
-      // Do not use a global serial lookup: different facilities have independent records.
-      const lastSerialRecord = await tx.bayeganiRecord.findFirst({
-        where: {
-          facilityNumber: internalFacilityNumber,
-          serial: { not: null },
-        },
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-        select: { serial: true },
-      });
+      const lastSerial = highestSerial?.toString() ?? null;
 
       return {
         createdCustomers,
@@ -494,13 +488,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: `${createdCustomers.length} رکورد مشتری ذخیره شد؛ ${bayeganiRecords.length} رکورد بایگانی ثبت/به‌روزرسانی شد و ${skippedDuplicateBayeganiRecords} ردیف تکراری بایگانی نادیده گرفته شد.`,
+        message: `${createdCustomers.length} رکورد مشتری ذخیره شد؛ ${createdBayeganiRecords} رکورد جدید بایگانی اضافه شد.`,
         count: createdCustomers.length,
         contractDetailsId: contract.id,
         bankDetailsSaved: true,
         bayeganiRecordCount: bayeganiRecords.length,
-        skippedDuplicateBayeganiRecordCount: skippedDuplicateBayeganiRecords,
-        updatedBayeganiRecordCount: updatedBayeganiRecords,
         id: firstCustomer.id,
         ids: createdCustomers.map((customer) => customer.id),
         contractNumber: contract.contractNumber,
