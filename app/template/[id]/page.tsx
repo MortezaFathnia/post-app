@@ -247,12 +247,12 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
       value !== null && value !== undefined && String(value).trim()
     )?.[1];
     const counterCode = record.counterCode || (rawCounterCode ? String(rawCounterCode).trim() : "") ||
-      record.counterLabel?.match(/^(\\d+)\\s*-/)?.[1] || "";
+      record.counterLabel?.match(/^(\d+)\s*-/)?.[1] || "";
     const rawCounterName = Object.entries(rawData).find(([key, value]) =>
       ["نام باجه", "نام باجه عامل"].includes(key.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\\u200c\\s]+/g, " ").trim()) &&
       value !== null && value !== undefined && String(value).trim()
     )?.[1];
-    const counterName = record.counterLabel?.match(/^\\d+\\s*-(.*)$/)?.[1]?.trim() ||
+    const counterName = record.counterLabel?.match(/^\d+\s*-(.*)$/)?.[1]?.trim() ||
       (rawCounterName ? String(rawCounterName).trim() : "");
     const counterLabel = record.counterLabel || (counterCode && counterName ? `${counterCode}-${counterName}` : "");
     const archiveCode = [counterCode, classification, record.serial || ""].every(Boolean)
@@ -370,7 +370,7 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                     value !== null && value !== undefined && String(value).trim()
                   )?.[1];
                   const counterCode = record.counterCode || (rawCounterCode ? String(rawCounterCode).trim() : "") ||
-                    record.counterLabel?.match(/^(\\d+)\\s*-/)?.[1] || "";
+                    record.counterLabel?.match(/^(\d+)\s*-/)?.[1] || "";
                   const generatedArchiveCode = [counterCode, classification !== "—" ? classification : "", record.serial || ""]
                     .every(Boolean)
                     ? [counterCode, classification, record.serial].join("-")
