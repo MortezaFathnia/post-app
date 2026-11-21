@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getTodayDateJalali } from "@/lib/date/jalali";
 
 function getContractTypeTitle(contractType: string) {
   switch (contractType) {
@@ -306,7 +307,7 @@ export default async function ContractsPage() {
 
                     {/* Date */}
                     <td className="whitespace-nowrap px-5 py-4 text-gray-600">
-                      {contract.contractDate || "-"}
+                      {getTodayDateJalali(contract.createdAt)}
                     </td>
 
                     {/* Actions */}
