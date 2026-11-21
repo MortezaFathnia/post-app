@@ -293,10 +293,19 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
 
           <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
-              <h2 className="text-lg font-bold text-slate-900">اطلاعات بایگانی تسهیلات</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                رکوردهای بایگانی مرتبط با این قرارداد
-              </p>
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-lg text-blue-700" aria-hidden="true">
+                  ▤
+                </span>
+                <div>
+                  <h2 className="font-bold text-slate-900">
+                    اطلاعات بایگانی تسهیلات
+                  </h2>
+                  <p className="mt-1 text-xs text-slate-500">
+                    رکوردهای بایگانی مرتبط با این قرارداد
+                  </p>
+                </div>
+              </div>
             </div>
 
             {bayeganiRecords.length === 0 ? (
@@ -304,86 +313,75 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                 هیچ رکورد بایگانی مرتبط با این قرارداد ثبت نشده است.
               </p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[1100px] text-right text-sm">
-                  <thead className="bg-slate-50 text-xs font-bold text-slate-500">
-                    <tr>
-                      <th className="whitespace-nowrap px-4 py-3">نام فایل</th>
-                      <th className="whitespace-nowrap px-4 py-3">شماره تسهیلات</th>
-                      <th className="whitespace-nowrap px-4 py-3">کد بایگانی</th>
-                      <th className="whitespace-nowrap px-4 py-3">سریال</th>
-                      <th className="whitespace-nowrap px-4 py-3">عنوان تسهیلات</th>
-                      <th className="whitespace-nowrap px-4 py-3">کد و نام باجه</th>
-                      <th className="whitespace-nowrap px-4 py-3">طبقه</th>
-                      <th className="whitespace-nowrap px-4 py-3">وضعیت</th>
-                      <th className="whitespace-nowrap px-4 py-3">تاریخ شروع</th>
-                      <th className="whitespace-nowrap px-4 py-3">تاریخ پایان</th>
-                      <th className="whitespace-nowrap px-4 py-3">مدت</th>
-                      <th className="whitespace-nowrap px-4 py-3">تعداد اقساط</th>
-                      <th className="whitespace-nowrap px-4 py-3">مبلغ مصوب</th>
-                      <th className="whitespace-nowrap px-4 py-3">مانده</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {bayeganiRecords.map((record) => {
-                      const rawData = record.rawData && typeof record.rawData === "object" && !Array.isArray(record.rawData)
-                        ? record.rawData as Record<string, unknown> : {};
-                      const facilityType = rawData["نوع تسهیلات"] ?? record.facilityTitle ?? rawData["عنوان تسهیلات"] ?? "";
-                      const duration = [
-                        record.duration,
-                        rawData["مدت"],
-                        rawData["مدت تسهیلات(به ماه)"],
-                        rawData["مدت تسهیلات (به ماه)"],
-                        rawData["مدت تسهیلات به ماه"],
-                        rawData["مدت قرارداد"],
-                      ].find((value) => value !== null && value !== undefined && String(value).trim() && !["0", "۰", "٠"].includes(String(value).trim())) ?? "";
-                      const rawStartDate = [
-                        record.startDate,
-                        rawData["تاریخ شروع"],
-                        rawData["تاریخ شروع قرارداد"],
-                        rawData["تاریخ آغاز"],
-                      ].find((value) => hasUsableDate(value));
-                      const displayedStartDate = hasUsableDate(rawStartDate) ? String(rawStartDate).trim() : todayPersianDate;
-                      const displayedInstallmentCount = getArchiveInstallmentCount(
-                        contract.loanType,
-                        duration,
-                        record.installmentCount,
-                      );
-                      const calculatedEndDate = sumDatesJalali(displayedStartDate, duration);
-                      const displayedEndDate = calculatedEndDate || (hasUsableDate(record.endDate) ? record.endDate! : "—");
-                      const classification = resolveArchiveClassification(classificationRules, facilityType, duration) || record.classification || "—";
-                      const rawCounterCode = Object.entries(rawData).find(([key, value]) =>
-                        ["کد باجه", "کد باجه عامل"].includes(key.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\\u200c\\s]+/g, " ").trim()) &&
-                        value !== null && value !== undefined && String(value).trim()
-                      )?.[1];
-                      const counterCode = record.counterCode || (rawCounterCode ? String(rawCounterCode).trim() : "") ||
-                        record.counterLabel?.match(/^(\\d+)\\s*-/)?.[1] || "";
-                      const generatedArchiveCode = [counterCode, classification !== "—" ? classification : "", record.serial || ""]
-                        .every(Boolean)
-                        ? [counterCode, classification, record.serial].join("-")
-                        : "";
-                      const displayedArchiveCode = generatedArchiveCode || record.archiveCode || "—";
-                      return (
-                      <tr key={record.id} className="text-slate-700">
-                        <td className="whitespace-nowrap px-4 py-3">{record.sourceFile}</td>
-                        <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.facilityNumber || "—"}</td>
-                        <td className="whitespace-nowrap px-4 py-3 font-semibold">{displayedArchiveCode}</td>
-                        <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.serial || "—"}</td>
-                        <td className="px-4 py-3">{getUploadedArchiveTitle(rawData, applicantName)}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{record.counterLabel || "—"}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{classification}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{record.status || "—"}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{displayedStartDate}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{displayedEndDate}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{record.duration || "—"}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{displayedInstallmentCount}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{record.approvedAmount || "—"}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{record.remainingAmount || "—"}</td>
-                      </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div className="space-y-4 p-5 sm:p-6">
+                {bayeganiRecords.map((record, index) => {
+                  const rawData = record.rawData && typeof record.rawData === "object" && !Array.isArray(record.rawData)
+                    ? record.rawData as Record<string, unknown> : {};
+                  const facilityType = rawData["نوع تسهیلات"] ?? record.facilityTitle ?? rawData["عنوان تسهیلات"] ?? "";
+                  const duration = [
+                    record.duration,
+                    rawData["مدت"],
+                    rawData["مدت تسهیلات(به ماه)"],
+                    rawData["مدت تسهیلات (به ماه)"],
+                    rawData["مدت تسهیلات به ماه"],
+                    rawData["مدت قرارداد"],
+                  ].find((value) => value !== null && value !== undefined && String(value).trim() && !["0", "۰", "٠"].includes(String(value).trim())) ?? "";
+                  const rawStartDate = [
+                    record.startDate,
+                    rawData["تاریخ شروع"],
+                    rawData["تاریخ شروع قرارداد"],
+                    rawData["تاریخ آغاز"],
+                  ].find((value) => hasUsableDate(value));
+                  const displayedArchiveStartDate = hasUsableDate(rawStartDate) ? String(rawStartDate).trim() : todayPersianDate;
+                  const displayedInstallmentCount = getArchiveInstallmentCount(
+                    contract.loanType,
+                    duration,
+                    record.installmentCount,
+                  );
+                  const calculatedEndDate = sumDatesJalali(displayedArchiveStartDate, duration);
+                  const displayedEndDate = calculatedEndDate || (hasUsableDate(record.endDate) ? record.endDate! : "—");
+                  const classification = resolveArchiveClassification(classificationRules, facilityType, duration) || record.classification || "—";
+                  const rawCounterCode = Object.entries(rawData).find(([key, value]) =>
+                    ["کد باجه", "کد باجه عامل"].includes(key.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\\u200c\\s]+/g, " ").trim()) &&
+                    value !== null && value !== undefined && String(value).trim()
+                  )?.[1];
+                  const counterCode = record.counterCode || (rawCounterCode ? String(rawCounterCode).trim() : "") ||
+                    record.counterLabel?.match(/^(\\d+)\\s*-/)?.[1] || "";
+                  const generatedArchiveCode = [counterCode, classification !== "—" ? classification : "", record.serial || ""]
+                    .every(Boolean)
+                    ? [counterCode, classification, record.serial].join("-")
+                    : "";
+                  const displayedArchiveCode = generatedArchiveCode || record.archiveCode || "—";
+
+                  return (
+                    <article key={record.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                      <div className="flex flex-col gap-2 border-b border-slate-100 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                        <h3 className="font-bold text-slate-800">
+                          رکورد بایگانی {new Intl.NumberFormat("fa-IR").format(index + 1)}
+                        </h3>
+                        <p className="break-all text-xs text-slate-500">
+                          {record.sourceFile || "نام فایل ثبت نشده"}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        <InfoItem label="شماره تسهیلات" value={record.facilityNumber} />
+                        <InfoItem label="کد بایگانی" value={displayedArchiveCode} />
+                        <InfoItem label="سریال" value={record.serial} />
+                        <InfoItem label="عنوان تسهیلات" value={getUploadedArchiveTitle(rawData, applicantName)} />
+                        <InfoItem label="کد و نام باجه" value={record.counterLabel} />
+                        <InfoItem label="طبقه" value={classification} />
+                        <InfoItem label="وضعیت" value={record.status} />
+                        <InfoItem label="تاریخ شروع" value={displayedArchiveStartDate} />
+                        <InfoItem label="تاریخ پایان" value={displayedEndDate} />
+                        <InfoItem label="مدت" value={String(duration || "—")} />
+                        <InfoItem label="تعداد اقساط" value={displayedInstallmentCount} />
+                        <InfoItem label="مبلغ مصوب" value={record.approvedAmount} />
+                        <InfoItem label="مانده" value={record.remainingAmount} />
+                        <InfoItem label="ردیف فایل" value={record.sourceRow === null ? "—" : String(record.sourceRow)} />
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </section>
