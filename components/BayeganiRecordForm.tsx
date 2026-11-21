@@ -16,7 +16,6 @@ type ApiRecord = {
 };
 type CounterOption = { name: string; code: string };
 type FacilityCodeOption = { id: number; code: string; name: string };
-type ClassificationOption = { classification: number; facilityType: string | null; duration: string | null };
 
 const initialFields: Record<string, string> = {
   "شماره تسهیلات": "",
@@ -52,26 +51,6 @@ function buildNewArchiveCode(raw: Record<string, unknown>) {
   const floor = String(raw["طبقه"] ?? "").trim();
   const serial = String(raw["سریال"] ?? "").trim();
   return [counterCode, floor, serial].every(Boolean) ? [counterCode, floor, serial].join("-") : "";
-}
-
-function resolveClassification(rules: ClassificationOption[], facilityType: string, duration: string) {
-  const typeName = facilityType.split("-").slice(1).join("-").trim() || facilityType.trim();
-  const normalizedDuration = duration
-    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
-    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
-    .trim();
-  const months = Number(normalizedDuration);
-  const typeRule = rules.find((rule) => rule.facilityType?.trim() && rule.facilityType.trim() === typeName);
-  if (typeRule) return String(typeRule.classification);
-  for (const rule of rules) {
-    const range = rule.duration?.trim();
-    if (!range || !Number.isFinite(months)) continue;
-    const match = range.match(/^(\d+)\s*[-–]\s*(\d+)$/);
-    if (match && months >= Number(match[1]) && months <= Number(match[2])) return String(rule.classification);
-    const greaterThan = range.match(/^>\s*(\d+)$/);
-    if (greaterThan && months > Number(greaterThan[1])) return String(rule.classification);
-  }
-  return "";
 }
 
 function normalizeAmount(value: string) {
@@ -118,7 +97,6 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   const [counterQuery, setCounterQuery] = useState("");
   const [counterOpen, setCounterOpen] = useState(false);
   const [facilityCodes, setFacilityCodes] = useState<FacilityCodeOption[]>([]);
-  const [classificationRules, setClassificationRules] = useState<ClassificationOption[]>([]);
   const [facilityQuery, setFacilityQuery] = useState("");
   const [facilityOpen, setFacilityOpen] = useState(false);
 
