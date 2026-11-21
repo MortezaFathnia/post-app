@@ -172,7 +172,6 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
 
             <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:p-6">
               <InfoItem label="شماره قرارداد" value={contract.contractNumber} />
-              <InfoItem label="کد قرارداد" value={contract.contractCode} />
               <InfoItem label="متقاضی" value={applicantName} />
               <InfoItem
                 label="نوع قرارداد"
@@ -204,7 +203,6 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                   <thead className="bg-slate-50 text-xs font-bold text-slate-500">
                     <tr>
                       <th className="whitespace-nowrap px-4 py-3">شماره تسهیلات</th>
-                      <th className="whitespace-nowrap px-4 py-3">کد قرارداد (یکتا)</th>
                       <th className="whitespace-nowrap px-4 py-3">کد بایگانی</th>
                       <th className="whitespace-nowrap px-4 py-3">سریال</th>
                       <th className="whitespace-nowrap px-4 py-3">عنوان تسهیلات</th>
@@ -223,7 +221,6 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                     {contract.bayeganiRecords.map((record) => (
                       <tr key={record.id} className="text-slate-700">
                         <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.facilityNumber || "—"}</td>
-                        <td className="whitespace-nowrap px-4 py-3 font-semibold">{contract.contractNumber || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.archiveCode || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.serial || "—"}</td>
                         <td className="px-4 py-3">{record.facilityTitle || "—"}</td>
