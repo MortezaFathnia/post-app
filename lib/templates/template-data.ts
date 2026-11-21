@@ -1,34 +1,6 @@
+import { getTodayDateJalali, sumDatesJalali } from "@/lib/date/jalali";
+
 type TemplateDataSource = Record<string, any>;
-
-function getTehranCalendarDate(date: Date): { year: number; month: number; day: number } {
-  const parts = new Intl.DateTimeFormat("en-US-u-ca-gregory", {
-    timeZone: "Asia/Tehran",
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-  }).formatToParts(date);
-  const part = (type: string) => Number(parts.find((item) => item.type === type)?.value);
-  return { year: part("year"), month: part("month"), day: part("day") };
-}
-
-function getOneMonthLaterPersianDate(date: Date): string {
-  const current = getTehranCalendarDate(date);
-  const targetMonthIndex = current.month; // zero-based index of the next month
-  const targetYear = current.year + Math.floor(targetMonthIndex / 12);
-  const targetMonth = (targetMonthIndex % 12) + 1;
-  const lastDay = new Date(Date.UTC(targetYear, targetMonth, 0)).getUTCDate();
-  const targetDay = Math.min(current.day, lastDay);
-  // Use UTC to represent the already-resolved Tehran calendar date without
-  // depending on the machine's local time zone.
-  const target = new Date(Date.UTC(targetYear, targetMonth - 1, targetDay, 12));
-  return new Intl.DateTimeFormat("fa-IR", {
-    timeZone: "UTC",
-    calendar: "persian",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(target);
-}
 
 function firstNonEmpty(...values: unknown[]): string {
   for (const value of values) {
@@ -101,14 +73,9 @@ export function getTemplateData(customer: TemplateDataSource) {
     customer.installmentInterval ?? rawDbData["فاصله اقساط مبادله ای"],
   );
   const calculatedFirstInstallmentDate = customer.loanType === "INSTALLMENT"
-    ? (rawFirstInstallmentDate || getOneMonthLaterPersianDate(new Date()))
+    ? (rawFirstInstallmentDate || sumDatesJalali(getTodayDateJalali(), 1))
     : rawFirstInstallmentDate;
-  const todayPersianDate = new Intl.DateTimeFormat("fa-IR", {
-    timeZone: "Asia/Tehran",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
+  const todayPersianDate = getTodayDateJalali();
   const contractDate = firstNonEmpty(
     customer.contractDate,
     customer["تاریخ قرارداد"],
@@ -138,13 +105,9 @@ export function getTemplateData(customer: TemplateDataSource) {
     // installment loans, calculate it as one month after the server date.
     firstInstallmentDate: calculatedFirstInstallmentDate,
     installmentCount: rawInstallmentCount,
-    serverDate: new Intl.DateTimeFormat("fa-IR", {
-      timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit",
-    }).format(new Date()),
+    serverDate: getTodayDateJalali(),
     // Date displayed at the top of every generated contract/template.
-    documentDate: firstNonEmpty(customer.contractDate, new Intl.DateTimeFormat("fa-IR", {
-      timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit",
-    }).format(new Date())),
+    documentDate: firstNonEmpty(customer.contractDate, getTodayDateJalali()),
     // These are CSS class values used by the existing loan-type checkboxes.
     isMaturityLoan: customer.loanType === "MATURITY" ? "checked" : "",
     isInstallmentLoan: customer.loanType === "INSTALLMENT" ? "checked" : "",
