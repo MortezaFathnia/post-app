@@ -157,15 +157,19 @@ export default function UploadPage() {
 
             {uploadedContractId !== null && (
               <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-4 text-sm text-green-800">
-                <p className="font-semibold">فایل با موفقیت ثبت شد.</p>
-                <p className="mt-2">
-                  آخرین سریال ثبت‌شده برای شماره تسهیلات
-                  <span className="mx-1 font-semibold" dir="ltr">{contractNumber}</span>
-                  :
-                  <span className="mx-2 font-bold" dir="ltr">
-                    {lastSerial ?? "سریال ثبت‌شده‌ای وجود ندارد"}
-                  </span>
-                </p>
+                <p className="mb-3 font-semibold">فایل با موفقیت ثبت شد و رکوردهای جدید به انتهای بایگانی اضافه شدند.</p>
+                <label htmlFor="lastSerial" className="mb-2 block font-medium text-gray-700">
+                  سریال
+                </label>
+                <input
+                  id="lastSerial"
+                  type="text"
+                  value={lastSerial ?? ""}
+                  readOnly
+                  dir="ltr"
+                  className="w-full rounded-lg border border-green-300 bg-white px-4 py-3 text-left font-bold text-gray-900"
+                  placeholder="سریالی ثبت نشد"
+                />
                 <button
                   type="button"
                   onClick={() => router.push(`/template/${uploadedContractId}`)}
