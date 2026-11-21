@@ -83,34 +83,50 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
         },
         take: 1,
       },
-      bayeganiRecords: {
-        orderBy: [{ serialSort: "desc" }, { createdAt: "desc" }],
-        select: {
-          id: true,
-          serialSort: true,
-          facilityNumber: true,
-          contractCode: true,
-          customerNumber: true,
-          archiveCode: true,
-          facilityTitle: true,
-          serial: true,
-          classification: true,
-          counterLabel: true,
-          status: true,
-          startDate: true,
-          endDate: true,
-          duration: true,
-          installmentCount: true,
-          approvedAmount: true,
-          remainingAmount: true,
-        },
-      },
     },
   });
 
   if (!contract) {
     notFound();
   }
+
+  // Include archive rows from every uploaded workbook associated with this
+  // contract, including rows identified directly by the facility number.
+  const bayeganiRecords = await prisma.bayeganiRecord.findMany({
+    where: {
+      OR: [
+        ...(contract.contractCode ? [{ contractCode: contract.contractCode }] : []),
+        ...(contract.contractCode ? [{ facilityNumber: contract.contractCode }] : []),
+        ...(contract.contractNumber ? [{ facilityNumber: contract.contractNumber }] : []),
+      ],
+    },
+    orderBy: [
+      { sourceFile: "asc" },
+      { serialSort: { sort: "desc", nulls: "last" } },
+      { createdAt: "desc" },
+    ],
+    select: {
+      id: true,
+      sourceFile: true,
+      sourceRow: true,
+      serialSort: true,
+      facilityNumber: true,
+      contractCode: true,
+      customerNumber: true,
+      archiveCode: true,
+      facilityTitle: true,
+      serial: true,
+      classification: true,
+      counterLabel: true,
+      status: true,
+      startDate: true,
+      endDate: true,
+      duration: true,
+      installmentCount: true,
+      approvedAmount: true,
+      remainingAmount: true,
+    },
+  });
 
   const templateSet = getContractTemplateSet(contract.contractType);
 
@@ -193,7 +209,7 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
               </p>
             </div>
 
-            {contract.bayeganiRecords.length === 0 ? (
+            {bayeganiRecords.length === 0 ? (
               <p className="px-6 py-8 text-center text-sm text-slate-500">
                 هیچ رکورد بایگانی مرتبط با این قرارداد ثبت نشده است.
               </p>
@@ -202,6 +218,7 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                 <table className="w-full min-w-[1100px] text-right text-sm">
                   <thead className="bg-slate-50 text-xs font-bold text-slate-500">
                     <tr>
+                      <th className="whitespace-nowrap px-4 py-3">نام فایل</th>
                       <th className="whitespace-nowrap px-4 py-3">شماره تسهیلات</th>
                       <th className="whitespace-nowrap px-4 py-3">کد بایگانی</th>
                       <th className="whitespace-nowrap px-4 py-3">سریال</th>
@@ -218,8 +235,9 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {contract.bayeganiRecords.map((record) => (
+                    {bayeganiRecords.map((record) => (
                       <tr key={record.id} className="text-slate-700">
+                        <td className="whitespace-nowrap px-4 py-3">{record.sourceFile}</td>
                         <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.facilityNumber || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3">{record.archiveCode || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3 font-semibold">{record.serial || "—"}</td>
