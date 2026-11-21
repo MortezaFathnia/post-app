@@ -117,7 +117,8 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   const [counters, setCounters] = useState<CounterOption[]>([]);
   const [counterQuery, setCounterQuery] = useState("");
   const [counterOpen, setCounterOpen] = useState(false);
-  const [facilityCodes, setFacilityCodes] = useState<FacilityCodeOption[]>([]);\n  const [classificationRules, setClassificationRules] = useState<ClassificationOption[]>([]);
+  const [facilityCodes, setFacilityCodes] = useState<FacilityCodeOption[]>([]);
+  const [classificationRules, setClassificationRules] = useState<ClassificationOption[]>([]);
   const [facilityQuery, setFacilityQuery] = useState("");
   const [facilityOpen, setFacilityOpen] = useState(false);
 
