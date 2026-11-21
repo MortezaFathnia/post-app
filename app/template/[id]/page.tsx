@@ -168,10 +168,10 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
 
   // Resolve the archive record by the exact facility code first.
   // Example: facilityNumber "1538.123.3232132.10" must display its stored serial "3548".
-  const facilityCode = contract.contractNumber?.trim() || contract.contractCode?.trim() || "";
+  const facilityCode = contract.facilityNumber?.trim() || contract.contractNumber?.trim() || "";
   const archiveSelect = {
     id: true, sourceFile: true, sourceRow: true, serialSort: true, facilityNumber: true,
-    contractCode: true, customerNumber: true, archiveCode: true, facilityTitle: true,
+    customerNumber: true, archiveCode: true, facilityTitle: true,
     serial: true, classification: true, counterCode: true, counterLabel: true, status: true, startDate: true,
     endDate: true, duration: true, installmentCount: true, approvedAmount: true,
     remainingAmount: true, rawData: true,
@@ -191,8 +191,8 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
       // Fallback only when no exact facilityNumber match exists.
       return prisma.bayeganiRecord.findMany({
         where: { OR: [
-          ...(contract.contractCode ? [{ contractCode: contract.contractCode }] : []),
-          ...(contract.contractCode ? [{ facilityNumber: contract.contractCode }] : []),
+          ...(contract.facilityNumber ? [{ facilityNumber: contract.facilityNumber }] : []),
+          ...(contract.contractNumber ? [{ facilityNumber: contract.contractNumber }] : []),
         ] },
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         take: 1,
