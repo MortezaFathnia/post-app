@@ -83,16 +83,6 @@ function getUploadedArchiveTitle(rawData: unknown, fallbackApplicantName: string
   return [facilityType, applicantName].filter(Boolean).join(" ") || "—";
 }
 
-function getContractTypeTitle(contractType: string) {
-  switch (contractType) {
-    case "MORABAHA":
-      return "مرابحه";
-    case "CREDIT_CARD":
-      return "مرابحه کارت اعتباری";
-    default:
-      return "نامشخص";
-  }
-}
 
 function getLoanTypeTitle(loanType: string | null) {
   switch (loanType) {
@@ -217,9 +207,6 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
   const hasUsableDate = (value: string | null | undefined) =>
     Boolean(value?.trim()) && !["0", "٠", "۰", "—", "-"].includes(value!.trim());
 
-  const displayedContractDate = hasUsableDate(contract.contractDate)
-    ? contract.contractDate!
-    : todayPersianDate;
   const archiveStartDate = bayeganiRecords.find((record) =>
     hasUsableDate(record.startDate),
   )?.startDate;
@@ -256,39 +243,6 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
               <span aria-hidden="true">→</span>
               بازگشت به قراردادها
             </Link>
-          </section>
-
-          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-lg text-blue-700" aria-hidden="true">
-                  ▤
-                </span>
-                <div>
-                  <h2 className="font-bold text-slate-900">
-                    اطلاعات قرارداد
-                  </h2>
-                  <p className="mt-1 text-xs text-slate-500">
-                    مشخصات قرارداد و متقاضی
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:p-6">
-              <InfoItem label="شماره قرارداد" value={contract.contractNumber} />
-              <InfoItem label="متقاضی" value={applicantName} />
-              <InfoItem
-                label="نوع قرارداد"
-                value={getContractTypeTitle(contract.contractType)}
-              />
-              <InfoItem
-                label="نوع تسهیلات"
-                value={getLoanTypeTitle(contract.loanType)}
-              />
-              <InfoItem label="تاریخ قرارداد" value={displayedContractDate} />
-              <InfoItem label="تاریخ شروع" value={displayedStartDate} />
-            </div>
           </section>
 
           <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
