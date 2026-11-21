@@ -41,6 +41,14 @@ const initialFields: Record<string, string> = {
   "توضیحات": "",
 };
 
+function getTodayPersianDate() {
+  const parts = new Intl.DateTimeFormat("en-u-ca-persian", {
+    timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date());
+  const part = (type: string) => parts.find((item) => item.type === type)?.value || "";
+  return `${part("year")}/${part("month")}/${part("day")}`;
+}
+
 const hiddenFields = new Set(["کد باجه", "column1", "column3", "column23", "column24"]);
 
 function isHiddenField(key: string) {
@@ -137,7 +145,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const result = await readApiResponse(res);
         if (!res.ok || !result.success) throw new Error(result.error || "دریافت سریال بعدی ناموفق بود.");
         if (active) {
-          const next = { ...initialFields, "سریال": result.nextSerial || "1" };
+          const next = { ...initialFields, "سریال": result.nextSerial || "1", "تاریخ شروع": getTodayPersianDate() };
           setFields(next);
           setOriginalFields(next);
         }
