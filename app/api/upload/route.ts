@@ -402,7 +402,6 @@ export async function POST(request: NextRequest) {
       for (const { data, rowNumber, values } of customers) {
         const mappedRecordData = mapBayeganiExcelRow(
           values,
-          resolvedContractCode,
           values as Prisma.InputJsonObject,
         );
         const matchedFacilityCode = mappedRecordData.facilityCode
@@ -468,10 +467,29 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      return { createdCustomers, firstCustomer, contract, bayeganiRecords, skippedDuplicateBayeganiRecords, updatedBayeganiRecords };
+      // Return the most recently created non-empty serial for this exact facility number.
+      // Do not use a global serial lookup: different facilities have independent records.
+      const lastSerialRecord = await tx.bayeganiRecord.findFirst({
+        where: {
+          facilityNumber: internalFacilityNumber,
+          serial: { not: null },
+        },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        select: { serial: true },
+      });
+
+      return {
+        createdCustomers,
+        firstCustomer,
+        contract,
+        bayeganiRecords,
+        skippedDuplicateBayeganiRecords,
+        updatedBayeganiRecords,
+        lastSerial: lastSerialRecord?.serial ?? null,
+      };
     });
 
-    const { createdCustomers, firstCustomer, contract, bayeganiRecords, skippedDuplicateBayeganiRecords, updatedBayeganiRecords } = result;
+    const { createdCustomers, firstCustomer, contract, bayeganiRecords, skippedDuplicateBayeganiRecords, updatedBayeganiRecords, lastSerial } = result;
 
     return NextResponse.json(
       {
@@ -486,6 +504,7 @@ export async function POST(request: NextRequest) {
         id: firstCustomer.id,
         ids: createdCustomers.map((customer) => customer.id),
         contractNumber: contract.contractNumber,
+        lastSerial,
       },
       { status: 200 },
     );
