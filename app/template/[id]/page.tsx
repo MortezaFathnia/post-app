@@ -175,9 +175,11 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
         ...(contract.contractCode ? [{ facilityNumber: contract.contractCode }] : []),
         ...(contract.contractNumber ? [{ facilityNumber: contract.contractNumber }] : []),
       ] },
+      // For a facility code (facilityNumber), use the record with the highest
+      // stored serial. Example: 1538.123.3232132.8 -> serial 3548.
       orderBy: [
-        { createdAt: "desc" },
         { serialSort: { sort: "desc", nulls: "last" } },
+        { createdAt: "desc" },
       ],
       take: 1,
       select: {
