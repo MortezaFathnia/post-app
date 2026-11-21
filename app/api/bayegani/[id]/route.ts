@@ -133,7 +133,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const facilityNumber = value(raw, "شماره تسهيلات", "شماره تسهیلات");
     if (!facilityNumber) return NextResponse.json({ success: false, error: "کد قرارداد الزامی است." }, { status: 400 });
-    const duplicateContract = await prisma.bayeganiRecord.findFirst({ where: { id: { not: recordId }, OR: [{ facilityNumber }, { contractCode: facilityNumber }] }, select: { id: true } });
+    const duplicateContract = await prisma.bayeganiRecord.findFirst({ where: { id: { not: recordId }, facilityNumber }, select: { id: true } });
     if (duplicateContract) return NextResponse.json({ success: false, error: "این کد قرارداد قبلاً برای رکورد دیگری ثبت شده است؛ کد قرارداد باید یکتا باشد." }, { status: 409 });
     if (!value(raw, "تاریخ شروع", "تاريخ شروع")) {
       const parts = new Intl.DateTimeFormat("en-u-ca-persian", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
@@ -165,13 +165,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         });
         if (facilityNumber) {
           await tx.contractDetails.upsert({
-            where: { contractCode: facilityNumber },
-            create: { contractCode: facilityNumber },
+            where: { facilityNumber },
+            create: { facilityNumber },
             update: {},
           });
           await tx.contractCustomer.upsert({
-            where: { contractCode_nationalCode: { contractCode: facilityNumber, nationalCode } },
-            create: { contractCode: facilityNumber, nationalCode, role: "BORROWER" },
+            where: { facilityNumber_nationalCode: { facilityNumber, nationalCode } },
+            create: { facilityNumber, nationalCode, role: "BORROWER" },
             update: { role: "BORROWER" },
           });
         }
