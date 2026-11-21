@@ -386,6 +386,14 @@ export async function POST(request: NextRequest) {
       for (const [nationalCode, customer] of importedCustomers) {
         await tx.customer.upsert({ where: { nationalCode }, create: { nationalCode, ...customer }, update: customer });
       }
+      const facilityNumbers = [...new Set(records.map((record) => cell(record.facilityNumber)).filter(Boolean))];
+      for (const facilityNumber of facilityNumbers) {
+        await tx.contractDetails.upsert({
+          where: { facilityNumber },
+          create: { facilityNumber },
+          update: {},
+        });
+      }
       await tx.bayeganiRecord.deleteMany();
       let count = 0;
       for (let offset = 0; offset < records.length; offset += 300) {
