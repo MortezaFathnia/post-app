@@ -398,9 +398,11 @@ export async function POST(request: NextRequest) {
             resolvedContractCode,
             values as Prisma.InputJsonObject,
           ),
-          // The upload form's contract number is the facility number for
-          // every archive row created from this workbook.
-          facilityNumber: contractNumber,
+          // Prefer the facility number from the archive row itself.
+          // The upload form value is only a fallback when the Excel row omits it.
+          facilityNumber:
+            mapBayeganiExcelRow(values, resolvedContractCode, values as Prisma.InputJsonObject).facilityNumber ||
+            contractNumber,
         };
         const record = await tx.bayeganiRecord.upsert({
           where: {
