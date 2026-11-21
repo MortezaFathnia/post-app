@@ -1,8 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import { prisma } from "@/lib/prisma";
-import { getContractTemplateSet } from "@/lib/templates/contract-templates";
 import { getTodayDateJalali, sumDatesJalali } from "@/lib/date/jalali";
 
 type PageProps = {
@@ -194,25 +192,12 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
     }),
   ]);
 
-  const templateSet = getContractTemplateSet(contract.contractType);
-
-  if (!templateSet) {
-    notFound();
-  }
-
   const applicantName = getApplicantName(
     contract.customerLinks[0]?.customer ?? null,
   );
   const todayPersianDate = getTodayDateJalali();
   const hasUsableDate = (value: string | null | undefined) =>
     Boolean(value?.trim()) && !["0", "٠", "۰", "—", "-"].includes(value!.trim());
-
-  const archiveStartDate = bayeganiRecords.find((record) =>
-    hasUsableDate(record.startDate),
-  )?.startDate;
-  const displayedStartDate = hasUsableDate(archiveStartDate)
-    ? archiveStartDate!
-    : todayPersianDate;
 
   // Persist the exact values shown in "اطلاعات بایگانی تسهیلات" so the
   // BayeganiRecord table and the template-selection page stay in sync.
@@ -287,34 +272,8 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
   return (
     <div dir="rtl" className="min-h-screen bg-slate-50 text-slate-900">
       <Sidebar />
-
       <main className="min-h-screen px-4 pb-8 pt-20 sm:px-6 lg:mr-64 lg:px-8 lg:pt-8">
-        <div className="mx-auto w-full max-w-[1600px] space-y-6">
-          <section className="flex flex-col justify-between gap-4 rounded-2xl bg-gradient-to-l from-slate-900 to-blue-900 p-6 text-white shadow-sm sm:flex-row sm:items-center sm:p-8">
-            <div>
-              <p className="text-sm font-medium text-blue-200">
-                مدیریت قراردادها
-              </p>
-              <h1 className="mt-2 text-2xl font-extrabold sm:text-3xl">
-                اسناد قرارداد
-              </h1>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
-                انتخاب و مشاهده اسناد مربوط به قرارداد شماره{" "}
-                <span className="font-bold text-white">
-                  {contract.contractNumber || "—"}
-                </span>
-              </p>
-            </div>
-
-            <Link
-              href="/dashboard/contracts"
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20"
-            >
-              <span aria-hidden="true">→</span>
-              بازگشت به قراردادها
-            </Link>
-          </section>
-
+        <div className="mx-auto w-full max-w-[1600px]">
           <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
               <div className="flex items-center gap-3">
@@ -408,50 +367,6 @@ export default async function TemplateSelectionPage({ params }: PageProps) {
                 })}
               </div>
             )}
-          </section>
-
-          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
-              <h2 className="text-lg font-bold text-slate-900">انتخاب سند</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                برای مشاهده یا چاپ، سند مورد نظر را انتخاب کنید.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3 sm:p-6">
-              {templateSet.templates.map((template, index) => (
-                <article
-                  key={template.id}
-                  className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-xl text-blue-700">
-                    {template.id === "request"
-                      ? "▧"
-                      : template.id === "contract"
-                        ? "▤"
-                        : "✎"}
-                  </div>
-
-                  <p className="mt-4 text-xs font-semibold text-slate-400">
-                    سند {new Intl.NumberFormat("fa-IR").format(index + 1)}
-                  </p>
-                  <h3 className="mt-1 text-lg font-extrabold text-slate-900">
-                    {template.title}
-                  </h3>
-                  <p className="mt-2 flex-1 text-sm leading-7 text-slate-500">
-                    {template.description}
-                  </p>
-
-                  <Link
-                    href={`/template/${contract.id}/${template.id}`}
-                    className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-700"
-                  >
-                    مشاهده سند
-                    <span aria-hidden="true">←</span>
-                  </Link>
-                </article>
-              ))}
-            </div>
           </section>
         </div>
       </main>
