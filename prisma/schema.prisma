@@ -12,6 +12,7 @@ enum ContractType {
   CREDIT_CARD
   DEBT_DISCOUNTING
   QARD_AL_HASAN
+  INTEREST_FREE_LOAN @map("interest-free-loan")
 }
 
 enum LoanType {
@@ -39,7 +40,7 @@ model Customer {
   nationalCode           String            @unique
   postalCode             String?
   passportNumber         String?
-  occupation             String?
+  occupation              String?
   installmentAmount      String?
   residence              String?
   address                String?
