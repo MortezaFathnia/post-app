@@ -1551,3 +1551,89 @@ body.template-morabaha-request .page-footer {
     page-break-after: avoid;
   }
 }
+
+
+/* ===== interest-free-loan contract ===== */
+body.loan-contract {
+  margin: 0;
+  padding: 0;
+  width: auto;
+  min-height: 0;
+  background: #eef1f5;
+  color: #111;
+  font-family: "Vazirmatn", Tahoma, Arial, sans-serif;
+  font-size: 10pt;
+  line-height: 1.8;
+  direction: rtl;
+}
+body.loan-contract .paper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 190mm;
+  min-height: 277mm;
+  margin: 10mm auto;
+  padding: 8mm 10mm 28mm;
+  background: #fff;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, .14);
+  overflow: hidden;
+}
+body.loan-contract .content {
+  flex: 1;
+  white-space: pre-wrap;
+  text-align: justify;
+  overflow-wrap: break-word;
+}
+body.loan-contract .signatures {
+  position: absolute;
+  bottom: 12mm;
+  left: 10mm;
+  right: 10mm;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4mm;
+  text-align: center;
+  font-size: 8pt;
+}
+body.loan-contract .page-number {
+  position: absolute;
+  bottom: 5mm;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 9pt;
+}
+@media screen and (max-width: 800px) {
+  body.loan-contract .paper {
+    width: auto;
+    min-height: 0;
+    margin: 12px;
+    padding: 20px 16px 110px;
+  }
+  body.loan-contract .signatures {
+    left: 16px;
+    right: 16px;
+    bottom: 24px;
+    gap: 8px;
+    font-size: 7pt;
+  }
+}
+@media print {
+  body.loan-contract {
+    background: #fff !important;
+  }
+  body.loan-contract .paper {
+    width: auto;
+    min-height: 277mm;
+    margin: 0;
+    padding: 8mm 10mm 28mm;
+    box-shadow: none;
+    overflow: visible;
+    break-after: page;
+    page-break-after: always;
+  }
+  body.loan-contract .paper:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+}
