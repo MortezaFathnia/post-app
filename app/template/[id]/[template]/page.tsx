@@ -25,6 +25,8 @@ function getTemplateFolder(contractType: string): string {
     case "DEBT_DISCOUNTING":
       return "debt-discounting";
     case "QARD_AL_HASAN":
+    case "INTEREST_FREE_LOAN":
+    case "interest-free-loan":
       return "interest-free-loan";
     default:
       throw new Error(`Unsupported contract type: ${contractType}`);
@@ -62,37 +64,27 @@ function resolveArchiveClassification(
   const monthsText = normalizeDigits(duration).replace(/[^0-9.]/g, "");
   const months = Number(monthsText);
 
-  // Prefer an exact facility-type rule from FacilityClassification.
   const typeRule = normalizedType
     ? rules.find((rule) => normalizeClassificationText(rule.facilityType) === normalizedType)
     : undefined;
   if (typeRule) return String(typeRule.classification);
 
-  // If no type rule matches, use the duration range configured in FacilityClassification.
   if (!monthsText || !Number.isFinite(months)) return "";
   for (const rule of rules) {
     const range = normalizeDigits(rule.duration).trim().replace(/\s/g, "");
     if (!range) continue;
 
     const between = range.match(/^(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)$/);
-    if (between && months >= Number(between[1]) && months <= Number(between[2])) {
-      return String(rule.classification);
-    }
+    if (between && months >= Number(between[1]) && months <= Number(between[2])) return String(rule.classification);
 
     const greaterThan = range.match(/^>\s*(\d+(?:\.\d+)?)$/);
-    if (greaterThan && months > Number(greaterThan[1])) {
-      return String(rule.classification);
-    }
+    if (greaterThan && months > Number(greaterThan[1])) return String(rule.classification);
 
     const atLeast = range.match(/^>=\s*(\d+(?:\.\d+)?)$/);
-    if (atLeast && months >= Number(atLeast[1])) {
-      return String(rule.classification);
-    }
+    if (atLeast && months >= Number(atLeast[1])) return String(rule.classification);
 
     const exact = range.match(/^\d+(?:\.\d+)?$/);
-    if (exact && months === Number(range)) {
-      return String(rule.classification);
-    }
+    if (exact && months === Number(range)) return String(rule.classification);
   }
   return "";
 }
@@ -109,9 +101,7 @@ function escapeHtml(value: string): string {
 function replaceTemplate(html: string, data: Record<string, unknown>): string {
   return html.replace(/{{\s*([^{}]+?)\s*}}/g, (_, key: string) => {
     const value = data[key.trim()];
-    if (value === null || value === undefined || typeof value === "object") {
-      return "";
-    }
+    if (value === null || value === undefined || typeof value === "object") return "";
     return escapeHtml(String(value));
   });
 }
@@ -120,12 +110,8 @@ export default async function TemplatePage({ params }: PageProps) {
   const { id, template } = await params;
   const contractId = Number(id);
 
-  if (!Number.isInteger(contractId) || contractId <= 0) {
-    notFound();
-  }
+  if (!Number.isInteger(contractId) || contractId <= 0) notFound();
 
-  // The URL ID is ContractDetails.id (the same ID used by the selection page),
-  // not Customer.id. Customer information is loaded through ContractCustomer.
   const contract = await prisma.contractDetails.findUnique({
     where: { id: contractId },
     include: {
@@ -137,41 +123,21 @@ export default async function TemplatePage({ params }: PageProps) {
     },
   });
 
-  if (!contract) {
-    notFound();
-  }
+  if (!contract) notFound();
 
-  // The contract code is the facility number used by BayeganiRecord.
-  // Select the highest serial belonging to this facility only.
   const [archiveRecords, classificationRules] = await Promise.all([
     prisma.bayeganiRecord.findMany({
-      where: contract.facilityNumber
-        ? {
-            facilityNumber: contract.facilityNumber,
-          }
-        : { id: -1 },
+      where: contract.facilityNumber ? { facilityNumber: contract.facilityNumber } : { id: -1 },
       orderBy: [
         { serialSort: { sort: "desc", nulls: "last" } },
         { createdAt: "desc" },
       ],
       select: {
-        id: true,
-        facilityNumber: true,
-        serial: true,
-        archiveCode: true,
-        facilityTitle: true,
-        classification: true,
-        counterName: true,
-        counterCode: true,
-        counterLabel: true,
-        status: true,
-        startDate: true,
-        endDate: true,
-        duration: true,
-        installmentCount: true,
-        approvedAmount: true,
-        remainingAmount: true,
-        rawData: true,
+        id: true, facilityNumber: true, serial: true, archiveCode: true,
+        facilityTitle: true, classification: true, counterName: true,
+        counterCode: true, counterLabel: true, status: true, startDate: true,
+        endDate: true, duration: true, installmentCount: true,
+        approvedAmount: true, remainingAmount: true, rawData: true,
       },
     }),
     prisma.facilityClassification.findMany({
@@ -187,35 +153,20 @@ export default async function TemplatePage({ params }: PageProps) {
       ? latestArchiveRecord.rawData as unknown as Record<string, unknown>
       : {};
   const archiveFacilityType = String(
-    archiveRawData["نوع تسهیلات"]
-      ?? latestArchiveRecord?.facilityTitle
-      ?? archiveRawData["عنوان تسهیلات"]
-      ?? "",
+    archiveRawData["نوع تسهیلات"] ?? latestArchiveRecord?.facilityTitle ?? archiveRawData["عنوان تسهیلات"] ?? "",
   );
   const archiveDuration = String(
-    latestArchiveRecord?.duration
-      ?? archiveRawData["مدت"]
-      ?? archiveRawData["مدت تسهیلات(به ماه)"]
-      ?? "",
+    latestArchiveRecord?.duration ?? archiveRawData["مدت"] ?? archiveRawData["مدت تسهیلات(به ماه)"] ?? "",
   );
   const resolvedClassification = resolveArchiveClassification(
-    classificationRules,
-    archiveFacilityType,
-    archiveDuration,
+    classificationRules, archiveFacilityType, archiveDuration,
   ) || latestArchiveRecord?.classification || "";
 
   const templateDefinition = getContractTemplate(contract.contractType, template);
-  if (!templateDefinition) {
-    notFound();
-  }
+  if (!templateDefinition) notFound();
 
   const folder = getTemplateFolder(contract.contractType);
-  const templatePath = path.join(
-    process.cwd(),
-    "templates",
-    folder,
-    templateDefinition.file,
-  );
+  const templatePath = path.join(process.cwd(), "templates", folder, templateDefinition.file);
 
   let templateHtml: string;
   try {
@@ -229,7 +180,6 @@ export default async function TemplatePage({ params }: PageProps) {
     ...(borrower ?? {}),
     ...contract,
     ...archiveRawData,
-    // Fill template placeholders from the latest BayeganiRecord for this facility.
     facilityNumber: latestArchiveRecord?.facilityNumber ?? contract.facilityNumber ?? "",
     "شماره تسهیلات": latestArchiveRecord?.facilityNumber ?? contract.facilityNumber ?? "",
     lastSerial: latestArchiveRecord?.serial ?? "",
@@ -251,31 +201,18 @@ export default async function TemplatePage({ params }: PageProps) {
     status: latestArchiveRecord?.status ?? "",
     startDate: latestArchiveRecord?.startDate ?? "",
     endDate: sumDatesJalali(
-      latestArchiveRecord?.startDate
-        ?? archiveRawData["تاریخ شروع"]
-        ?? archiveRawData["تاریخ شروع قرارداد"]
-        ?? "",
-      latestArchiveRecord?.duration
-        ?? archiveRawData["مدت"]
-        ?? archiveRawData["مدت تسهیلات(به ماه)"]
-        ?? "",
+      latestArchiveRecord?.startDate ?? archiveRawData["تاریخ شروع"] ?? archiveRawData["تاریخ شروع قرارداد"] ?? "",
+      latestArchiveRecord?.duration ?? archiveRawData["مدت"] ?? archiveRawData["مدت تسهیلات(به ماه)"] ?? "",
     ) || latestArchiveRecord?.endDate || "",
     installmentCount: latestArchiveRecord?.installmentCount ?? "",
     approvedAmount: latestArchiveRecord?.approvedAmount ?? "",
     remainingAmount: latestArchiveRecord?.remainingAmount ?? "",
-    // Customer no longer stores contract type/loan type; those belong to
-    // ContractDetails. Derive the customer kind from the available company data.
     type: borrower?.companyName ? "COMPANY" : "INDIVIDUAL",
   };
   const templateData = getTemplateData(templateSource);
 
   const replacedHtml = replaceTemplate(templateHtml, templateData);
-  const sharedStylePath = path.join(
-    process.cwd(),
-    "templates",
-    "shared",
-    "template.css",
-  );
+  const sharedStylePath = path.join(process.cwd(), "templates", "shared", "template.css");
   const sharedStyles = await readFile(sharedStylePath, "utf8");
   const sharedStyleTag = `<style id="shared-template-styles">${sharedStyles}</style>`;
   const generatedHtml = /<\/head\s*>/i.test(replacedHtml)
@@ -293,12 +230,8 @@ export default async function TemplatePage({ params }: PageProps) {
           srcDoc={generatedHtml}
           className="template-preview-frame"
           style={{
-            display: "block",
-            width: "100%",
-            height: "calc(100vh - 90px)",
-            minHeight: "900px",
-            border: "none",
-            background: "white",
+            display: "block", width: "100%", height: "calc(100vh - 90px)",
+            minHeight: "900px", border: "none", background: "white",
           }}
         />
       </main>
