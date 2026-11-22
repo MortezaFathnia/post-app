@@ -11,8 +11,7 @@ enum ContractType {
   MORABAHA
   CREDIT_CARD
   DEBT_DISCOUNTING
-  QARD_AL_HASAN
-  INTEREST_FREE_LOAN @map("interest-free-loan")
+  INTEREST_FREE_LOAN
 }
 
 enum LoanType {
