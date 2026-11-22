@@ -49,6 +49,8 @@ export default function DebtDocumentsArchivePage() {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("counter");
   const [filterValue, setFilterValue] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortBy, setSortBy] = useState("createdAt");
@@ -77,6 +79,8 @@ export default function DebtDocumentsArchivePage() {
         search,
         filterType: filterValue.trim() ? filterType : "",
         filterValue: filterValue.trim(),
+        dateFrom,
+        dateTo,
         sortBy,
         sortOrder,
       });
@@ -102,13 +106,16 @@ export default function DebtDocumentsArchivePage() {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [page, pageSize, search, filterType, filterValue, sortBy, sortOrder]);
+  }, [page, pageSize, search, filterType, filterValue, dateFrom, dateTo, sortBy, sortOrder]);
 
   async function exportExcel() {
     setError("");
     setExportLoading(true);
     try {
-      const response = await fetch("/api/debt-documents/export", { cache: "no-store" });
+      const params = new URLSearchParams();
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (dateTo) params.set("dateTo", dateTo);
+      const response = await fetch(`/api/debt-documents/export?${params.toString()}`, { cache: "no-store" });
       if (!response.ok) {
         const result = await response.json().catch(() => null);
         throw new Error(result?.error || "خروجی اکسل ناموفق بود.");
@@ -201,8 +208,8 @@ export default function DebtDocumentsArchivePage() {
               <p className="mt-1 text-xs text-slate-500">تعداد نتایج: {total.toLocaleString("fa-IR")}</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={exportExcel} disabled={exportLoading} className="rounded-xl border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">
-                {exportLoading ? "در حال تهیه فایل..." : "خروجی اکسل همه رکوردها"}
+              <button type="button" onClick={exportExcel} disabled={exportLoading || (!!dateFrom && !!dateTo && dateFrom > dateTo)} className="rounded-xl border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">
+                {exportLoading ? "در حال تهیه فایل..." : dateFrom || dateTo ? "خروجی اکسل بازه انتخابی" : "خروجی اکسل همه رکوردها"}
               </button>
               <button type="button" onClick={() => void loadRecords()} disabled={loading} className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
                 به‌روزرسانی جدول
@@ -225,6 +232,18 @@ export default function DebtDocumentsArchivePage() {
               <input value={filterValue} onChange={(event) => { setFilterValue(event.target.value); setPage(1); }} placeholder="مقدار موردنظر برای فیلتر..." aria-label="مقدار فیلتر" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
             )}
             <button type="button" onClick={() => { setFilterValue(""); setPage(1); }} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100">پاک کردن</button>
+          </div>
+          <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-end">
+            <div className="min-w-0 flex-1 space-y-1">
+              <label className="block text-sm font-medium text-slate-700">از تاریخ سررسید</label>
+              <PersianDatePicker value={dateFrom} onChange={(value) => { setDateFrom(value); setPage(1); }} placeholder="تاریخ شروع" className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <label className="block text-sm font-medium text-slate-700">تا تاریخ سررسید</label>
+              <PersianDatePicker value={dateTo} onChange={(value) => { setDateTo(value); setPage(1); }} placeholder="تاریخ پایان" className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
+            </div>
+            <button type="button" onClick={() => { setDateFrom(""); setDateTo(""); setPage(1); }} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100">پاک کردن بازه تاریخ</button>
+            {dateFrom && dateTo && dateFrom > dateTo && <p className="text-sm text-red-600">تاریخ شروع نباید بعد از تاریخ پایان باشد.</p>}
           </div>
         </div>
 
