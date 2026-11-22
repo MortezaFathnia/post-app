@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { prisma } from "@/lib/prisma";
 
@@ -10,10 +10,43 @@ function customerNumberFromFacility(facilityNumber: string | null): string {
   return facilityNumber.trim().split(".")[2]?.trim() ?? "";
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Export all records without changing the database.
+    const normalizeDigits = (input: string) =>
+      input.replace(/[۰-۹٠-٩]/g, (digit) => {
+        const persian = "۰۱۲۳۴۵۶۷۸۹";
+        const arabic = "٠١٢٣٤٥٦٧٨٩";
+        const persianIndex = persian.indexOf(digit);
+        return String(persianIndex >= 0 ? persianIndex : arabic.indexOf(digit));
+      });
+    const normalizeDate = (input: string | null) => {
+      if (!input?.trim()) return null;
+      const normalized = normalizeDigits(input.trim()).replace(/[.-]/g, "/");
+      const match = normalized.match(/^(\\d{4})\\/(\\d{1,2})\\/(\\d{1,2})$/);
+      if (!match) return null;
+      return `${match[1]}/${match[2].padStart(2, "0")}/${match[3].padStart(2, "0")}`;
+    };
+    const params = request.nextUrl.searchParams;
+    const rawDateFrom = params.get("dateFrom");
+    const rawDateTo = params.get("dateTo");
+    const dateFrom = normalizeDate(rawDateFrom);
+    const dateTo = normalizeDate(rawDateTo);
+    if ((rawDateFrom && !dateFrom) || (rawDateTo && !dateTo)) {
+      return NextResponse.json({ success: false, error: "قالب تاریخ معتبر نیست." }, { status: 400 });
+    }
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+      return NextResponse.json({ success: false, error: "تاریخ شروع نباید بعد از تاریخ پایان باشد." }, { status: 400 });
+    }
+
+    const where = dateFrom || dateTo ? {
+      dueDate: {
+        ...(dateFrom ? { gte: dateFrom } : {}),
+        ...(dateTo ? { lte: dateTo } : {}),
+      },
+    } : undefined;
+    // Export only records matching the selected due-date range (or all records if no range is selected).
     const records = await prisma.debtDiscountingRecord.findMany({
+      where,
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     });
 
