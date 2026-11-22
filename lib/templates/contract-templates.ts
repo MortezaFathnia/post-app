@@ -42,6 +42,19 @@ export const contractTemplateSets: ContractTemplateSet[] = [
   },
 
   {
+    id: "QARD_AL_HASAN",
+    title: "قرض الحسنه",
+    templates: [
+      {
+        id: "contract",
+        title: "قرارداد قرض الحسنه",
+        description: "قرارداد قرض الحسنه",
+        file: "contract.html",
+      },
+    ],
+  },
+
+  {
     id: "CREDIT_CARD",
     title: "مرابحه کارت اعتباری",
 
