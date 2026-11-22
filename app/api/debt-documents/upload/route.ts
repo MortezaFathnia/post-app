@@ -178,8 +178,32 @@ export async function GET(request: NextRequest) {
         return String(persianIndex >= 0 ? persianIndex : arabic.indexOf(digit));
       });
 
+    const normalizeDate = (input: string | null) => {
+      if (!input?.trim()) return null;
+      const normalized = normalizeDigits(input.trim()).replace(/[.-]/g, "/");
+      const match = normalized.match(/^(\\d{4})\\/(\\d{1,2})\\/(\\d{1,2})$/);
+      if (!match) return null;
+      return `${match[1]}/${match[2].padStart(2, "0")}/${match[3].padStart(2, "0")}`;
+    };
+    const rawDateFrom = params.get("dateFrom");
+    const rawDateTo = params.get("dateTo");
+    const dateFrom = normalizeDate(rawDateFrom);
+    const dateTo = normalizeDate(rawDateTo);
+    if ((rawDateFrom && !dateFrom) || (rawDateTo && !dateTo)) {
+      return NextResponse.json({ success: false, error: "قالب تاریخ معتبر نیست." }, { status: 400 });
+    }
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+      return NextResponse.json({ success: false, error: "تاریخ شروع نباید بعد از تاریخ پایان باشد." }, { status: 400 });
+    }
+
     const searchTerms = [...new Set([search, normalizeDigits(search)].filter(Boolean))];
     const where: Prisma.DebtDiscountingRecordWhereInput = {};
+    if (dateFrom || dateTo) {
+      where.dueDate = {
+        ...(dateFrom ? { gte: dateFrom } : {}),
+        ...(dateTo ? { lte: dateTo } : {}),
+      };
+    }
     if (params.get("uploadedOnly") === "true") {
       where.sourceFile = { not: null };
       where.sheetName = "چک ها";
