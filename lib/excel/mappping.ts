@@ -78,8 +78,17 @@ export function mapDbExcelRow(row: DbExcelRow) {
   const debtorName = value(row, "نام و نام خانوادگی مدیون");
   const loanType = mapLoanType(row);
 
+  const facilityType = (firstValue(row, ["نوع تسهیلات(انتخاب شود)", "نوع تسهیلات", "نوع وام"]) ?? "")
+    .replace(/[يى]/g, "ی")
+    .replace(/ك/g, "ک")
+    .replace(/[\u200c\s]+/g, " ")
+    .trim();
+  const contractType = facilityType.includes("قرض الحسنه")
+    ? ContractType.QARD_AL_HASAN
+    : ContractType.MORABAHA;
+
   const mapped = {
-    contractType: ContractType.MORABAHA,
+    contractType,
     loanType,
 
     name: debtorName,
