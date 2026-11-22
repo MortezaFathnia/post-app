@@ -24,6 +24,8 @@ function getTemplateFolder(contractType: string): string {
       return "credit-card";
     case "DEBT_DISCOUNTING":
       return "debt-discounting";
+    case "QARD_AL_HASAN":
+      return "interest-free-loan";
     default:
       throw new Error(`Unsupported contract type: ${contractType}`);
   }
