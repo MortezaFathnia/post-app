@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
     const normalizeDate = (input: string | null) => {
       if (!input?.trim()) return null;
       const normalized = normalizeDigits(input.trim()).replace(/[.-]/g, "/");
-      const match = normalized.match(/^(\\d{4})\\/(\\d{1,2})\\/(\\d{1,2})$/);
+      const match = normalized.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
       if (!match) return null;
       return `${match[1]}/${match[2].padStart(2, "0")}/${match[3].padStart(2, "0")}`;
     };
