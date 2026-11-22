@@ -11,6 +11,7 @@ enum ContractType {
   MORABAHA
   CREDIT_CARD
   DEBT_DISCOUNTING
+  QARD_AL_HASAN
 }
 
 enum LoanType {
