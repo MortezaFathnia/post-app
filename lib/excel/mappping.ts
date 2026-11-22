@@ -23,9 +23,6 @@ function mapLoanType(row: DbExcelRow): LoanType | null {
     .replace(/\s+/g, " ")
     .trim();
 
-  // Some DB sheets use «نوع تسهیلات(انتخاب شود)» for the product (e.g. مرابحه),
-  // while «نحوه بازپرداخت(انتخاب شود)» identifies the schedule (یکجا/اقساطی).
-  // Prefer an explicit schedule label when present, otherwise fall back to repayment method.
   const explicit = normalize(firstValue(row, ["نوع تسهیلات(انتخاب شود)", "نوع تسهیلات", "نوع وام"]));
   if (explicit.includes("سررسیدی")) return LoanType.MATURITY;
   if (explicit === "اقساط" || explicit.includes("تسهیلات اقساط") || explicit.startsWith("اقساط ")) {
@@ -84,13 +81,12 @@ export function mapDbExcelRow(row: DbExcelRow) {
     .replace(/[\u200c\s]+/g, " ")
     .trim();
   const contractType = facilityType.includes("قرض الحسنه")
-    ? ContractType.QARD_AL_HASAN
+    ? ContractType.INTEREST_FREE_LOAN
     : ContractType.MORABAHA;
 
   const mapped = {
     contractType,
     loanType,
-
     name: debtorName,
     nationalCode: value(row, "کدملی/شناسه ملی مدیون"),
     residence: value(row, "مقیم مدیون"),
@@ -111,7 +107,6 @@ export function mapDbExcelRow(row: DbExcelRow) {
     debtorLongTermDepositNumber: firstValue(row, ["شماره سپرده بلند مدت مدیون", "شماره سپرده بلندمدت مدیون"]),
     debtorLongTermDepositAmount: value(row, "مبلغ سپرده بلند مدت مدیون"),
     debtorCustomerNumber: value(row, "شماره مشتری مدیون"),
-
     requestDate: value(row, "تاریخ درخواست"),
     requestNumber: value(row, "شماره درخواست"),
     approvalDate: value(row, "تاریخ مصوبه"),
@@ -120,7 +115,6 @@ export function mapDbExcelRow(row: DbExcelRow) {
     maturityDate: value(row, "تاریخ سررسید"),
     contractNumber: value(row, "قرارداد(شماره پیگیری بانک مرکزی)"),
     contractCode: value(row, "شماره اندیکاتور(برای فرم قرارداد)"),
-
     facilityAmount: value(row, "مبلغ تسهیلات اعطایی(سهم بانک)"),
     prepayment: value(row, "پیش دریافت(سهم20%مشتری)"),
     payableAmount: value(row, "مبلغ تسهیلات/فاکتور(سهم بانک و پیش دریافت)"),
@@ -142,7 +136,6 @@ export function mapDbExcelRow(row: DbExcelRow) {
     proposedMudarabahProfit: value(row, "سود پیشنهادی تسهیلات مضاربه"),
     collateralType: value(row, "نوع وثیقه"),
     collateralDescription: value(row, "توضیحات کامل وثیقه"),
-
     bankName: value(row, "نام بانک"),
     branchName: value(row, "نام شعبه"),
     branchPostalCode: value(row, "کد پستی"),
@@ -154,11 +147,9 @@ export function mapDbExcelRow(row: DbExcelRow) {
     counterCode: value(row, "کد باجه"),
     brokerName: value(row, "نام کارگزار"),
     brokerCustomerCode: value(row, "کدمعرف(شماره مشتری کارگزار)"),
-
     ...mapGuarantor(row, 1),
     ...mapGuarantor(row, 2),
     ...mapGuarantor(row, 3),
-
   };
 
   return mapped;
