@@ -42,7 +42,7 @@ export const contractTemplateSets: ContractTemplateSet[] = [
   },
 
   {
-    id: "QARD_AL_HASAN",
+    id: "INTEREST_FREE_LOAN",
     title: "قرض الحسنه",
     templates: [
       {
@@ -79,13 +79,8 @@ export const contractTemplateSets: ContractTemplateSet[] = [
 export function getContractTemplateSet(
   contractType: string
 ): ContractTemplateSet | undefined {
-  const normalizedType = contractType === "INTEREST_FREE_LOAN"
-    || contractType === "interest-free-loan"
-    ? "QARD_AL_HASAN"
-    : contractType;
-
   return contractTemplateSets.find(
-    (item) => item.id === normalizedType
+    (item) => item.id === contractType
   );
 }
 
