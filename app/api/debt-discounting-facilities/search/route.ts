@@ -6,21 +6,16 @@ export const runtime = "nodejs";
 export async function GET(request: NextRequest) {
   try {
     const query = request.nextUrl.searchParams.get("q")?.trim() ?? "";
-    if (query.length < 2) {
-      return NextResponse.json({ success: true, people: [] });
-    }
+    if (query.length < 2) return NextResponse.json({ success: true, people: [] });
 
-    const records = await prisma.debtDiscountingFacility.findMany({
+    // Source autocomplete exclusively from the full DebtDocument table.
+    const records = await prisma.debtDocument.findMany({
       where: {
         facilityTitle: { contains: query, mode: "insensitive" },
         facilityNumber: { not: null },
       },
-      select: {
-        facilityTitle: true,
-        facilityNumber: true,
-      },
+      select: { facilityTitle: true, facilityNumber: true },
       orderBy: [{ facilityTitle: "asc" }, { facilityNumber: "asc" }],
-      take: 500,
     });
 
     const grouped = new Map<string, Set<string>>();
@@ -36,13 +31,9 @@ export async function GET(request: NextRequest) {
       name,
       facilityNumbers: Array.from(numbers).sort((a, b) => a.localeCompare(b, "fa", { numeric: true })),
     }));
-
     return NextResponse.json({ success: true, people });
   } catch (error) {
-    console.error("Debt discounting facility autocomplete error:", error);
-    return NextResponse.json(
-      { success: false, error: "جست‌وجوی نام و تسهیلات ناموفق بود." },
-      { status: 500 },
-    );
+    console.error("DebtDocument autocomplete error:", error);
+    return NextResponse.json({ success: false, error: "جست‌وجوی نام و تسهیلات ناموفق بود." }, { status: 500 });
   }
 }
