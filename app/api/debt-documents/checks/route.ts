@@ -107,6 +107,8 @@ export async function POST(request: NextRequest) {
       }>;
       counterLabel?: string;
       facilityNumber?: string;
+      facilityName?: string;
+      baseDate?: string;
       serial?: string;
       dueDate?: string;
       bankAgent?: string;
@@ -118,8 +120,10 @@ export async function POST(request: NextRequest) {
     if (body.mode === "discount-calculator") {
       const counterLabel = clean(body.counterLabel);
       const facilityNumber = clean(body.facilityNumber);
+      const facilityName = clean(body.facilityName);
+      const baseDate = clean(body.baseDate);
       const rows = Array.isArray(body.records) ? body.records : [];
-      if (!counterLabel || !facilityNumber || rows.length === 0) {
+      if (!counterLabel || !facilityNumber || !facilityName || !baseDate || rows.length === 0) {
         return NextResponse.json({ success: false, error: "باجه، کد تسهیلات و حداقل یک چک انتخاب‌شده الزامی است." }, { status: 400 });
       }
 
@@ -220,7 +224,10 @@ export async function POST(request: NextRequest) {
         ];
         return cells.map(textCsvCell).join(",");
       }).join("\r\n") + (savedRows.length ? "\r\n" : "");
-      const safeFacility = facilityNumber.replace(/[<>:"/\\\\|?*\\x00-\\x1F]/g, "_");
+      const safeFilePart = (value: string) => value.replace(/[<>:"/\\\\|?*\\x00-\\x1F]/g, "_").trim();
+      const safeFacility = safeFilePart(facilityNumber);
+      const safeName = safeFilePart(facilityName);
+      const safeDate = safeFilePart(baseDate.replace(/[/.]/g, "-"));
 
       return NextResponse.json({
         success: true,
@@ -228,7 +235,7 @@ export async function POST(request: NextRequest) {
         duplicateCheckNumbers: duplicates,
         records: created,
         textContent,
-        textFileName: `${safeFacility}-${shamsiFileDate()}.txt`,
+        textFileName: `${safeFacility}-${safeName}-${safeDate}.txt`,
       });
     }
 
