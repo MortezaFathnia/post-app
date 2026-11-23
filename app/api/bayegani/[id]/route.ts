@@ -66,22 +66,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       return NextResponse.json({ success: false, error: "رکورد پیدا نشد." }, { status: 404 });
     }
 
-    // GET remains read-only; hydrate customer name fields for older records from Customer.
-    const rawData = record.rawData && typeof record.rawData === "object" && !Array.isArray(record.rawData)
-      ? { ...(record.rawData as Record<string, unknown>) }
-      : {};
-    const nationalCode = record.nationalId || value(rawData, "کد ملی", "کد ملي ", "کد ملي مشتري");
-    if (nationalCode) {
-      const customer = await prisma.customer.findFirst({
-        where: { nationalCode },
-        select: { name: true, lastName: true },
-      });
-      if (customer) {
-        rawData["نام"] = customer.name || rawData["نام"] || "";
-        rawData["نام خانوادگی"] = customer.lastName || rawData["نام خانوادگی"] || "";
-      }
-    }
-    return NextResponse.json({ success: true, record: serializeRecord({ ...record, rawData }) });
+    // Return the archive record's own saved rawData without replacing fields from Customer.
+    // The edit form must show exactly what was stored in this BayeganiRecord.
+    return NextResponse.json({ success: true, record: serializeRecord(record) });
   } catch (error) {
     console.error("Load archive record error:", error);
     return NextResponse.json({
