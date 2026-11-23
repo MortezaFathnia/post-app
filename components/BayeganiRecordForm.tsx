@@ -171,9 +171,26 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const next: Record<string, string> = { ...initialFields };
         next["مبلغ مصوب"] = normalizeAmount(String(raw["مبلغ مصوب"] ?? raw["مبلغ"] ?? ""));
         delete raw["مبلغ"];
+        const aliases: Record<string, string> = {
+          "شماره تسهيلات": "شماره تسهیلات",
+          "شماره تسهیلات ": "شماره تسهیلات",
+          "نوع تسهيلات": "نوع تسهیلات",
+          "تاريخ شروع": "تاریخ شروع",
+          "تاريخ تحويل وثيقه": "تاریخ تحویل وثیقه",
+          "تاریخ تحويل وثيقه": "تاریخ تحویل وثیقه",
+          "پايان قرارداد": "پایان قرارداد",
+          "وضعيت کنونی": "وضعیت کنونی",
+          "کد ملي": "کد ملی",
+          "کد ملي مشتري": "کد ملی",
+          "تعداد اقساط ": "تعداد اقساط",
+          "مبلغ مصوب ": "مبلغ مصوب",
+        };
         for (const [key, value] of Object.entries(raw)) {
-          const fieldName = key.trim() === "تیک" ? "توضیحات" : key;
-          next[fieldName] = value == null ? "" : String(value);
+          const trimmedKey = key.trim();
+          const fieldName = trimmedKey === "تیک" ? "توضیحات" : (aliases[trimmedKey] || trimmedKey);
+          if (Object.prototype.hasOwnProperty.call(initialFields, fieldName)) {
+            next[fieldName] = value == null ? "" : String(value);
+          }
         }
         delete next["تیک"];
         next["پایان قرارداد"] = sumDatesJalali(next["تاریخ شروع"] || "", next["مدت"] || "") || next["پایان قرارداد"];
