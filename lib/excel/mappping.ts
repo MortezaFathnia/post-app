@@ -72,7 +72,10 @@ function mapGuarantor(row: DbExcelRow, n: 1 | 2 | 3) {
 }
 
 export function mapDbExcelRow(row: DbExcelRow) {
-  const debtorName = value(row, "نام و نام خانوادگی مدیون");
+  const debtorFullName = value(row, "نام و نام خانوادگی مدیون");
+  const debtorNameParts = (debtorFullName ?? "").split(/\\s+/).filter(Boolean);
+  const debtorFirstName = debtorNameParts.shift() ?? null;
+  const debtorLastName = debtorNameParts.join(" ") || null;
   const loanType = mapLoanType(row);
 
   const facilityType = (firstValue(row, ["نوع تسهیلات(انتخاب شود)", "نوع تسهیلات", "نوع وام"]) ?? "")
@@ -87,7 +90,8 @@ export function mapDbExcelRow(row: DbExcelRow) {
   const mapped = {
     contractType,
     loanType,
-    name: debtorName,
+    name: debtorFirstName,
+    lastName: debtorLastName,
     nationalCode: value(row, "کدملی/شناسه ملی مدیون"),
     residence: value(row, "مقیم مدیون"),
     postalCode: value(row, "کد پستی مدیون"),
