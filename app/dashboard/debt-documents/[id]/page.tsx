@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 type DebtCheck = {
   id: number;
+  createdAt: string | null;
   counterLabel: string;
   facilityNumber: string;
   customerNumber: string | null;
@@ -30,6 +31,7 @@ type DebtCheck = {
 };
 
 const fields: { key: keyof DebtCheck; label: string }[] = [
+  { key: "createdAt", label: "تاریخ و زمان ثبت در پایگاه داده" },
   { key: "counterLabel", label: "کدباجه - نام باجه" },
   { key: "facilityNumber", label: "شماره تسهیلات" },
   { key: "customerNumber", label: "شماره مشتری" },
@@ -97,7 +99,15 @@ export default function DebtDocumentCheckDetailsPage() {
           <dl className="grid gap-px bg-slate-100 sm:grid-cols-2 lg:grid-cols-3">
             {fields.map((field) => {
               const value = record[field.key];
-              const display = field.key === "checkStatus" && value === "نقدشده" ? "نقد شده" : value == null || value === "" ? "—" : String(value);
+              const display = field.key === "createdAt" && value
+                ? new Intl.DateTimeFormat("fa-IR", {
+                    dateStyle: "long",
+                    timeStyle: "short",
+                    timeZone: "Asia/Tehran",
+                  }).format(new Date(String(value)))
+                : field.key === "checkStatus" && value === "نقدشده"
+                  ? "نقد شده"
+                  : value == null || value === "" ? "—" : String(value);
               return <div key={field.key} className="bg-white p-4"><dt className="text-xs font-medium text-slate-500">{field.label}</dt><dd className="mt-2 break-words text-sm font-semibold text-slate-800">{display}</dd></div>;
             })}
           </dl>
