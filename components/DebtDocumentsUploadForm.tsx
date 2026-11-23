@@ -28,7 +28,6 @@ export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
   const [facilityNumber, setFacilityNumber] = useState("");
   const [facilityPeople, setFacilityPeople] = useState<FacilityPersonOption[]>([]);
   const [facilityOpen, setFacilityOpen] = useState(false);
-  const [facilityNumberOpen, setFacilityNumberOpen] = useState(false);
   const [loadingFacilities, setLoadingFacilities] = useState(false);
   const [facilitySearchError, setFacilitySearchError] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -183,9 +182,6 @@ export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
   const filteredPeople = facilityPeople.filter((person) =>
     person.name.toLocaleLowerCase().includes(facilityName.trim().toLocaleLowerCase())
   );
-  const filteredFacilityNumbers = (selectedFacilityPerson?.facilityNumbers ?? []).filter((number) =>
-    number.toLocaleLowerCase().includes(facilityNumber.trim().toLocaleLowerCase())
-  );
 
   return (
     <>
@@ -279,47 +275,21 @@ export default function DebtDocumentsUploadForm({ onUploaded }: Props) {
             <label htmlFor="debtArchiveFacilityNumber" className="mb-2 block text-sm font-semibold text-slate-700">
               انتخاب شماره تسهیلات
             </label>
-            <div className="relative">
-              <input
-                id="debtArchiveFacilityNumber"
-                role="combobox"
-                aria-autocomplete="list"
-                aria-expanded={facilityNumberOpen}
-                aria-controls="debt-archive-facility-number-options"
-                required
-                value={facilityNumber}
-                onFocus={() => setFacilityNumberOpen(true)}
-                onChange={(event) => { setFacilityNumber(event.target.value); setFacilityNumberOpen(true); }}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") setFacilityNumberOpen(false);
-                  if (event.key === "Enter" && facilityNumberOpen && filteredFacilityNumbers[0]) {
-                    event.preventDefault();
-                    setFacilityNumber(filteredFacilityNumbers[0]);
-                    setFacilityNumberOpen(false);
-                  }
-                }}
-                disabled={loading || !selectedFacilityPerson || selectedFacilityPerson.facilityNumbers.length === 0}
-                autoComplete="off"
-                placeholder={selectedFacilityPerson ? "شماره تسهیلات را جست‌وجو کنید..." : "ابتدا نام شخص را انتخاب کنید"}
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
-              />
-              {facilityNumberOpen && selectedFacilityPerson && !loading && (
-                <div id="debt-archive-facility-number-options" role="listbox" className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
-                  {filteredFacilityNumbers.slice(0, 50).map((number) => (
-                    <button
-                      key={number}
-                      type="button"
-                      role="option"
-                      aria-selected={facilityNumber === number}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => { setFacilityNumber(number); setFacilityNumberOpen(false); }}
-                      className="w-full rounded-lg px-3 py-2.5 text-right text-sm text-slate-700 transition hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
-                    >{number}</button>
-                  ))}
-                  {filteredFacilityNumbers.length === 0 && <p className="px-3 py-4 text-center text-sm text-slate-500">موردی پیدا نشد.</p>}
-                </div>
-              )}
-            </div>
+            <select
+              id="debtArchiveFacilityNumber"
+              required
+              value={facilityNumber}
+              onChange={(event) => setFacilityNumber(event.target.value)}
+              disabled={loading || !selectedFacilityPerson || selectedFacilityPerson.facilityNumbers.length === 0}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+            >
+              <option value="">
+                {selectedFacilityPerson ? "شماره تسهیلات را انتخاب کنید" : "ابتدا نام شخص را انتخاب کنید"}
+              </option>
+              {(selectedFacilityPerson?.facilityNumbers ?? []).map((number) => (
+                <option key={number} value={number}>{number}</option>
+              ))}
+            </select>
           </div>
 
           <div>
