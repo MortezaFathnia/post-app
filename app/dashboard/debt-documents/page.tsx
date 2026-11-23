@@ -2,6 +2,7 @@
 import PersianDatePicker from "@/components/PersianDatePicker";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import DebtDocumentsUploadForm from "@/components/DebtDocumentsUploadForm";
 
 type DebtRecord = {
@@ -40,6 +41,7 @@ const columns: { key: keyof DebtRecord; label: string }[] = [
   { key: "serial", label: "سریال سفته / چک" },
   { key: "administrativeNumber", label: "شماره انتظامی" },
   { key: "dueDate", label: "تاریخ سررسید" },
+  { key: "checkStatus", label: "وضعیت چک" },
   { key: "description", label: "توضیحات" },
 ];
 
@@ -259,6 +261,7 @@ export default function DebtDocumentsArchivePage() {
                 <tr>
                   <th className="whitespace-nowrap px-4 py-3 font-semibold">ردیف</th>
                   {columns.map((column) => sortableHeader(column.label, column.key))}
+                  <th className="whitespace-nowrap px-4 py-3 font-semibold">عملیات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -267,9 +270,19 @@ export default function DebtDocumentsArchivePage() {
                     <td className="whitespace-nowrap px-4 py-3">{(firstRecord + index).toLocaleString("fa-IR")}</td>
                     {columns.map((column) => (
                       <td key={column.key} className="whitespace-nowrap px-4 py-3">
-{String(record[column.key] ?? "—")}
+{column.key === "checkStatus" && record.checkStatus === "نقدشده" ? "نقد شده" : String(record[column.key] ?? "—")}
                       </td>
                     ))}
+                    <td className="whitespace-nowrap px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => void updateCheckStatus(record.id, "نقدشده")} disabled={record.checkStatus === "نقدشده"} className="rounded-lg border border-emerald-300 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50">
+                          {record.checkStatus === "نقدشده" ? "نقد شده" : "تغییر به نقد شده"}
+                        </button>
+                        <Link href={"/dashboard/debt-documents/" + record.id} className="rounded-lg border border-blue-300 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50">
+                          جزئیات چک
+                        </Link>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
