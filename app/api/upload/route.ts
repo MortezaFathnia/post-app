@@ -185,6 +185,7 @@ export async function POST(request: NextRequest) {
       for (const { data } of customers) {
         const customerData = {
           name: data.name,
+          lastName: data.lastName,
           nationalCode: data.nationalCode!,
           postalCode: data.postalCode,
           birthCertificateNumber: data.birthCertificateNumber,
