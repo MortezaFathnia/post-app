@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getCurrentShamsiDate } from "@/lib/shamsi-date";
 
 export const runtime = "nodejs";
 
@@ -80,18 +81,6 @@ function addOneDayToShamsiDate(input: string | null): string | null {
     }
   }
   return input;
-}
-
-function shamsiDateString(date = new Date()): string {
-  const parts = new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", {
-    timeZone: "Asia/Tehran",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-  const part = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((item) => item.type === type)?.value ?? "";
-  return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
 function csvCell(input: string): string {
@@ -294,6 +283,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file");
     const counterLabel = String(formData.get("counterLabel") ?? "").trim();
     const facilityNumber = String(formData.get("facilityNumber") ?? "").trim();
+    const facilityName = String(formData.get("facilityName") ?? "").trim();
 
     if (!counterLabel || !facilityNumber) {
       return NextResponse.json(
@@ -425,7 +415,7 @@ export async function POST(request: NextRequest) {
           checkNumber,
           checkStatus: "درراه",
           domesticForeign: value(row, "چک داخلی یا خارجی"),
-          dueDate: addOneDayToShamsiDate(value(row, "تاریخ سررسید")),
+          dueDate: value(row, "تاریخ سررسید"),
           paidAmount: value(row, "مبلغ چک"),
           unpaidAmount: null,
           embeddedProfit: null,
@@ -574,7 +564,7 @@ export async function POST(request: NextRequest) {
             dueDate,
             "L",
             "0",
-            (addOneDayToShamsiDate(dueDate) ?? dueDate).replaceAll("/", "-"),
+            dueDate,
             "0",
             "0",
             "17",
@@ -613,7 +603,7 @@ export async function POST(request: NextRequest) {
       })),
       ...(textContent === undefined ? {} : {
         textContent,
-        textFileName: `${facilityNumber.replace(/[<>:"/\\\\|?*\x00-\x1F]/g, "_")}-${shamsiDateString()}.txt`,
+        textFileName: `${facilityNumber.replace(/[<>:"/\\\\|?*\x00-\x1F]/g, "_")}-${facilityName.replace(/[<>:"/\\\\|?*\x00-\x1F]/g, "_")}-${getCurrentShamsiDate()}.txt`,
         previewHeaders: countFormat || simpleCountFormat || newFormat ? countFormatOutputHeaders : textHeaders,
         previewRows: countFormat || simpleCountFormat || newFormat ? countFormatRows : rows.map((row) => textHeaders.map((header) => {
           const cell = textCell(row, header);
