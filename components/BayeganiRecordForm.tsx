@@ -163,35 +163,44 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const result = await res.json();
         if (!res.ok || !result.success) throw new Error(result.error || "دریافت رکورد ناموفق بود.");
         const record = result.record as ApiRecord;
-        const raw = record.rawData && typeof record.rawData === "object" ? removeUnwantedColumns(record.rawData) : {};
-        const legacyArchiveCode = String(raw["کد بایگانی جدید"] ?? raw["کد بایگانی"] ?? "").trim();
-        delete raw["کد بایگانی جدید"];
-        delete raw["شماره مشتری"];
-        if (legacyArchiveCode) raw["کد بایگانی"] = legacyArchiveCode;
-        const next: Record<string, string> = { ...initialFields };
-        next["مبلغ مصوب"] = normalizeAmount(String(raw["مبلغ مصوب"] ?? raw["مبلغ"] ?? ""));
-        delete raw["مبلغ"];
+        const sourceRaw = record.rawData && typeof record.rawData === "object" ? removeUnwantedColumns(record.rawData) : {};
+        const normalizeKey = (key: string) => key.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\\s\\u200c]+/g, " ").trim();
+        const raw: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(sourceRaw)) raw[normalizeKey(key)] = value;
         const aliases: Record<string, string> = {
-          "شماره تسهيلات": "شماره تسهیلات",
-          "شماره تسهیلات ": "شماره تسهیلات",
-          "نوع تسهيلات": "نوع تسهیلات",
-          "تاريخ شروع": "تاریخ شروع",
-          "تاريخ تحويل وثيقه": "تاریخ تحویل وثیقه",
-          "تاریخ تحويل وثيقه": "تاریخ تحویل وثیقه",
-          "پايان قرارداد": "پایان قرارداد",
-          "وضعيت کنونی": "وضعیت کنونی",
-          "کد ملي": "کد ملی",
-          "کد ملي مشتري": "کد ملی",
-          "تعداد اقساط ": "تعداد اقساط",
-          "مبلغ مصوب ": "مبلغ مصوب",
+          "شماره تسهيلات": "شماره تسهیلات", "نوع تسهيلات": "نوع تسهیلات",
+          "تاريخ شروع": "تاریخ شروع", "تاريخ تحويل وثيقه": "تاریخ تحویل وثیقه",
+          "تاریخ تحويل وثيقه": "تاریخ تحویل وثیقه", "پايان قرارداد": "پایان قرارداد",
+          "وضعيت کنونی": "وضعیت کنونی", "کد ملي": "کد ملی", "کد ملي مشتري": "کد ملی",
         };
+        const next: Record<string, string> = { ...initialFields };
         for (const [key, value] of Object.entries(raw)) {
-          const trimmedKey = key.trim();
-          const fieldName = trimmedKey === "تیک" ? "توضیحات" : (aliases[trimmedKey] || trimmedKey);
-          if (Object.prototype.hasOwnProperty.call(initialFields, fieldName)) {
-            next[fieldName] = value == null ? "" : String(value);
-          }
+          const fieldName = normalizeKey(key) === "تیک" ? "توضیحات" : (aliases[normalizeKey(key)] || normalizeKey(key));
+          if (Object.prototype.hasOwnProperty.call(initialFields, fieldName)) next[fieldName] = value == null ? "" : String(value);
         }
+        // Fall back to the normalized database columns if legacy rawData lacks those fields.
+        const columnFallbacks: Record<string, unknown> = {
+          "شماره تسهیلات": result.record.facilityNumber,
+          "نام": raw["نام"] ?? raw["نام و نام خانوادگی مدیون"],
+          "سریال": result.record.serial,
+          "طبقه": result.record.classification,
+          "نام باجه": result.record.counterName,
+          "کد باجه": result.record.counterCode,
+          "وضعیت کنونی": result.record.status,
+          "کد بایگانی": result.record.archiveCode,
+          "تاریخ شروع": result.record.startDate,
+          "مدت": result.record.duration,
+          "تاریخ تحویل وثیقه": result.record.bailDeliveryDate,
+          "پایان قرارداد": result.record.endDate,
+          "تعداد اقساط": result.record.installmentCount,
+          "مبلغ مصوب": result.record.approvedAmount,
+          "کد ملی": result.record.nationalId,
+        };
+        for (const [key, value] of Object.entries(columnFallbacks)) {
+          if (!String(next[key] ?? "").trim() && value != null && String(value).trim()) next[key] = String(value);
+        }
+        next["مبلغ مصوب"] = normalizeAmount(next["مبلغ مصوب"]);
+        delete raw["مبلغ"];
         delete next["تیک"];
         next["پایان قرارداد"] = sumDatesJalali(next["تاریخ شروع"] || "", next["مدت"] || "") || next["پایان قرارداد"];
         next["وضعیت کنونی"] = next["وضعیت کنونی"] || "فعال";
