@@ -242,7 +242,7 @@ export default function AddDebtCheckPage() {
     setSaving(true); setError(""); setMessage("");
     try {
       const response=await fetch("/api/debt-documents/checks",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-        mode:"discount-calculator",counterLabel,facilityNumber,
+        mode:"discount-calculator",counterLabel,facilityNumber,facilityName:facilityName.trim(),baseDate:`${base.year}-${String(base.month).padStart(2,"0")}-${String(base.day).padStart(2,"0")}`,
         records:validPending.map(row=>({
           checkNumber:row.checkNumber,amount:String(numberValue(row.amount)),day:numberValue(row.day),month:numberValue(row.month),year:numberValue(row.year),
           serial:row.serial,bankCode:row.bankCode,bankName:banks.find(b=>b.bankId===row.bankCode)?.name || "",
