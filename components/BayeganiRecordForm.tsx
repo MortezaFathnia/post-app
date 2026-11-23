@@ -164,7 +164,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         if (!res.ok || !result.success) throw new Error(result.error || "دریافت رکورد ناموفق بود.");
         const record = result.record as ApiRecord;
         const sourceRaw = record.rawData && typeof record.rawData === "object" ? removeUnwantedColumns(record.rawData) : {};
-        const normalizeKey = (key: string) => key.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\\s\\u200c]+/g, " ").trim();
+        const normalizeKey = (key: string) => key.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\s\u200c]+/g, " ").trim();
         const raw: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(sourceRaw)) raw[normalizeKey(key)] = value;
         const aliases: Record<string, string> = {
