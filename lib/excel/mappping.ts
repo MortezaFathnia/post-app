@@ -73,7 +73,7 @@ function mapGuarantor(row: DbExcelRow, n: 1 | 2 | 3) {
 
 export function mapDbExcelRow(row: DbExcelRow) {
   const debtorFullName = value(row, "نام و نام خانوادگی مدیون");
-  const debtorNameParts = (debtorFullName ?? "").split(/\\s+/).filter(Boolean);
+  const debtorNameParts = (debtorFullName ?? "").split(/\s+/).filter(Boolean);
   const debtorFirstName = debtorNameParts.shift() ?? null;
   const debtorLastName = debtorNameParts.join(" ") || null;
   const loanType = mapLoanType(row);
