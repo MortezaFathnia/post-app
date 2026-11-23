@@ -229,6 +229,7 @@ export default function DebtDocumentsUploadPage() {
       const formData = new FormData();
       formData.append("counterLabel", counterLabel.trim());
       formData.append("facilityNumber", facilityNumber.trim());
+      formData.append("facilityName", facilityName.trim());
       formData.append("file", file);
       formData.append("format", "new");
 
