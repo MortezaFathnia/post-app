@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
             paidAmount: amount.replace(/,/g, ""),
             bankAgent: `${bankCode}-${bankName}`,
             checkBranch: branchCode || null,
-            description: accountNumber || null,
+            description: bankName,
             rawData: {
               "شماره چک": checkNumber,
               "مبلغ چک": amount,
