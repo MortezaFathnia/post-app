@@ -136,6 +136,18 @@ const simpleCountFormatHeaders = [
 export async function GET(request: NextRequest) {
   try {
     const params = request.nextUrl.searchParams;
+    const recordIdParam = params.get("recordId");
+    if (recordIdParam !== null) {
+      const recordId = Number(recordIdParam);
+      if (!Number.isInteger(recordId) || recordId <= 0) {
+        return NextResponse.json({ success: false, error: "شناسه چک معتبر نیست." }, { status: 400 });
+      }
+      const record = await prisma.debtDiscountingRecord.findUnique({ where: { id: recordId } });
+      if (!record) {
+        return NextResponse.json({ success: false, error: "چک موردنظر پیدا نشد." }, { status: 404 });
+      }
+      return NextResponse.json({ success: true, record });
+    }
     const page = Math.max(1, Number(params.get("page") || 1));
     const pageSize = Math.min(100, Math.max(10, Number(params.get("pageSize") || 20)));
     const search = (params.get("search") || "").trim();
