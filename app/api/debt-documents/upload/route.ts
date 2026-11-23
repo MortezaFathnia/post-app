@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getCurrentShamsiDate } from "@/lib/shamsi-date";
+import { getCurrentShamsiDate } from "@/lib/date/jalali";
 
 export const runtime = "nodejs";
 
