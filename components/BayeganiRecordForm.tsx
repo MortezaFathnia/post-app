@@ -199,6 +199,13 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         for (const [key, value] of Object.entries(columnFallbacks)) {
           if (!String(next[key] ?? "").trim() && value != null && String(value).trim()) next[key] = String(value);
         }
+        // Older imports stored the debtor's full name in one column. Keep the
+        // edit form's first-name and last-name inputs separate when loading them.
+        if (!next["نام خانوادگی"].trim() && next["نام"].trim().includes(" ")) {
+          const nameParts = next["نام"].trim().split(/\s+/);
+          next["نام"] = nameParts.shift() || "";
+          next["نام خانوادگی"] = nameParts.join(" ");
+        }
         next["مبلغ مصوب"] = normalizeAmount(next["مبلغ مصوب"]);
         delete raw["مبلغ"];
         delete next["تیک"];
