@@ -39,6 +39,7 @@ function getApplicantName(customer: {
 
 export default async function ContractsPage() {
   const contracts = await prisma.contractDetails.findMany({
+    where: { creationSource: "EXCEL" },
     orderBy: { createdAt: "desc" },
     include: {
       customerLinks: {
