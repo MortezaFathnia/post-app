@@ -275,7 +275,12 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const selected = counters.find((counter) => counter.code === value);
         if (selected) next["نام باجه"] = selected.name;
       }
-      if (["نوع تسهیلات", "نوع شخص", "جنسیت", "نام", "نام خانوادگی", "نام شرکت"].includes(key)) {
+      if (key === "شماره تسهیلات") {
+        const facilityTypeCode = value.trim().split(".")[1] || "";
+        const matchedFacility = facilityCodes.find((item) => item.code.trim() === facilityTypeCode);
+        next["نوع تسهیلات"] = matchedFacility ? `${matchedFacility.code}-${matchedFacility.name}` : "";
+      }
+      if (["شماره تسهیلات", "نوع تسهیلات", "نوع شخص", "جنسیت", "نام", "نام خانوادگی", "نام شرکت"].includes(key)) {
         const selectedFacility = facilityCodes.find(
           (item) => `${item.code}-${item.name}` === next["نوع تسهیلات"]
         );
@@ -603,7 +608,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                   maxLength={key === "کد ملی" ? 10 : undefined}
                   inputMode={key === "کد ملی" ? "numeric" : undefined}
                   title={key === "کد ملی" ? "کد ملی باید دقیقاً ۱۰ رقم انگلیسی باشد." : undefined}
-                  disabled={key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد" || key === "عنوان تسهیلات"}
+                  disabled={key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد"}
                   onChange={(event) => changeField(key, event.target.value)}
                   onKeyDown={(event) => {
                     if (key === "مبلغ مصوب" && event.key === "*") {
@@ -611,7 +616,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
                       changeField(key, `${normalizeAmount(fields["مبلغ مصوب"])}000`);
                     }
                   }}
-                  className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد" || key === "عنوان تسهیلات" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
+                  className={`w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${key === "کد بایگانی" || key === "سریال" || key === "پایان قرارداد" ? "bg-slate-100 text-slate-600" : "bg-white"}`}
                   placeholder={key}
                 />
               )}
