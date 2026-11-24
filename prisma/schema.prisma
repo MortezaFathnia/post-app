@@ -95,6 +95,7 @@ model ContractDetails {
   repaymentMethod           String?
   gracePeriod               String?
   installmentCount          String?
+  repaymentMethod           String?
   installmentInterval       String?
   firstInstallmentDate      String?
   firstQardInstallmentDate  String?
