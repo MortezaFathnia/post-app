@@ -38,37 +38,39 @@ function mapLoanType(row: DbExcelRow): LoanType | null {
   return null;
 }
 
+function normalizeHeader(input: string): string {
+  return input.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\\u200c\\s\\/\\-_:()]/g, "").trim();
+}
+
 function mapGuarantor(row: DbExcelRow, n: 1 | 2 | 3) {
   const suffix = String(n);
   const variants: Record<string, string[]> = {
-    Name: [`نام و نام خانوادگی ضامن${suffix}`, `نام و نام خانوادگی ضامن ${suffix}`],
-    NationalCode: [`کدملی/شناسه ملی ضامن ${suffix}`, `کدملی/شناسه ملی ضامن${suffix}`],
-    PostalCode: [`کد پستی ضامن ${suffix}`, `کد پستی ضامن${suffix}`],
-    BirthCertificate: [`شماره شناسنامه/ثبت ضامن${suffix}`, `شماره شناسنامه/ثبت ضامن ${suffix}`],
-    BirthCertificateSerial: [`سریال شناسنامه ضامن${suffix}`, `سریال شناسنامه ضامن ${suffix}`],
-    BirthDate: [`تاریخ تولد/ثبت ضامن${suffix}`, `تاریخ تولد/ثبت ضامن ${suffix}`],
-    FatherName: [`نام پدر ضامن${suffix}`, `نام پدر ضامن ${suffix}`],
-    BirthPlace: [`صادر/محل ثبت ضامن${suffix}`, `صادره/محل ثبت ضامن${suffix}`],
-    Residence: [`مقیم ضامن ${suffix}`, `مقیم ضامن${suffix}`],
-    Address: [`آدرس منزل ضامن ${suffix}`, `آدرس منزل ضامن${suffix}`],
-    WorkAddress: [`آدرس محل کار ضامن ${suffix}`, `آدرس محل کار ضامن${suffix}`],
-    Landline: [`تلفن منزل ضامن ${suffix}`, `تلفن منزل ضامن${suffix}`],
-    WorkPhone: [`تلفن محل کار ضامن ${suffix}`, `تلفن محل کار ضامن${suffix}`],
-    Mobile: [`موبایل ضامن${suffix}`, `موبایل ضامن ${suffix}`],
-    Occupation: [`شغل ضامن ${suffix}`, `شغل ضامن${suffix}`],
-    AccountNumber: [`شماره حساب ضامن ${suffix}`, `شماره حساب ضامن${suffix}`],
-    AccountOpeningDate: [`تاریخ افتتاح حساب ضامن${suffix}`, `تاریخ افتتاح حساب ضامن ${suffix}`],
+    Name: [`نام و نام خانوادگی ضامن${suffix}`, `نام ضامن${suffix}`, `نام و نام خانوادگی ضامن ${suffix}`],
+    NationalCode: [`کدملی/شناسه ملی ضامن ${suffix}`, `کدملی/شناسه ملی ضامن${suffix}`, `کد ملی ضامن ${suffix}`],
+    PostalCode: [`کد پستی ضامن ${suffix}`],
+    BirthCertificate: [`شماره شناسنامه/ثبت ضامن ${suffix}`],
+    BirthCertificateSerial: [`سریال شناسنامه ضامن ${suffix}`],
+    BirthDate: [`تاریخ تولد/ثبت ضامن ${suffix}`],
+    FatherName: [`نام پدر ضامن ${suffix}`],
+    BirthPlace: [`صادر/محل ثبت ضامن ${suffix}`, `صادره/محل ثبت ضامن ${suffix}`],
+    Residence: [`مقیم ضامن ${suffix}`],
+    Address: [`آدرس منزل ضامن ${suffix}`],
+    WorkAddress: [`آدرس محل کار ضامن ${suffix}`],
+    Landline: [`تلفن منزل ضامن ${suffix}`],
+    WorkPhone: [`تلفن محل کار ضامن ${suffix}`],
+    Mobile: [`موبایل ضامن ${suffix}`],
+    Occupation: [`شغل ضامن ${suffix}`],
+    AccountNumber: [`شماره حساب ضامن ${suffix}`],
+    AccountOpeningDate: [`تاریخ افتتاح حساب ضامن ${suffix}`],
     LongTermDepositNumber: [`شماره سپرده بلندمدت ضامن ${suffix}`, `شماره سپرده بلند مدت ضامن ${suffix}`],
     LongTermDepositAmount: [`مبلغ سپرده بلندمدت ضامن ${suffix}`, `مبلغ سپرده بلند مدت ضامن ${suffix}`],
-    CustomerNumber: [`شماره مشتری ضامن${suffix}`, `شماره مشتری ضامن ${suffix}`],
+    CustomerNumber: [`شماره مشتری ضامن ${suffix}`],
   };
-
-  return Object.fromEntries(
-    Object.entries(variants).map(([field, headers]) => [
-      `guarantor${suffix}${field}`,
-      firstValue(row, headers),
-    ]),
-  );
+  const normalizedRow = new Map(Object.entries(row).map(([key, val]) => [normalizeHeader(key), val]));
+  return Object.fromEntries(Object.entries(variants).map(([field, headers]) => {
+    const result = headers.map(normalizeHeader).map(header => normalizedRow.get(header)).find(v => v != null && String(v).trim() !== "");
+    return [`guarantor${suffix}${field}`, result == null ? null : String(result).trim()];
+  }));
 }
 
 export function mapDbExcelRow(row: DbExcelRow) {
