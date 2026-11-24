@@ -20,9 +20,12 @@ type FacilityCodeOption = { id: number; code: string; name: string };
 const initialFields: Record<string, string> = {
   "شماره تسهیلات": "",
   "نوع تسهیلات": "",
+  "نوع شخص": "حقیقی",
   "جنسیت": "مرد",
   "نام": "",
   "نام خانوادگی": "",
+  "نام شرکت": "",
+  "شماره ثبت": "",
   "عنوان تسهیلات": "",
   "سریال": "",
   "طبقه": "",
@@ -272,18 +275,22 @@ export default function BayeganiRecordForm({ recordId }: Props) {
         const selected = counters.find((counter) => counter.code === value);
         if (selected) next["نام باجه"] = selected.name;
       }
-      if (["نوع تسهیلات", "جنسیت", "نام", "نام خانوادگی"].includes(key)) {
+      if (["نوع تسهیلات", "نوع شخص", "جنسیت", "نام", "نام خانوادگی", "نام شرکت"].includes(key)) {
         const selectedFacility = facilityCodes.find(
           (item) => `${item.code}-${item.name}` === next["نوع تسهیلات"]
         );
         const facilityName = selectedFacility?.name
           || next["نوع تسهیلات"].split("-").slice(1).join("-").trim();
+        const personType = next["نوع شخص"] || "حقیقی";
         const gender = next["جنسیت"];
         const firstName = next["نام"].trim();
         const lastName = next["نام خانوادگی"].trim();
-        next["عنوان تسهیلات"] = facilityName && gender && firstName && lastName
-          ? `${facilityName} ${gender === "زن" ? "سرکار خانم" : "جناب آقای"} ${firstName} ${lastName}`
-          : "";
+        const companyName = next["نام شرکت"].trim();
+        next["عنوان تسهیلات"] = personType === "حقوقی"
+          ? (facilityName && companyName ? `${facilityName} ${companyName}` : "")
+          : (facilityName && gender && firstName && lastName
+              ? `${facilityName} ${gender === "زن" ? "سرکار خانم" : "جناب آقای"} ${firstName} ${lastName}`
+              : "");
       }
       if (key === "تاریخ شروع" || key === "مدت") {
         next["پایان قرارداد"] = sumDatesJalali(next["تاریخ شروع"] || "", next["مدت"] || "");
@@ -304,8 +311,12 @@ export default function BayeganiRecordForm({ recordId }: Props) {
       setError("شماره تسهیلات باید دقیقاً شامل ۴ بخش عددی باشد که با نقطه (.) از هم جدا شده‌اند؛ مانند 1538.232.3323421.1");
       return;
     }
-    if (fields["کد ملی"] && !/^[0-9]{10}$/.test(fields["کد ملی"])) {
-      setError("کد ملی باید دقیقاً شامل ۱۰ رقم انگلیسی باشد.");
+    if ((fields["نوع شخص"] || "حقیقی") === "حقیقی" && !/^[0-9]{10}$/.test(fields["کد ملی"])) {
+      setError("کد ملی شخص حقیقی باید دقیقاً شامل ۱۰ رقم انگلیسی باشد.");
+      return;
+    }
+    if ((fields["نوع شخص"] || "حقیقی") === "حقوقی" && (!fields["نام شرکت"].trim() || !fields["شماره ثبت"].trim())) {
+      setError("نام شرکت و شماره ثبت برای شخص حقوقی الزامی است.");
       return;
     }
     setSaving(true);
@@ -347,10 +358,17 @@ export default function BayeganiRecordForm({ recordId }: Props) {
   if (bailDateIndex !== -1) entryKeys.splice(bailDateIndex, 1);
   const statusIndex = entryKeys.indexOf("وضعیت کنونی");
   entryKeys.splice(statusIndex + 1, 0, "تاریخ تحویل وثیقه");
-  const entries = entryKeys.map((key) => [key, fields[key] ?? ""] as [string, string]);
+  const personType = fields["نوع شخص"] || "حقیقی";
+  const visibleEntryKeys = entryKeys.filter((key) => personType === "حقوقی"
+    ? !["جنسیت", "نام", "نام خانوادگی", "کد ملی"].includes(key)
+    : !["نام شرکت", "شماره ثبت"].includes(key));
+  const entries = visibleEntryKeys.map((key) => [key, fields[key] ?? ""] as [string, string]);
   const hasChanges = JSON.stringify(fields) !== JSON.stringify(originalFields);
-  const requiredFields = Object.keys(initialFields).filter((key) => key !== "تعداد اقساط" && key !== "توضیحات" && key !== "تاریخ تحویل وثیقه");
-  const hasAllRequiredFields = requiredFields.every((key) => String(fields[key] ?? "").trim().length > 0);
+  const optionalFields = new Set(["تعداد اقساط", "توضیحات", "تاریخ تحویل وثیقه", "جنسیت", "نام", "نام خانوادگی", "کد ملی", "نام شرکت", "شماره ثبت"]);
+  const requiredFields = Object.keys(initialFields).filter((key) => !optionalFields.has(key));
+  const identityRequired = personType === "حقوقی" ? ["نام شرکت", "شماره ثبت"] : ["جنسیت", "نام", "نام خانوادگی", "کد ملی"];
+  const hasAllRequiredFields = requiredFields.every((key) => String(fields[key] ?? "").trim().length > 0)
+    && identityRequired.every((key) => String(fields[key] ?? "").trim().length > 0);
   const canSave = hasChanges && (Boolean(recordId) || hasAllRequiredFields);
   return (
     <div dir="rtl" className="space-y-6">
@@ -366,7 +384,12 @@ export default function BayeganiRecordForm({ recordId }: Props) {
           {entries.map(([key, value]) => (
             <label key={key} className={`block ${key === "وضعیت کنونی" ? "sm:col-start-1" : ""}`}>
               <span className="mb-1.5 block text-sm font-medium text-slate-700">{key === "نام باجه" ? "کد باجه-نام باجه" : key}</span>
-              {key === "جنسیت" ? (
+              {key === "نوع شخص" ? (
+                <select value={value || "حقیقی"} onChange={(event) => changeField(key, event.target.value)} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                  <option value="حقیقی">حقیقی</option>
+                  <option value="حقوقی">حقوقی</option>
+                </select>
+              ) : key === "جنسیت" ? (
                 <select
                   value={value}
                   onChange={(event) => changeField(key, event.target.value)}
