@@ -383,13 +383,13 @@ export default function BayeganiRecordForm({ recordId, newPage = false }: Props)
     }
     visibleEntryKeys = moveAfter(visibleEntryKeys, "مبلغ مصوب", "نام باجه");
     visibleEntryKeys = moveAfter(visibleEntryKeys, "تعداد اقساط", "مبلغ مصوب");
-    visibleEntryKeys = moveAfter([...visibleEntryKeys, "سررسیدی یا اقساط"], "سررسیدی یا اقساط", "تعداد اقساط");
     visibleEntryKeys = moveAfter(visibleEntryKeys, "تاریخ شروع", "تعداد اقساط");
     visibleEntryKeys = moveAfter(visibleEntryKeys, "مدت", "تاریخ شروع");
     visibleEntryKeys = moveAfter(visibleEntryKeys, "پایان قرارداد", "مدت");
     visibleEntryKeys = moveAfter(visibleEntryKeys, "وضعیت کنونی", "پایان قرارداد");
     visibleEntryKeys = moveAfter(visibleEntryKeys, "تاریخ تحویل وثیقه", "وضعیت کنونی");
     visibleEntryKeys = moveAfter(visibleEntryKeys, "کد بایگانی", "تعداد اقساط");
+    visibleEntryKeys = moveAfter([...visibleEntryKeys, "سررسیدی یا اقساط"], "سررسیدی یا اقساط", "تعداد اقساط");
   }
   const installmentCount = Number(normalizeAmount(fields["تعداد اقساط"] || ""));
   const repaymentType = installmentCount > 1 ? "اقساط" : installmentCount === 1 ? "سررسیدی" : "";
