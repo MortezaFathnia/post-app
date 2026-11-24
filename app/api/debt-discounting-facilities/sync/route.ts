@@ -22,7 +22,7 @@ export async function POST() {
     }
     const facilityNumbers = [...sourceByFacility.keys()];
     if (!facilityNumbers.length) {
-      return NextResponse.json({ success: true, created: 0, updated: 0, total: 0, message: "هیچ تسهیلاتی با پیش‌شماره 1538.340. در بایگانی پیدا نشد." });
+      return NextResponse.json({ success: true, created: 0, updated: 0, skipped: sourceRows.length, total: 0, message: "هیچ تسهیلاتی با پیش‌شماره 1538.340. در بایگانی پیدا نشد." });
     }
 
     // Reconcile by facilityNumber (not solely contractId) to keep sync idempotent.
@@ -58,7 +58,7 @@ export async function POST() {
       }
     });
 
-    return NextResponse.json({ success: true, created, updated, total: sourceByFacility.size, message: "تمام تسهیلات 1538.340. با بایگانی تطبیق داده و در دیتابیس ذخیره شدند." });
+    return NextResponse.json({ success: true, created, updated, skipped: sourceRows.length - sourceByFacility.size, total: sourceByFacility.size, message: "تمام تسهیلات 1538.340. با بایگانی تطبیق داده و در دیتابیس ذخیره شدند." });
   } catch (error) {
     console.error("Debt discounting facilities sync error:", error);
     return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "همگام‌سازی اطلاعات تسهیلات خرید دین ناموفق بود." }, { status: 500 });
