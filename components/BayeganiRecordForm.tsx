@@ -131,10 +131,10 @@ export default function BayeganiRecordForm({ recordId }: Props) {
     return () => { active = false; };
   }, []);
 
-  // For existing archive records, derive the facility type from the
-  // second segment of facilityNumber (e.g. 1538.222.5555131.1 -> code 222).
+  // Derive the facility type from segment two of facilityNumber for both new
+  // and existing records (e.g. 1538.222.5555131.1 -> code 222).
   useEffect(() => {
-    if (!recordId || facilityCodes.length === 0) return;
+    if (facilityCodes.length === 0) return;
     const facilityCode = String(fields["شماره تسهیلات"] || "").trim().split(".")[1];
     if (!facilityCode) return;
     const matched = facilityCodes.find((item) => item.code.trim() === facilityCode);
@@ -155,7 +155,7 @@ export default function BayeganiRecordForm({ recordId }: Props) {
             : current["عنوان تسهیلات"]);
       return { ...current, "نوع تسهیلات": option, "عنوان تسهیلات": title };
     });
-  }, [recordId, facilityCodes, fields["شماره تسهیلات"], fields["جنسیت"], fields["نام"], fields["نام خانوادگی"]]);
+  }, [recordId, facilityCodes, fields["شماره تسهیلات"], fields["نوع شخص"], fields["جنسیت"], fields["نام"], fields["نام خانوادگی"], fields["نام شرکت"]]);
 
   useEffect(() => {
     if (recordId) return;
