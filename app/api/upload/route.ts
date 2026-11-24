@@ -360,10 +360,19 @@ export async function POST(request: NextRequest) {
         }
 
         const { role, ...guarantorData } = guarantor;
+        const guarantorNameParts = guarantorData.name!.trim().split(/\\s+/).filter(Boolean);
+        const guarantorFirstName = guarantorNameParts.shift() ?? null;
+        const guarantorLastName = guarantorNameParts.join(" ") || null;
+        const customerData = {
+          ...guarantorData,
+          name: guarantorFirstName,
+          lastName: guarantorLastName,
+          nationalCode,
+        };
         await tx.customer.upsert({
           where: { nationalCode },
-          create: { ...guarantorData, nationalCode },
-          update: { ...guarantorData, nationalCode },
+          create: customerData,
+          update: customerData,
         });
 
         await tx.contractCustomer.deleteMany({
