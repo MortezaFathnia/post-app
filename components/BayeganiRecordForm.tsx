@@ -419,7 +419,7 @@ export default function BayeganiRecordForm({ recordId, newPage = false }: Props)
                 <select
                   value={value}
                   disabled
-                  aria-label="سررسیدی یا اقساط (بر اساس تعداد اقساط)"
+                  aria-label="نحوه بازپرداخت (بر اساس تعداد اقساط)"
                   className="w-full rounded-xl border border-slate-300 bg-slate-100 px-3 py-2.5 text-sm text-slate-700 outline-none"
                 >
                   <option value="">ابتدا تعداد اقساط را وارد کنید</option>
