@@ -49,6 +49,7 @@ const menuItems = [
     children: [
       { title: "مدیریت کد و نام باجه", href: "/dashboard/settings", icon: "▤", description: "فهرست باجه‌ها" },
       { title: "فهرست بانک‌ها", href: "/dashboard/settings/banks", icon: "▤", description: "نام و شناسه بانک‌ها" },
+      { title: "اطلاعات بانک و شعب", href: "/dashboard/settings/bank-details", icon: "▤", description: "ثبت و ویرایش اطلاعات بانک و شعب" },
       { title: "مدیریت کد و نام تسهیلات", href: "/dashboard/settings/facility-codes", icon: "▤", description: "فهرست مرجع انواع تسهیلات" },
       { title: "طبقه‌بندی تسهیلات", href: "/dashboard/settings/facility-classifications", icon: "▤", description: "مدیریت طبقه، نوع و مدت تسهیلات" },
     ],
