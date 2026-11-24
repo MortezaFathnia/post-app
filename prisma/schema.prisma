@@ -95,7 +95,6 @@ model ContractDetails {
   repaymentMethod           String?
   gracePeriod               String?
   installmentCount          String?
-  repaymentMethod           String?
   installmentInterval       String?
   firstInstallmentDate      String?
   firstQardInstallmentDate  String?
@@ -171,6 +170,7 @@ model BayeganiRecord {
   bailDeliveryDate          String?
   duration                  String?
   installmentCount          String?
+  repaymentMethod           String?
   approvedAmount            String?
   remainingAmount           String?
   nationalId                String?
