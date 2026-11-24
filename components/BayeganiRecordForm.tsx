@@ -410,7 +410,7 @@ export default function BayeganiRecordForm({ recordId, newPage = false }: Props)
       <form onSubmit={submit} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <div className={`grid gap-4 ${newPage && personType === "حقیقی" ? "grid-cols-3" : newPage ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"}`}>
           {entries.map(([key, value]) => (
-            <label key={key} className={`block ${key === "وضعیت کنونی" ? "sm:col-start-1" : ""}`}>
+            <label key={key} className={`block ${newPage && key === "توضیحات" ? "col-span-full" : key === "وضعیت کنونی" ? "sm:col-start-1" : ""}`}>
               <span className="mb-1.5 block text-sm font-medium text-slate-700">{key === "نام باجه" ? "کد باجه-نام باجه" : key}</span>
               {key === "نوع شخص" ? (
                 <select value={value || "حقیقی"} onChange={(event) => changeField(key, event.target.value)} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
