@@ -218,6 +218,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         bailDeliveryDate: value(raw, "تاریخ تحویل وثیقه", "تاريخ تحويل وثيقه") || null,
         duration: value(raw, "مدت", "24"),
         installmentCount: value(raw, "تعداد اقساط") || null,
+        repaymentMethod: value(raw, "نحوه بازپرداخت", "سررسیدی یا اقساط") || null,
         approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
         remainingAmount: value(raw, "مانده تسهيلات", "مانده تسهیلات"),
         nationalId: personType === "حقوقی" ? null : (nationalCode || null),
