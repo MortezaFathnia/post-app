@@ -67,6 +67,7 @@ model ContractDetails {
   facilityNumber            String?          @unique
   contractReference         String?
   contractNumber            String?
+  creationSource            String           @default("MANUAL")
   contractType              ContractType       @default(MORABAHA)
   loanType                  LoanType?
   contractDate              String?
