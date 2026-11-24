@@ -1,0 +1,2 @@
+ALTER TABLE "ContractDetails"
+ADD COLUMN "creationSource" TEXT NOT NULL DEFAULT 'MANUAL';
