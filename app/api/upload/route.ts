@@ -225,6 +225,7 @@ export async function POST(request: NextRequest) {
         facilityNumber: internalFacilityNumber,
         contractReference: resolvedContractCode,
         contractNumber,
+        creationSource: "EXCEL",
         contractType: firstData.contractType,
         loanType: firstData.loanType,
         contractDate: firstData.contractDate,
