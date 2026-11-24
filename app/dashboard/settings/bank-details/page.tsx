@@ -11,11 +11,6 @@ type BankDetails = {
   branchPhone: string | null;
   branchAddress: string | null;
   branchManager: string | null;
-  counterName: string | null;
-  counterCode: string | null;
-  brokerName: string | null;
-  brokerCustomerCode: string | null;
-  bankRepresentative: string | null;
 };
 
 type FormValues = Omit<BankDetails, "id">;
@@ -28,17 +23,11 @@ const fields: { key: keyof FormValues; label: string; placeholder?: string }[] =
   { key: "branchPhone", label: "تلفن شعبه" },
   { key: "branchAddress", label: "نشانی شعبه" },
   { key: "branchManager", label: "نام رئیس شعبه" },
-  { key: "counterName", label: "نام باجه" },
-  { key: "counterCode", label: "کد باجه" },
-  { key: "brokerName", label: "نام کارگزار" },
-  { key: "brokerCustomerCode", label: "کد مشتری کارگزار" },
-  { key: "bankRepresentative", label: "نماینده بانک" },
 ];
 
 const emptyForm: FormValues = {
   bankName: "", branchName: "", branchCode: "", branchPostalCode: "",
-  branchPhone: "", branchAddress: "", branchManager: "", counterName: "",
-  counterCode: "", brokerName: "", brokerCustomerCode: "", bankRepresentative: "",
+  branchPhone: "", branchAddress: "", branchManager: "",
 };
 
 const inputClass = "w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100";
@@ -136,7 +125,7 @@ export default function BankDetailsSettingsPage() {
       <header>
         <p className="text-sm font-medium text-blue-600">مدیریت سامانه</p>
         <h1 className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-slate-100">مدیریت اطلاعات بانک و شعب</h1>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">اطلاعات مشترک بانک‌ها و شعب را مستقل از فایل بارگذاری قراردادها ثبت و ویرایش کنید.</p>
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">اطلاعات بانک‌ها و شعب را مستقل از اطلاعات باجه ثبت و ویرایش کنید.</p>
       </header>
 
       <form onSubmit={submitForm} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
