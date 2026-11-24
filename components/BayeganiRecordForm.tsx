@@ -330,12 +330,12 @@ export default function BayeganiRecordForm({ recordId, newPage = false }: Props)
         ? await fetch(`/api/bayegani/${recordId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "کد بایگانی": buildNewArchiveCode(fields) || fields["کد بایگانی"] }) }),
+            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, ...(newPage ? { "سررسیدی یا اقساط": repaymentType } : {}), "کد بایگانی": buildNewArchiveCode(fields) || fields["کد بایگانی"] }) }),
           })
         : await fetch("/api/bayegani/manual", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, "کد بایگانی": buildNewArchiveCode(fields) || fields["کد بایگانی"] }) }),
+            body: JSON.stringify({ rawData: removeUnwantedColumns({ ...fields, ...(newPage ? { "سررسیدی یا اقساط": repaymentType } : {}), "کد بایگانی": buildNewArchiveCode(fields) || fields["کد بایگانی"] }) }),
           });
       const result = await readApiResponse(response);
       if (!response.ok || !result.success) throw new Error(result.error || "ذخیره اطلاعات ناموفق بود.");
@@ -383,6 +383,7 @@ export default function BayeganiRecordForm({ recordId, newPage = false }: Props)
     }
     visibleEntryKeys = moveAfter(visibleEntryKeys, "مبلغ مصوب", "نام باجه");
     visibleEntryKeys = moveAfter(visibleEntryKeys, "تعداد اقساط", "مبلغ مصوب");
+    visibleEntryKeys = moveAfter([...visibleEntryKeys, "سررسیدی یا اقساط"], "سررسیدی یا اقساط", "تعداد اقساط");
     visibleEntryKeys = moveAfter(visibleEntryKeys, "تاریخ شروع", "تعداد اقساط");
     visibleEntryKeys = moveAfter(visibleEntryKeys, "مدت", "تاریخ شروع");
     visibleEntryKeys = moveAfter(visibleEntryKeys, "پایان قرارداد", "مدت");
@@ -390,7 +391,9 @@ export default function BayeganiRecordForm({ recordId, newPage = false }: Props)
     visibleEntryKeys = moveAfter(visibleEntryKeys, "تاریخ تحویل وثیقه", "وضعیت کنونی");
     visibleEntryKeys = moveAfter(visibleEntryKeys, "کد بایگانی", "تعداد اقساط");
   }
-  const entries = visibleEntryKeys.map((key) => [key, fields[key] ?? ""] as [string, string]);
+  const installmentCount = Number(normalizeAmount(fields["تعداد اقساط"] || ""));
+  const repaymentType = installmentCount > 1 ? "اقساط" : installmentCount === 1 ? "سررسیدی" : "";
+  const entries = visibleEntryKeys.map((key) => [key, key === "سررسیدی یا اقساط" ? repaymentType : fields[key] ?? ""] as [string, string]);
   const hasChanges = JSON.stringify(fields) !== JSON.stringify(originalFields);
   const optionalFields = new Set(["تعداد اقساط", "توضیحات", "تاریخ تحویل وثیقه", "جنسیت", "نام", "نام خانوادگی", "کد ملی", "نام شرکت", "شماره ثبت"]);
   const requiredFields = Object.keys(initialFields).filter((key) => !optionalFields.has(key));
@@ -412,7 +415,18 @@ export default function BayeganiRecordForm({ recordId, newPage = false }: Props)
           {entries.map(([key, value]) => (
             <label key={key} className={`block ${newPage && key === "توضیحات" ? "col-span-full" : key === "وضعیت کنونی" ? "sm:col-start-1" : ""}`}>
               <span className="mb-1.5 block text-sm font-medium text-slate-700">{key === "نام باجه" ? "کد باجه-نام باجه" : key}</span>
-              {key === "نوع شخص" ? (
+              {key === "سررسیدی یا اقساط" ? (
+                <select
+                  value={value}
+                  disabled
+                  aria-label="سررسیدی یا اقساط (بر اساس تعداد اقساط)"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-100 px-3 py-2.5 text-sm text-slate-700 outline-none"
+                >
+                  <option value="">ابتدا تعداد اقساط را وارد کنید</option>
+                  <option value="سررسیدی">سررسیدی</option>
+                  <option value="اقساط">اقساط</option>
+                </select>
+              ) : key === "نوع شخص" ? (
                 <select value={value || "حقیقی"} onChange={(event) => changeField(key, event.target.value)} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
                   <option value="حقیقی">حقیقی</option>
                   <option value="حقوقی">حقوقی</option>
