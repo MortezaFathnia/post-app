@@ -7,8 +7,8 @@ const facilityPrefix = "1538.340.";
 
 export async function POST() {
   try {
-    // Start with BayeganiRecord; DebtDiscountingRecord is only the matching
-    // source that determines which Bayegani facilities belong in this list.
+    // Pull ALL facilities with the requested prefix directly from BayeganiRecord.
+    // DebtDiscountingRecord is intentionally not used as a gate for this sync.
     const bayeganiRecords = await prisma.bayeganiRecord.findMany({
       where: { facilityNumber: { startsWith: facilityPrefix } },
       orderBy: [{ facilityNumber: "asc" }, { id: "asc" }],
@@ -18,44 +18,23 @@ export async function POST() {
         facilityTitle: true,
         counterLabel: true,
         serial: true,
+        status: true,
         startDate: true,
         endDate: true,
       },
     });
 
-    const facilityNumbers = Array.from(new Set(
-      bayeganiRecords
-        .map((item) => item.facilityNumber)
-        .filter((item): item is string => Boolean(item)),
-    ));
-
-    if (facilityNumbers.length === 0) {
-      return NextResponse.json({
-        success: true, created: 0, updated: 0, skipped: 0,
-        message: "هیچ تسهیلاتی با پیش‌شماره 1538.340. در جدول بایگانی پیدا نشد.",
-      });
-    }
-
-    const debtRecords = await prisma.debtDiscountingRecord.findMany({
-      where: { facilityNumber: { in: facilityNumbers } },
-      distinct: ["facilityNumber"],
-      select: { facilityNumber: true },
-    });
-    const matchedNumbers = new Set(debtRecords.map((item) => item.facilityNumber));
-
     const primaryByFacility = new Map<string, (typeof bayeganiRecords)[number]>();
     for (const source of bayeganiRecords) {
       const number = source.facilityNumber;
-      if (!number || !matchedNumbers.has(number)) continue;
+      if (!number?.startsWith(facilityPrefix)) continue;
       const current = primaryByFacility.get(number);
-      if (!current || (!current.serial && source.serial)) {
-        primaryByFacility.set(number, source);
-      }
+      // Prefer the row with serial populated; otherwise retain the first source row.
+      if (!current || (!current.serial && source.serial)) primaryByFacility.set(number, source);
     }
 
     let created = 0;
     let updated = 0;
-    const skipped = facilityNumbers.filter((number) => !matchedNumbers.has(number)).length;
 
     await prisma.$transaction(async (tx) => {
       for (const source of primaryByFacility.values()) {
@@ -65,6 +44,7 @@ export async function POST() {
           facilityTitle: source.facilityTitle,
           counterLabel: source.counterLabel,
           serial: source.serial,
+          status: source.status || "فعال",
           startDate: source.startDate || "",
           endDate: source.endDate || "",
         };
@@ -88,16 +68,14 @@ export async function POST() {
       success: true,
       created,
       updated,
-      skipped,
-      message: "همگام‌سازی تسهیلات بر اساس بایگانی و تطبیق با اسناد خرید دین انجام شد.",
+      skipped: 0,
+      total: primaryByFacility.size,
+      message: "تمام تسهیلات با پیش‌شماره 1538.340. از جدول بایگانی تسهیلات همگام‌سازی شدند.",
     });
   } catch (error) {
     console.error("DebtDocument facilities sync error:", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "همگام‌سازی اطلاعات تسهیلات خرید دین ناموفق بود.",
-      },
+      { success: false, error: error instanceof Error ? error.message : "همگام‌سازی اطلاعات تسهیلات خرید دین ناموفق بود." },
       { status: 500 },
     );
   }
