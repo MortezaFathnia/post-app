@@ -52,10 +52,14 @@ export default async function DashboardPage() {
         contractDate: true,
         contractType: true,
         loanType: true,
-        customers: {
+        customerLinks: {
           where: { role: "BORROWER" },
           take: 1,
-          select: { name: true, companyName: true },
+          select: {
+            customer: {
+              select: { name: true, companyName: true },
+            },
+          },
         },
       },
     }),
@@ -139,7 +143,7 @@ export default async function DashboardPage() {
                 {recentContracts.map((contract) => (
                   <tr key={contract.id} className="transition hover:bg-slate-50/80">
                     <td className="whitespace-nowrap px-5 py-4 font-bold text-slate-800">{contract.contractNumber || "—"}</td>
-                    <td className="px-5 py-4 text-slate-700">{getApplicantName(contract.customers[0])}</td>
+                    <td className="px-5 py-4 text-slate-700">{getApplicantName(contract.customerLinks[0]?.customer)}</td>
                     <td className="px-5 py-4"><span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">{getContractTypeTitle(contract.contractType)}</span></td>
                     <td className="px-5 py-4 text-slate-600">{getLoanTypeTitle(contract.loanType)}</td>
                     <td className="whitespace-nowrap px-5 py-4 text-slate-600">{contract.contractDate || "—"}</td>
