@@ -140,7 +140,7 @@ export default function DebtDiscountingFacilitiesPage() {
       const response = await fetch("/api/debt-discounting-facilities/sync", { method: "POST" });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || "همگام‌سازی اطلاعات ناموفق بود.");
-      setMessage(`همگام‌سازی انجام شد؛ ${result.created} رکورد جدید، ${result.updated} بروزرسانی و ${result.skipped} مورد رد شد.`);
+      setMessage(`همگام‌سازی انجام شد؛ ${Number(result.created ?? 0)} رکورد جدید، ${Number(result.updated ?? 0)} بروزرسانی و ${Number(result.skipped ?? 0)} رکورد تکراری رد شد.`);
       setPage(1);
       await loadRecords();
     } catch (e) {
