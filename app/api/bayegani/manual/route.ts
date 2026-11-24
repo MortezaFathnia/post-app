@@ -132,6 +132,8 @@ export async function POST(request: NextRequest) {
       const nextSourceRow = (lastManualRecord?.sourceRow ?? 0) + 1;
 
       const personType = value(raw, "نوع شخص") || "حقیقی";
+      if (!["حقیقی", "حقوقی"].includes(personType)) throw new Error("نوع شخص معتبر نیست.");
+      raw["نوع شخص"] = personType;
       const nationalCode = personType === "حقوقی" ? "" : value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري");
       if (personType === "حقیقی" && !/^[0-9]{10}$/.test(nationalCode)) {
         throw new Error("کد ملی شخص حقیقی باید دقیقاً شامل ۱۰ رقم باشد.");
@@ -142,9 +144,26 @@ export async function POST(request: NextRequest) {
       if (personType === "حقیقی") {
         await tx.customer.upsert({
           where: { nationalCode },
-          create: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null, nationalCode },
-          update: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null },
+          create: { personType, name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null, nationalCode },
+          update: { personType, name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null },
         });
+      }
+      if (personType === "حقوقی") {
+        const registrationNumber = value(raw, "شماره ثبت");
+        const company = {
+          personType,
+          name: null,
+          lastName: null,
+          nationalCode: null,
+          companyName: value(raw, "نام شرکت"),
+          registrationNumber,
+        };
+        const existingCompany = await tx.customer.findFirst({ where: { personType: "حقوقی", registrationNumber }, select: { id: true } });
+        if (existingCompany) {
+          await tx.customer.update({ where: { id: existingCompany.id }, data: company });
+        } else {
+          await tx.customer.create({ data: company });
+        }
       }
       if (facilityNumber) {
         await tx.contractDetails.upsert({
@@ -170,6 +189,7 @@ export async function POST(request: NextRequest) {
         data: {
           sourceFile: "ورود دستی", sheetName: "ورود دستی", sourceRow: nextSourceRow,
           facilityNumber: facilityNumber || null,
+          personType,
           customerNumber: customerNumber || null,
           archiveCode: archiveCode || null,
           facilityTitle: value(raw, "عنوان تسهیلات", "عنوان تسهيلات") || null,
