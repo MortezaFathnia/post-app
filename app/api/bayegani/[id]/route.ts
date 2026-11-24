@@ -120,6 +120,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const facilityNumber = value(raw, "شماره تسهيلات", "شماره تسهیلات");
     if (!facilityNumber) return NextResponse.json({ success: false, error: "کد قرارداد الزامی است." }, { status: 400 });
+    const personType = value(raw, "نوع شخص") || "حقیقی";
+    if (personType === "حقیقی" && !/^[0-9]{10}$/.test(value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري"))) {
+      return NextResponse.json({ success: false, error: "کد ملی شخص حقیقی باید دقیقاً شامل ۱۰ رقم باشد." }, { status: 400 });
+    }
+    if (personType === "حقوقی" && (!value(raw, "نام شرکت") || !value(raw, "شماره ثبت"))) {
+      return NextResponse.json({ success: false, error: "نام شرکت و شماره ثبت برای شخص حقوقی الزامی است." }, { status: 400 });
+    }
     const duplicateContract = await prisma.bayeganiRecord.findFirst({ where: { id: { not: recordId }, facilityNumber }, select: { id: true } });
     if (duplicateContract) return NextResponse.json({ success: false, error: "این کد قرارداد قبلاً برای رکورد دیگری ثبت شده است؛ کد قرارداد باید یکتا باشد." }, { status: 409 });
     if (!value(raw, "تاریخ شروع", "تاريخ شروع")) {
@@ -143,8 +150,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (archiveCode) raw["کد بایگانی"] = archiveCode;
 
     const record = await prisma.$transaction(async (tx) => {
-      const nationalCode = value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري");
-      if (nationalCode) {
+      const nationalCode = personType === "حقوقی" ? "" : value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري");
+      if (personType === "حقیقی" && nationalCode) {
         await tx.customer.upsert({
           where: { nationalCode },
           create: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null, nationalCode },
@@ -162,6 +169,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             update: { role: "BORROWER" },
           });
         }
+      }
+      if (personType === "حقوقی" && facilityNumber) {
+        await tx.contractCustomer.deleteMany({ where: { facilityNumber, role: "BORROWER" } });
       }
       const facilityTypeValue = value(raw, "نوع تسهیلات", "نوع تسهيلات");
       const facilityCodeCandidate = facilityTypeValue.match(/^(\d+)\s*-/)?.[1];
@@ -188,7 +198,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         installmentCount: value(raw, "تعداد اقساط") || null,
         approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
         remainingAmount: value(raw, "مانده تسهيلات", "مانده تسهیلات"),
-        nationalId: nationalCode || null,
+        nationalId: personType === "حقوقی" ? null : (nationalCode || null),
         facilityCode: matchedFacilityCode?.code ?? null,
         },
       });
