@@ -624,6 +624,14 @@ export default function BayeganiRecordForm({ recordId, newPage = false }: Props)
                   aria-label={key === "تاریخ شروع" ? "تاریخ شروع" : "تاریخ تحویل وثیقه"}
                   disabled={key === "تاریخ تحویل وثیقه" && fields["وضعیت کنونی"] !== "تسویه شده"}
                 />
+              ) : key === "توضیحات" && newPage ? (
+                <textarea
+                  value={value}
+                  onChange={(event) => changeField(key, event.target.value)}
+                  rows={4}
+                  className="w-full resize-y rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  placeholder={key}
+                />
               ) : (
                 <input
                   value={key === "مبلغ مصوب" ? formatAmount(value) : value}
