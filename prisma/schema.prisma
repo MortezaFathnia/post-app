@@ -125,8 +125,8 @@ model ContractCustomer {
 
 model BankDetails {
   id                 Int             @id @default(autoincrement())
-  contractDetailsId  Int             @unique
-  contractDetails    ContractDetails @relation(fields: [contractDetailsId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  contractDetailsId  Int?            @unique
+  contractDetails    ContractDetails? @relation(fields: [contractDetailsId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   bankName           String?
   branchName         String?
   branchCode         String?
