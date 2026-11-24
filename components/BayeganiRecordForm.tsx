@@ -385,7 +385,7 @@ export default function BayeganiRecordForm({ recordId, newPage = false }: Props)
         <Link href="/dashboard/bayegani" className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">بازگشت به فهرست</Link>
       </header>
       <form onSubmit={submit} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <div className={`grid grid-cols-1 gap-4 ${newPage ? "sm:grid-cols-3" : "sm:grid-cols-2 xl:grid-cols-3"}`}>
+        <div className={`grid gap-4 ${newPage && personType === "حقیقی" ? "grid-cols-3" : newPage ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"}`}>
           {entries.map(([key, value]) => (
             <label key={key} className={`block ${key === "وضعیت کنونی" ? "sm:col-start-1" : ""}`}>
               <span className="mb-1.5 block text-sm font-medium text-slate-700">{key === "نام باجه" ? "کد باجه-نام باجه" : key}</span>
