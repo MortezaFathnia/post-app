@@ -39,7 +39,7 @@ function mapLoanType(row: DbExcelRow): LoanType | null {
 }
 
 function normalizeHeader(input: string): string {
-  return input.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\\u200c\\s\\/\\-_:()]/g, "").trim();
+  return input.replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[\u200c\s/\-_:()]/g, "").trim();
 }
 
 function mapGuarantor(row: DbExcelRow, n: 1 | 2 | 3) {
