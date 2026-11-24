@@ -383,6 +383,9 @@ export default function BayeganiRecordForm({ recordId, newPage = false }: Props)
     }
     visibleEntryKeys = moveAfter(visibleEntryKeys, "مبلغ مصوب", "نام باجه");
     visibleEntryKeys = moveAfter(visibleEntryKeys, "تعداد اقساط", "مبلغ مصوب");
+    visibleEntryKeys = moveAfter(visibleEntryKeys, "تاریخ شروع", "تعداد اقساط");
+    visibleEntryKeys = moveAfter(visibleEntryKeys, "مدت", "تاریخ شروع");
+    visibleEntryKeys = moveAfter(visibleEntryKeys, "پایان قرارداد", "مدت");
   }
   const entries = visibleEntryKeys.map((key) => [key, fields[key] ?? ""] as [string, string]);
   const hasChanges = JSON.stringify(fields) !== JSON.stringify(originalFields);
