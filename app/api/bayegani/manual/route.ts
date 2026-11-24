@@ -146,17 +146,19 @@ export async function POST(request: NextRequest) {
           update: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null },
         });
       }
-      if (facilityNumber && personType === "حقیقی") {
+      if (facilityNumber) {
         await tx.contractDetails.upsert({
           where: { facilityNumber },
           create: { facilityNumber },
           update: {},
         });
-        await tx.contractCustomer.upsert({
-          where: { facilityNumber_nationalCode: { facilityNumber, nationalCode } },
-          create: { facilityNumber, nationalCode, role: "BORROWER" },
-          update: { role: "BORROWER" },
-        });
+        if (personType === "حقیقی") {
+          await tx.contractCustomer.upsert({
+            where: { facilityNumber_nationalCode: { facilityNumber, nationalCode } },
+            create: { facilityNumber, nationalCode, role: "BORROWER" },
+            update: { role: "BORROWER" },
+          });
+        }
       }
 
       const facilityTypeValue = value(raw, "نوع تسهیلات", "نوع تسهيلات");
