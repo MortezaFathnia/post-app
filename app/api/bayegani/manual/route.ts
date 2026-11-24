@@ -131,14 +131,22 @@ export async function POST(request: NextRequest) {
       });
       const nextSourceRow = (lastManualRecord?.sourceRow ?? 0) + 1;
 
-      const nationalCode = value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري");
-      if (!nationalCode) throw new Error("کد ملی برای ثبت مشتری الزامی است.");
-      await tx.customer.upsert({
-        where: { nationalCode },
-        create: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null, nationalCode },
-        update: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null },
-      });
-      if (facilityNumber) {
+      const personType = value(raw, "نوع شخص") || "حقیقی";
+      const nationalCode = personType === "حقوقی" ? "" : value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري");
+      if (personType === "حقیقی" && !/^[0-9]{10}$/.test(nationalCode)) {
+        throw new Error("کد ملی شخص حقیقی باید دقیقاً شامل ۱۰ رقم باشد.");
+      }
+      if (personType === "حقوقی" && (!value(raw, "نام شرکت") || !value(raw, "شماره ثبت"))) {
+        throw new Error("نام شرکت و شماره ثبت برای شخص حقوقی الزامی است.");
+      }
+      if (personType === "حقیقی") {
+        await tx.customer.upsert({
+          where: { nationalCode },
+          create: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null, nationalCode },
+          update: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null },
+        });
+      }
+      if (facilityNumber && personType === "حقیقی") {
         await tx.contractDetails.upsert({
           where: { facilityNumber },
           create: { facilityNumber },
@@ -173,7 +181,7 @@ export async function POST(request: NextRequest) {
           bailDeliveryDate: value(raw, "تاریخ تحویل وثیقه", "تاريخ تحويل وثيقه") || null,
           duration: value(raw, "مدت"), installmentCount: value(raw, "تعداد اقساط") || null, approvedAmount: value(raw, "مبلغ مصوب", "مبلغ"),
           remainingAmount: value(raw, "مانده تسهیلات", "مانده تسهيلات"),
-          nationalId: nationalCode,
+          nationalId: nationalCode || null,
           facilityCode: matchedFacilityCode?.code ?? null,
           rawData: raw as never,
         },
