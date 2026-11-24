@@ -121,6 +121,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const facilityNumber = value(raw, "شماره تسهيلات", "شماره تسهیلات");
     if (!facilityNumber) return NextResponse.json({ success: false, error: "کد قرارداد الزامی است." }, { status: 400 });
     const personType = value(raw, "نوع شخص") || "حقیقی";
+    if (!["حقیقی", "حقوقی"].includes(personType)) {
+      return NextResponse.json({ success: false, error: "نوع شخص معتبر نیست." }, { status: 400 });
+    }
+    raw["نوع شخص"] = personType;
     if (personType === "حقیقی" && !/^[0-9]{10}$/.test(value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري"))) {
       return NextResponse.json({ success: false, error: "کد ملی شخص حقیقی باید دقیقاً شامل ۱۰ رقم باشد." }, { status: 400 });
     }
@@ -154,8 +158,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       if (personType === "حقیقی" && nationalCode) {
         await tx.customer.upsert({
           where: { nationalCode },
-          create: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null, nationalCode },
-          update: { name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null },
+          create: { personType, name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null, nationalCode },
+          update: { personType, name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null },
         });
         if (facilityNumber) {
           await tx.contractDetails.upsert({
@@ -168,6 +172,23 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             create: { facilityNumber, nationalCode, role: "BORROWER" },
             update: { role: "BORROWER" },
           });
+        }
+      }
+      if (personType === "حقوقی") {
+        const registrationNumber = value(raw, "شماره ثبت");
+        const company = {
+          personType,
+          name: null,
+          lastName: null,
+          nationalCode: null,
+          companyName: value(raw, "نام شرکت"),
+          registrationNumber,
+        };
+        const existingCompany = await tx.customer.findFirst({ where: { personType: "حقوقی", registrationNumber }, select: { id: true } });
+        if (existingCompany) {
+          await tx.customer.update({ where: { id: existingCompany.id }, data: company });
+        } else {
+          await tx.customer.create({ data: company });
         }
       }
       if (personType === "حقوقی" && facilityNumber) {
@@ -183,6 +204,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         data: {
         rawData: raw as never,
         facilityNumber: facilityNumber || null,
+        personType,
         customerNumber: customerNumber || null,
         archiveCode: archiveCode || null,
         facilityTitle: value(raw, "عنوان تسهیلات", "عنوان تسهيلات") || null,
