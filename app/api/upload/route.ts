@@ -384,27 +384,8 @@ export async function POST(request: NextRequest) {
         linkedNationalCodes.add(nationalCode);
       }
 
-      const bankPayload = {
-        contractDetailsId: contract.id,
-        bankName: firstData.bankName,
-        branchName: firstData.branchName,
-        branchCode: firstData.branchCode,
-        branchPostalCode: firstData.branchPostalCode,
-        branchPhone: firstData.branchPhone,
-        branchAddress: firstData.branchAddress,
-        branchManager: firstData.branchManager,
-        counterName: firstData.counterName,
-        counterCode: firstData.counterCode,
-        brokerName: firstData.brokerName,
-        brokerCustomerCode: firstData.brokerCustomerCode,
-        bankRepresentative: firstData.bankRepresentative,
-      };
-
-      await tx.bankDetails.upsert({
-        where: { contractDetailsId: contract.id },
-        create: bankPayload,
-        update: bankPayload,
-      });
+      // BankDetails are maintained independently from contract uploads in Settings.
+      // Do not create or overwrite shared bank/branch data from the Excel file.
 
       const bayeganiRecords = [];
       const uploadId = randomUUID();
