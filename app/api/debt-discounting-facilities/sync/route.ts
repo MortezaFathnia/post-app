@@ -2,81 +2,65 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
-
 const facilityPrefix = "1538.340.";
 
 export async function POST() {
   try {
-    // Pull ALL facilities with the requested prefix directly from BayeganiRecord.
-    // DebtDiscountingRecord is intentionally not used as a gate for this sync.
-    const bayeganiRecords = await prisma.bayeganiRecord.findMany({
+    const sourceRows = await prisma.bayeganiRecord.findMany({
       where: { facilityNumber: { startsWith: facilityPrefix } },
       orderBy: [{ facilityNumber: "asc" }, { id: "asc" }],
-      select: {
-        id: true,
-        facilityNumber: true,
-        facilityTitle: true,
-        counterLabel: true,
-        serial: true,
-        status: true,
-        startDate: true,
-        endDate: true,
-      },
+      select: { id: true, facilityNumber: true, facilityTitle: true, counterLabel: true, serial: true, status: true, startDate: true, endDate: true },
     });
 
-    const primaryByFacility = new Map<string, (typeof bayeganiRecords)[number]>();
-    for (const source of bayeganiRecords) {
-      const number = source.facilityNumber;
+    // Deduplicate by facilityNumber, preferring a source row with a serial.
+    const sourceByFacility = new Map<string, (typeof sourceRows)[number]>();
+    for (const row of sourceRows) {
+      const number = row.facilityNumber;
       if (!number?.startsWith(facilityPrefix)) continue;
-      const current = primaryByFacility.get(number);
-      // Prefer the row with serial populated; otherwise retain the first source row.
-      if (!current || (!current.serial && source.serial)) primaryByFacility.set(number, source);
+      const current = sourceByFacility.get(number);
+      if (!current || (!current.serial && row.serial)) sourceByFacility.set(number, row);
     }
+    const facilityNumbers = [...sourceByFacility.keys()];
+    if (!facilityNumbers.length) {
+      return NextResponse.json({ success: true, created: 0, updated: 0, total: 0, message: "هیچ تسهیلاتی با پیش‌شماره 1538.340. در بایگانی پیدا نشد." });
+    }
+
+    // Reconcile by facilityNumber (not solely contractId) to keep sync idempotent.
+    const existingDocs = await prisma.debtDocument.findMany({
+      where: { facilityNumber: { in: facilityNumbers } },
+      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+    });
+    const docByFacility = new Map<string, (typeof existingDocs)[number]>();
+    for (const doc of existingDocs) if (doc.facilityNumber && !docByFacility.has(doc.facilityNumber)) docByFacility.set(doc.facilityNumber, doc);
 
     let created = 0;
     let updated = 0;
-
     await prisma.$transaction(async (tx) => {
-      for (const source of primaryByFacility.values()) {
-        if (!source.facilityNumber) continue;
-        const data = {
-          facilityNumber: source.facilityNumber,
-          facilityTitle: source.facilityTitle,
-          counterLabel: source.counterLabel,
-          serial: source.serial,
-          status: source.status || "فعال",
-          startDate: source.startDate || "",
-          endDate: source.endDate || "",
-        };
-
-        const existing = await tx.debtDocument.findUnique({
-          where: { contractId: source.id },
-          select: { id: true },
-        });
-
+      for (const source of sourceByFacility.values()) {
+        const number = source.facilityNumber;
+        if (!number) continue;
+        const data = { facilityNumber: number, facilityTitle: source.facilityTitle, counterLabel: source.counterLabel, serial: source.serial, startDate: source.startDate || "", endDate: source.endDate || "" };
+        const existing = docByFacility.get(number);
         if (existing) {
+          // Preserve status users may have set to "تسویه شده".
           await tx.debtDocument.update({ where: { id: existing.id }, data });
           updated++;
+          continue;
+        }
+        const byContract = await tx.debtDocument.findUnique({ where: { contractId: source.id }, select: { id: true } });
+        if (byContract) {
+          await tx.debtDocument.update({ where: { id: byContract.id }, data });
+          updated++;
         } else {
-          await tx.debtDocument.create({ data: { ...data, contractId: source.id } });
+          await tx.debtDocument.create({ data: { ...data, contractId: source.id, status: source.status || "فعال" } });
           created++;
         }
       }
     });
 
-    return NextResponse.json({
-      success: true,
-      created,
-      updated,
-      skipped: 0,
-      total: primaryByFacility.size,
-      message: "تمام تسهیلات با پیش‌شماره 1538.340. از جدول بایگانی تسهیلات همگام‌سازی شدند.",
-    });
+    return NextResponse.json({ success: true, created, updated, total: sourceByFacility.size, message: "تمام تسهیلات 1538.340. با بایگانی تطبیق داده و در دیتابیس ذخیره شدند." });
   } catch (error) {
-    console.error("DebtDocument facilities sync error:", error);
-    return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "همگام‌سازی اطلاعات تسهیلات خرید دین ناموفق بود." },
-      { status: 500 },
-    );
+    console.error("Debt discounting facilities sync error:", error);
+    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "همگام‌سازی اطلاعات تسهیلات خرید دین ناموفق بود." }, { status: 500 });
   }
 }
