@@ -51,7 +51,7 @@ model Customer {
   accountOpeningDate     String?
   longTermDepositNumber  String?
   longTermDepositAmount  String?
-  customerNumber         String?
+  customerNumber         String?            @unique
   companyName            String?
   registrationNumber     String?
   registrationDate       String?
@@ -111,16 +111,16 @@ model ContractDetails {
 
 model ContractCustomer {
   facilityNumber String
-  nationalCode   String
+  customerNumber String
   role           CustomerRole
   contract       ContractDetails @relation(fields: [facilityNumber], references: [facilityNumber], onDelete: Cascade, onUpdate: Cascade)
-  customer      Customer        @relation(fields: [nationalCode], references: [nationalCode], onDelete: Cascade, onUpdate: Cascade)
+  customer      Customer        @relation(fields: [customerNumber], references: [customerNumber], onDelete: Cascade, onUpdate: Cascade)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  @@id([facilityNumber, nationalCode])
+  @@id([facilityNumber, customerNumber])
   @@unique([facilityNumber, role])
-  @@index([nationalCode])
+  @@index([customerNumber])
 }
 
 model BankDetails {
