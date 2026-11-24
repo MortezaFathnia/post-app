@@ -364,9 +364,25 @@ export default function BayeganiRecordForm({ recordId, newPage = false }: Props)
   const statusIndex = entryKeys.indexOf("وضعیت کنونی");
   entryKeys.splice(statusIndex + 1, 0, "تاریخ تحویل وثیقه");
   const personType = fields["نوع شخص"] || "حقیقی";
-  const visibleEntryKeys = entryKeys.filter((key) => personType === "حقوقی"
+  let visibleEntryKeys = entryKeys.filter((key) => personType === "حقوقی"
     ? !["جنسیت", "نام", "نام خانوادگی", "کد ملی"].includes(key)
     : !["نام شرکت", "شماره ثبت"].includes(key));
+  // Keep this ordering specific to the new-record page; the edit page retains
+  // its existing field order.
+  if (newPage) {
+    const moveAfter = (items: string[], field: string, after: string) => {
+      const index = items.indexOf(field);
+      if (index === -1) return items;
+      const next = items.filter((item) => item !== field);
+      const anchorIndex = next.indexOf(after);
+      next.splice(anchorIndex === -1 ? next.length : anchorIndex + 1, 0, field);
+      return next;
+    };
+    if (personType === "حقیقی") {
+      visibleEntryKeys = moveAfter(visibleEntryKeys, "کد ملی", "نام خانوادگی");
+    }
+    visibleEntryKeys = moveAfter(visibleEntryKeys, "مبلغ مصوب", "نام باجه");
+  }
   const entries = visibleEntryKeys.map((key) => [key, fields[key] ?? ""] as [string, string]);
   const hasChanges = JSON.stringify(fields) !== JSON.stringify(originalFields);
   const optionalFields = new Set(["تعداد اقساط", "توضیحات", "تاریخ تحویل وثیقه", "جنسیت", "نام", "نام خانوادگی", "کد ملی", "نام شرکت", "شماره ثبت"]);
