@@ -103,12 +103,12 @@ export async function POST(request: NextRequest) {
     const cleanedRows = report.rows.filter((_, index) => !matchedIndexes.has(index));
     reportBook.Sheets[report.sheetName] = XLSX.utils.aoa_to_sheet(cleanedRows);
     const output = XLSX.write(reportBook, { type: "buffer", bookType: "xlsx" });
-    const outputName = \`\${reportFile.name.replace(/\.(xls|xlsx)$/i, "")}-پاکسازی-چک.xlsx\`;
+    const outputName = `${reportFile.name.replace(/\.(xls|xlsx)$/i, "")}-پاکسازی-چک.xlsx`;
     return new NextResponse(output, {
       status: 200,
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": \`attachment; filename*=UTF-8''\${encodeURIComponent(outputName)}\`,
+        "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(outputName)}`,
         "X-Original-Rows": String(Math.max(0, report.rows.length - 1)),
         "X-Matched-Rows": String(matchedIndexes.size),
         "X-Remaining-Rows": String(Math.max(0, cleanedRows.length - 1)),
