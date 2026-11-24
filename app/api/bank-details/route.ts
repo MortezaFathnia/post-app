@@ -9,11 +9,6 @@ const fields = [
   "branchPhone",
   "branchAddress",
   "branchManager",
-  "counterName",
-  "counterCode",
-  "brokerName",
-  "brokerCustomerCode",
-  "bankRepresentative",
 ] as const;
 
 type BankDetailsInput = Partial<Record<(typeof fields)[number], string | null>>;
