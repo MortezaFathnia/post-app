@@ -132,13 +132,19 @@ model BankDetails {
   branchPhone        String?
   branchAddress      String?
   branchManager      String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+}
+
+model CounterDetails {
+  id                 Int      @id @default(autoincrement())
   counterName        String?
   counterCode        String?
   brokerName         String?
   brokerCustomerCode String?
   bankRepresentative String?
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
 
 model BayeganiRecord {
