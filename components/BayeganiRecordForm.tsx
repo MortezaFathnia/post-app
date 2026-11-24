@@ -414,7 +414,7 @@ export default function BayeganiRecordForm({ recordId, newPage = false }: Props)
         <div className={`grid gap-4 ${newPage && personType === "حقیقی" ? "grid-cols-3" : newPage ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"}`}>
           {entries.map(([key, value]) => (
             <label key={key} className={`block ${newPage && key === "توضیحات" ? "col-span-full" : key === "وضعیت کنونی" ? "sm:col-start-1" : ""}`}>
-              <span className="mb-1.5 block text-sm font-medium text-slate-700">{key === "نام باجه" ? "کد باجه-نام باجه" : key}</span>
+              <span className="mb-1.5 block text-sm font-medium text-slate-700">{key === "نام باجه" ? "کد باجه-نام باجه" : key === "سررسیدی یا اقساط" ? "نحوه بازپرداخت" : key}</span>
               {key === "سررسیدی یا اقساط" ? (
                 <select
                   value={value}
