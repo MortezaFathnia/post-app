@@ -140,12 +140,16 @@ export default function BayeganiRecordForm({ recordId }: Props) {
     setFacilityQuery(option);
     setFields((current) => {
       if (current["نوع تسهیلات"] === option) return current;
+      const personType = current["نوع شخص"] || "حقیقی";
       const gender = current["جنسیت"];
       const firstName = current["نام"].trim();
       const lastName = current["نام خانوادگی"].trim();
-      const title = gender && firstName && lastName
-        ? `${matched.name} ${gender === "زن" ? "سرکار خانم" : "جناب آقای"} ${firstName} ${lastName}`
-        : current["عنوان تسهیلات"];
+      const companyName = current["نام شرکت"].trim();
+      const title = personType === "حقوقی"
+        ? (companyName ? `${matched.name} ${companyName}` : current["عنوان تسهیلات"])
+        : (gender && firstName && lastName
+            ? `${matched.name} ${gender === "زن" ? "سرکار خانم" : "جناب آقای"} ${firstName} ${lastName}`
+            : current["عنوان تسهیلات"]);
       return { ...current, "نوع تسهیلات": option, "عنوان تسهیلات": title };
     });
   }, [recordId, facilityCodes, fields["شماره تسهیلات"], fields["جنسیت"], fields["نام"], fields["نام خانوادگی"]]);
