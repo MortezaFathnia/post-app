@@ -131,7 +131,7 @@ export function mapDbExcelRow(row: DbExcelRow) {
     interestRate: value(row, "نرخ تسهیلات"),
     latePaymentRate: value(row, "نرخ وجه التزام تاخیر تادیه"),
     contractDuration: value(row, "مدت تسهیلات(به ماه)"),
-    repaymentMethod: value(row, "نحوه بازپرداخت(انتخاب شود)"),
+    repaymentMethod: firstValue(row, ["نحوه بازپرداخت(انتخاب شود)", "نحوه بازپرداخت", "سررسیدی یا اقساط"]),
     gracePeriod: value(row, "دوران تنفس"),
     installmentInterval: value(row, "فاصله اقساط مبادله ای"),
     firstInstallmentDate: value(row, "تاریخ سررسید اولین قسط"),
