@@ -142,10 +142,24 @@ export async function POST(request: NextRequest) {
         throw new Error("نام شرکت و شماره ثبت برای شخص حقوقی الزامی است.");
       }
       if (personType === "حقیقی") {
+        if (!customerNumber) {
+          throw new Error("شماره مشتری از شماره تسهیلات قابل استخراج نیست؛ شماره مشتری را وارد کنید.");
+        }
         await tx.customer.upsert({
           where: { nationalCode },
-          create: { personType, name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null, nationalCode },
-          update: { personType, name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null },
+          create: {
+            personType,
+            name: value(raw, "نام") || null,
+            lastName: value(raw, "نام خانوادگی") || null,
+            nationalCode,
+            customerNumber,
+          },
+          update: {
+            personType,
+            name: value(raw, "نام") || null,
+            lastName: value(raw, "نام خانوادگی") || null,
+            customerNumber,
+          },
         });
       }
       if (personType === "حقوقی") {
