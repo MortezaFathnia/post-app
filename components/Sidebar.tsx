@@ -24,6 +24,7 @@ const menuItems = [
     description: "مدیریت ضمانت‌نامه‌ها",
     children: [
       { title: "تمدید ضمانتنامه", href: "/dashboard/guarantees/extension", icon: "↻", description: "تکمیل و چاپ فرم تمدید ضمانت‌نامه" },
+      { title: "بایگانی ضمانتنامه", href: "/dashboard/guarantees/archive", icon: "▤", description: "بارگذاری و مشاهده اطلاعات ضمانتنامه‌ها" },
     ],
   },
   {
