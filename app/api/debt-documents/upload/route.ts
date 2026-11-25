@@ -324,6 +324,20 @@ export async function POST(request: NextRequest) {
       "بانک عامل",
       "شماره انتظامی",
     ];
+    const uploaded12Headers = [
+      "سریال سفته/ چک",
+      "شماره سفته / چک",
+      "وضعیت سفته / چک",
+      "تاريخ سررسيد",
+      "پرداخت شده",
+      "پرداخت نشده",
+      "سود/کارمزد مستتر",
+      "مدت تاخير به روز",
+      "جريمه دريافت شده",
+      "جريمه تاخير",
+      "بانک عامل",
+      "شماره انتظامی",
+    ];
     const uploadFormat = String(formData.get("format") ?? "new");
     if (uploadFormat !== "legacy" && uploadFormat !== "new") {
       return NextResponse.json(
@@ -341,6 +355,10 @@ export async function POST(request: NextRequest) {
       });
       const candidateHeaders = new Set((headerRows[0] ?? []).map(normalizeHeader));
       if (expectedHeaders) return expectedHeaders.every((header) => candidateHeaders.has(header));
+      if (uploadFormat === "new") return textHeaders.every((header) => candidateHeaders.has(header))
+        || countFormatHeaders.every((header) => candidateHeaders.has(header))
+        || simpleCountFormatHeaders.every((header) => candidateHeaders.has(header))
+        || uploaded12Headers.every((header) => candidateHeaders.has(header));
       return textHeaders.every((header) => candidateHeaders.has(header))
         || countFormatHeaders.every((header) => candidateHeaders.has(header))
         || simpleCountFormatHeaders.every((header) => candidateHeaders.has(header));
@@ -375,10 +393,11 @@ export async function POST(request: NextRequest) {
     const countFormat = countFormatHeaders.every((header) => headers.has(header));
     const simpleCountFormat = simpleCountFormatHeaders.every((header) => headers.has(header));
     const newFormat = textHeaders.every((header) => headers.has(header));
+    const uploaded12Format = uploaded12Headers.every((header) => headers.has(header));
     const isLegacyFormat = legacyHeaders.every((header) => headers.has(header));
     if (
       (uploadFormat === "legacy" && (!isLegacyFormat || newFormat || countFormat)) ||
-      (uploadFormat === "new" && (!newFormat && !countFormat && !simpleCountFormat))
+      (uploadFormat === "new" && (!newFormat && !countFormat && !simpleCountFormat && !uploaded12Format))
     ) {
       return NextResponse.json(
         {
@@ -400,9 +419,11 @@ export async function POST(request: NextRequest) {
     });
     // Ignore formatting/blank rows and rows without a check number.
     const validSourceRows = sourceRows.filter(({ row }) =>
-      countFormat || simpleCountFormat || newFormat
-        ? Boolean(value(row, "شماره چک"))
-        : Object.values(row).some((cell) => String(cell ?? "").trim() !== "")
+      uploaded12Format
+        ? Boolean(value(row, "شماره سفته / چک"))
+        : countFormat || simpleCountFormat || newFormat
+          ? Boolean(value(row, "شماره چک"))
+          : Object.values(row).some((cell) => String(cell ?? "").trim() !== "")
     );
     const rows = validSourceRows.map(({ row }) => row);
     if (!rows.length) {
@@ -413,6 +434,31 @@ export async function POST(request: NextRequest) {
     }
 
     const records = validSourceRows.map(({ row, sourceRow }) => {
+      if (uploaded12Format) {
+        return {
+          sourceFile: file.name,
+          sheetName,
+          sourceRow,
+          counterLabel,
+          facilityNumber,
+          customerNumber: customerNumberFromFacility(facilityNumber),
+          serial: value(row, "سریال سفته/ چک"),
+          checkNumber: value(row, "شماره سفته / چک"),
+          checkStatus: value(row, "وضعیت سفته / چک") ?? "درراه",
+          domesticForeign: null,
+          dueDate: value(row, "تاريخ سررسيد")?.replace(/-/g, "/") ?? null,
+          paidAmount: value(row, "پرداخت شده"),
+          unpaidAmount: value(row, "پرداخت نشده"),
+          embeddedProfit: value(row, "سود/کارمزد مستتر"),
+          delayDays: value(row, "مدت تاخير به روز"),
+          delayPenalty: value(row, "جريمه تاخير") ?? value(row, "جريمه دريافت شده"),
+          bankAgent: value(row, "بانک عامل"),
+          checkBranch: null,
+          description: value(row, "جريمه دريافت شده"),
+          administrativeNumber: value(row, "شماره انتظامی"),
+          rawData: row as Prisma.InputJsonObject,
+        };
+      }
       if (newFormat || countFormat || simpleCountFormat) {
         const checkNumber = value(row, "شماره چک");
         return {
