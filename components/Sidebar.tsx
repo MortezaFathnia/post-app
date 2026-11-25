@@ -122,7 +122,7 @@ export default function Sidebar() {
           </Link>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-6 pb-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-6">
           <p className="mb-3 px-3 text-[11px] font-bold tracking-wide text-slate-400">منوی اصلی</p>
           <nav aria-label="منوی اصلی">
             <ul className="space-y-1.5">
