@@ -276,7 +276,7 @@ export async function POST(request: NextRequest) {
       await tx.contractCustomer.create({
         data: {
           facilityNumber: internalFacilityNumber,
-          nationalCode: firstCustomer.nationalCode,
+          customerNumber: firstCustomer.customerNumber || internalFacilityNumber.split(".")[2] || "",
           role: "BORROWER",
         },
       });
@@ -379,9 +379,11 @@ export async function POST(request: NextRequest) {
         await tx.contractCustomer.deleteMany({
           where: { facilityNumber: internalFacilityNumber, role },
         });
-        await tx.contractCustomer.create({
-          data: { facilityNumber: internalFacilityNumber, nationalCode, role },
-        });
+        if (guarantor.customerNumber?.trim()) {
+          await tx.contractCustomer.create({
+            data: { facilityNumber: internalFacilityNumber, customerNumber: guarantor.customerNumber.trim(), role },
+          });
+        }
         linkedNationalCodes.add(nationalCode);
       }
 
