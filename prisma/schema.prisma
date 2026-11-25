@@ -106,8 +106,52 @@ model ContractDetails {
   collateralValue           String?
   customerLinks             ContractCustomer[]
   bayeganiRecords           BayeganiRecord[]
+  bayeganiGuarantees        BayeganiGuarantee[]
   createdAt                 DateTime         @default(now())
   updatedAt                 DateTime         @updatedAt
+}
+
+
+model BayeganiGuarantee {
+  id                       Int             @id @default(autoincrement())
+  rowNumber                String?
+  economicSectorCode       String?
+  facilityNumber           String?         @unique
+  iban                     String?
+  facilityTitle            String?
+  currentStatus            String?
+  startDate                String?
+  paymentCount             String?
+  duration                 String?
+  approvedAmount           String?
+  remainingAmount          String?
+  subFacilityType          String?
+  customerNumber           String?
+  fileSerial               String?
+  endDate                  String?
+  mainFacilityType         String?
+  branchCode               String?
+  additionalDescription    String?
+  lastModifiedDate         String?
+  archiveNumber            String?
+  notificationLetterDate   String?
+  notificationLetterNumber String?
+  requirements             String?
+  approvalAuthority        String?
+  nationalCode             String?
+  requestDate              String?
+  sourceFile               String
+  sheetName                String
+  sourceRow                Int
+  rawData                  Json
+  contractDetails          ContractDetails? @relation(fields: [facilityNumber], references: [facilityNumber], onDelete: SetNull, onUpdate: Cascade)
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+
+  @@index([customerNumber])
+  @@index([nationalCode])
+  @@index([currentStatus])
+  @@index([branchCode])
 }
 
 model ContractCustomer {
