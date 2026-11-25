@@ -173,8 +173,8 @@ export async function POST(request: NextRequest) {
         });
         if (personType === "حقیقی") {
           await tx.contractCustomer.upsert({
-            where: { facilityNumber_nationalCode: { facilityNumber, nationalCode } },
-            create: { facilityNumber, nationalCode, role: "BORROWER" },
+            where: { facilityNumber_customerNumber: { facilityNumber, customerNumber } },
+            create: { facilityNumber, customerNumber, role: "BORROWER" },
             update: { role: "BORROWER" },
           });
         }
