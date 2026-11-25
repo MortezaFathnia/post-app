@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
         else created++;
       }
       return { created, updated };
-    });
+    }, { maxWait: 10000, timeout: 60000 });
 
     return NextResponse.json({
       success: true,
