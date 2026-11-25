@@ -156,10 +156,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const record = await prisma.$transaction(async (tx) => {
       const nationalCode = personType === "حقوقی" ? "" : value(raw, "کد ملی", "کد ملي ", "کد ملي مشتري");
       if (personType === "حقیقی" && nationalCode) {
+        if (!customerNumber) {
+          throw new Error("شماره مشتری از شماره تسهیلات قابل استخراج نیست؛ شماره مشتری را وارد کنید.");
+        }
         await tx.customer.upsert({
           where: { nationalCode },
-          create: { personType, name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null, nationalCode },
-          update: { personType, name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null },
+          create: { personType, name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null, nationalCode, customerNumber },
+          update: { personType, name: value(raw, "نام") || null, lastName: value(raw, "نام خانوادگی") || null, customerNumber },
         });
         if (facilityNumber) {
           await tx.contractDetails.upsert({
@@ -168,8 +171,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             update: {},
           });
           await tx.contractCustomer.upsert({
-            where: { facilityNumber_nationalCode: { facilityNumber, nationalCode } },
-            create: { facilityNumber, nationalCode, role: "BORROWER" },
+            where: { facilityNumber_customerNumber: { facilityNumber, customerNumber } },
+            create: { facilityNumber, customerNumber, role: "BORROWER" },
             update: { role: "BORROWER" },
           });
         }
