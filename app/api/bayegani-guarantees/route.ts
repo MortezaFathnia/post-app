@@ -203,11 +203,18 @@ export async function POST(request: NextRequest) {
       });
       const existingNumbers = new Set(existing.map((record) => record.facilityNumber).filter((item): item is string => !!item));
 
-      for (const facilityNumber of facilityNumbers) {
+      for (const record of records) {
+        if (record.customerNumber) {
+          await tx.customer.upsert({
+            where: { customerNumber: record.customerNumber },
+            create: { customerNumber: record.customerNumber },
+            update: {},
+          });
+        }
         await tx.contractDetails.upsert({
-          where: { facilityNumber },
-          create: { facilityNumber },
-          update: {},
+          where: { facilityNumber: record.facilityNumber },
+          create: { facilityNumber: record.facilityNumber, customerNumber: record.customerNumber },
+          update: record.customerNumber ? { customerNumber: record.customerNumber } : {},
         });
       }
 
