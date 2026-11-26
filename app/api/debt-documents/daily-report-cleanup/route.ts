@@ -44,8 +44,6 @@ function findTargetSheet(workbook: XLSX.WorkBook) {
     const headerIndex = rows.findIndex((row) => {
       const headers = row.map(normalizeHeader);
       return headers.includes("کدمرجع") &&
-        headers.includes("کارمزد") &&
-        headers.includes("تمبر") &&
         headers.includes("واریز") &&
         headers.includes("برداشت");
     });
@@ -56,8 +54,6 @@ function findTargetSheet(workbook: XLSX.WorkBook) {
         rows: rows.slice(headerIndex),
         headerIndex,
         referenceIndex: headers.indexOf("کدمرجع"),
-        feeIndex: headers.indexOf("کارمزد"),
-        stampIndex: headers.indexOf("تمبر"),
         depositIndex: headers.indexOf("واریز"),
         withdrawalIndex: headers.indexOf("برداشت"),
       };
@@ -116,7 +112,7 @@ export async function POST(request: NextRequest) {
     const target = findTargetSheet(workbook);
     if (!target) {
       return NextResponse.json(
-        { success: false, error: "ستون‌های «کد مرجع»، «کارمزد»، «تمبر»، «واریز» و «برداشت» در فایل پیدا نشدند." },
+        { success: false, error: "ستون‌های «کد مرجع»، «واریز» و «برداشت» در فایل پیدا نشدند." },
         { status: 400 },
       );
     }
@@ -128,26 +124,21 @@ export async function POST(request: NextRequest) {
     const originalRows = Math.max(0, target.rows.length - 1);
 
     if (mode === "fee" || mode === "stamp") {
-      const comparisonIndex = mode === "fee" ? target.feeIndex : target.stampIndex;
+      const expectedReference = mode === "fee" ? "کارمزد" : "تمبر";
       const matched = target.rows.filter((row, index) => {
         if (index === 0) return true;
-        const referenceValue = amountKey(row[target.referenceIndex]) ?? normalizeText(row[target.referenceIndex]);
-        const comparisonValue = amountKey(row[comparisonIndex]) ?? normalizeText(row[comparisonIndex]);
-        return referenceValue !== "" && comparisonValue !== "" && referenceValue === comparisonValue;
+        return normalizeText(row[target.referenceIndex]) === expectedReference;
       });
       matchedRows = Math.max(0, matched.length - 1);
       outputRows = matched;
     } else {
-      // First exclude rows where کد مرجع matches either تمبر or کارمزد.
+      // Remove rows whose کد مرجع value is exactly تمبر or کارمزد.
       // Then compare adjacent remaining rows: واریز in the current row against
       // برداشت in the next row. If equal, remove both rows.
       const rowsWithoutFeeAndStampMatches = target.rows.filter((row, index) => {
         if (index === 0) return true;
-        const referenceValue = amountKey(row[target.referenceIndex]) ?? normalizeText(row[target.referenceIndex]);
-        const feeValue = amountKey(row[target.feeIndex]) ?? normalizeText(row[target.feeIndex]);
-        const stampValue = amountKey(row[target.stampIndex]) ?? normalizeText(row[target.stampIndex]);
-        if (!referenceValue) return true;
-        return referenceValue !== feeValue && referenceValue !== stampValue;
+        const referenceValue = normalizeText(row[target.referenceIndex]);
+        return referenceValue !== "تمبر" && referenceValue !== "کارمزد";
       });
 
       const result = removeMatchedAmounts(
