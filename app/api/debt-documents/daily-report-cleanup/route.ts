@@ -44,6 +44,8 @@ function findTargetSheet(workbook: XLSX.WorkBook) {
     const headerIndex = rows.findIndex((row) => {
       const headers = row.map(normalizeHeader);
       return headers.includes("کدمرجع") &&
+        headers.includes("کارمزد") &&
+        headers.includes("تمبر") &&
         headers.includes("واریز") &&
         headers.includes("برداشت");
     });
@@ -54,6 +56,8 @@ function findTargetSheet(workbook: XLSX.WorkBook) {
         rows: rows.slice(headerIndex),
         headerIndex,
         referenceIndex: headers.indexOf("کدمرجع"),
+        feeIndex: headers.indexOf("کارمزد"),
+        stampIndex: headers.indexOf("تمبر"),
         depositIndex: headers.indexOf("واریز"),
         withdrawalIndex: headers.indexOf("برداشت"),
       };
@@ -63,46 +67,34 @@ function findTargetSheet(workbook: XLSX.WorkBook) {
 }
 
 function removeMatchedAmounts(rows: unknown[][], depositIndex: number, withdrawalIndex: number) {
-  const deposits = new Map<string, number[]>();
-  const withdrawals = new Map<string, number[]>();
-
-  rows.forEach((row, index) => {
-    if (index === 0) return;
-    const deposit = amountKey(row[depositIndex]);
-    const withdrawal = amountKey(row[withdrawalIndex]);
-    if (deposit) deposits.set(deposit, [...(deposits.get(deposit) ?? []), index]);
-    if (withdrawal) withdrawals.set(withdrawal, [...(withdrawals.get(withdrawal) ?? []), index]);
-  });
-
   const removed = new Set<number>();
   let removedPairs = 0;
-  for (const [amount, depositRows] of deposits) {
-    const withdrawalRows = withdrawals.get(amount) ?? [];
-    let withdrawalCursor = 0;
-    for (const depositRow of depositRows) {
-      if (removed.has(depositRow)) continue;
-      while (
-        withdrawalCursor < withdrawalRows.length &&
-        (removed.has(withdrawalRows[withdrawalCursor]) || withdrawalRows[withdrawalCursor] === depositRow)
-      ) {
-        withdrawalCursor += 1;
-      }
-      if (withdrawalCursor >= withdrawalRows.length) break;
-      const withdrawalRow = withdrawalRows[withdrawalCursor];
-      removed.add(depositRow);
-      removed.add(withdrawalRow);
+  let index = 1;
+
+  // Match each row's deposit against the withdrawal in the immediately following row.
+  // When they match, remove both rows and continue after the pair.
+  while (index < rows.length - 1) {
+    const deposit = amountKey(rows[index]?.[depositIndex]);
+    const nextWithdrawal = amountKey(rows[index + 1]?.[withdrawalIndex]);
+
+    if (deposit !== null && nextWithdrawal !== null && deposit === nextWithdrawal) {
+      removed.add(index);
+      removed.add(index + 1);
       removedPairs += 1;
-      withdrawalCursor += 1;
+      index += 2;
+    } else {
+      index += 1;
     }
   }
 
   return {
-    rows: rows.filter((_, index) => !removed.has(index)),
+    rows: rows.filter((_, rowIndex) => !removed.has(rowIndex)),
     removedRows: removed.size,
     removedPairs,
     originalRows: Math.max(0, rows.length - 1),
   };
 }
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -124,7 +116,7 @@ export async function POST(request: NextRequest) {
     const target = findTargetSheet(workbook);
     if (!target) {
       return NextResponse.json(
-        { success: false, error: "ستون‌های «کد مرجع»، «واریز» و «برداشت» در فایل پیدا نشدند." },
+        { success: false, error: "ستون‌های «کد مرجع»، «کارمزد»، «تمبر»، «واریز» و «برداشت» در فایل پیدا نشدند." },
         { status: 400 },
       );
     }
@@ -136,10 +128,13 @@ export async function POST(request: NextRequest) {
     const originalRows = Math.max(0, target.rows.length - 1);
 
     if (mode === "fee" || mode === "stamp") {
-      const expectedValue = mode === "fee" ? "کارمزد" : "تمبر";
-      const matched = target.rows.filter((row, index) =>
-        index === 0 || normalizeText(row[target.referenceIndex]) === expectedValue
-      );
+      const comparisonIndex = mode === "fee" ? target.feeIndex : target.stampIndex;
+      const matched = target.rows.filter((row, index) => {
+        if (index === 0) return true;
+        const referenceValue = amountKey(row[target.referenceIndex]) ?? normalizeText(row[target.referenceIndex]);
+        const comparisonValue = amountKey(row[comparisonIndex]) ?? normalizeText(row[comparisonIndex]);
+        return referenceValue !== "" && comparisonValue !== "" && referenceValue === comparisonValue;
+      });
       matchedRows = Math.max(0, matched.length - 1);
       outputRows = matched;
     } else {
