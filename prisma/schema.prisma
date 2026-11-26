@@ -60,12 +60,16 @@ model Customer {
   companyEconomicCode    String?
   companyNationalId      String?
   contractLinks          ContractCustomer[]
+  bayeganiGuarantees     BayeganiGuarantee[]
+  primaryContracts       ContractDetails[]
   createdAt              DateTime          @default(now())
   updatedAt              DateTime          @updatedAt
 }
 model ContractDetails {
   id                        Int              @id @default(autoincrement())
   facilityNumber            String?          @unique
+  customerNumber            String?
+  customer                  Customer?         @relation(fields: [customerNumber], references: [customerNumber], onDelete: SetNull, onUpdate: Cascade)
   contractReference         String?
   contractNumber            String?
   creationSource            String           @default("MANUAL")
@@ -145,6 +149,7 @@ model BayeganiGuarantee {
   sourceRow                Int
   rawData                  Json
   contractDetails          ContractDetails? @relation(fields: [facilityNumber], references: [facilityNumber], onDelete: SetNull, onUpdate: Cascade)
+  customer                 Customer?       @relation(fields: [customerNumber], references: [customerNumber], onDelete: SetNull, onUpdate: Cascade)
   createdAt                DateTime        @default(now())
   updatedAt                DateTime        @updatedAt
 
