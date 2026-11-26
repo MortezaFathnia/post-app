@@ -30,8 +30,9 @@ function amountKey(value: unknown): string | null {
     .replace(/[,٬\s]/g, "")
     .replace(/[٫]/g, ".");
   const numeric = Number(normalized);
-  if (!Number.isFinite(numeric)) return null;
-  // Zero is a valid amount too: 0 in واریز must match 0 in the next row's برداشت.
+  // Ignore zero amounts: in this report, zero is the default empty-side value,
+  // not a meaningful transaction amount to pair with another row.
+  if (!Number.isFinite(numeric) || numeric === 0) return null;
   return String(numeric);
 }
 
