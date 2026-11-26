@@ -66,21 +66,26 @@ function findTargetSheet(workbook: XLSX.WorkBook) {
 function removeMatchedAmounts(rows: unknown[][], depositIndex: number, withdrawalIndex: number) {
   const removed = new Set<number>();
   let removedPairs = 0;
-  let index = 1;
 
-  // Match each row's deposit against the withdrawal in the immediately following row.
-  // When they match, remove both rows and continue after the pair.
-  while (index < rows.length - 1) {
+  // For each row, look forward through subsequent rows (not only the immediately
+  // next physical row) for the first still-unmatched withdrawal with the same amount.
+  // Remove both rows and ensure each row is used in at most one pair.
+  for (let index = 1; index < rows.length; index += 1) {
+    if (removed.has(index)) continue;
+
     const deposit = amountKey(rows[index]?.[depositIndex]);
-    const nextWithdrawal = amountKey(rows[index + 1]?.[withdrawalIndex]);
+    if (deposit === null) continue;
 
-    if (deposit !== null && nextWithdrawal !== null && deposit === nextWithdrawal) {
-      removed.add(index);
-      removed.add(index + 1);
-      removedPairs += 1;
-      index += 2;
-    } else {
-      index += 1;
+    for (let nextIndex = index + 1; nextIndex < rows.length; nextIndex += 1) {
+      if (removed.has(nextIndex)) continue;
+
+      const nextWithdrawal = amountKey(rows[nextIndex]?.[withdrawalIndex]);
+      if (nextWithdrawal !== null && deposit === nextWithdrawal) {
+        removed.add(index);
+        removed.add(nextIndex);
+        removedPairs += 1;
+        break;
+      }
     }
   }
 
@@ -134,8 +139,8 @@ export async function POST(request: NextRequest) {
       outputRows = matched;
     } else {
       // Remove rows whose کد مرجع value is exactly تمبر or کارمزد.
-      // Then compare adjacent remaining rows: واریز in the current row against
-      // برداشت in the next row. If equal, remove both rows.
+      // Then compare each row's واریز with برداشت in subsequent rows.
+      // If a later row has the same amount, remove both matched rows.
       const rowsWithoutFeeAndStampMatches = target.rows.filter((row, index) => {
         if (index === 0) return true;
         const referenceValue = normalizeText(row[target.referenceIndex]);
