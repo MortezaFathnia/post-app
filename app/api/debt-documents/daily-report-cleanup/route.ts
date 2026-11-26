@@ -138,10 +138,27 @@ export async function POST(request: NextRequest) {
       matchedRows = Math.max(0, matched.length - 1);
       outputRows = matched;
     } else {
-      const result = removeMatchedAmounts(target.rows, target.depositIndex, target.withdrawalIndex);
+      // First exclude rows where کد مرجع matches either تمبر or کارمزد.
+      // Then compare adjacent remaining rows: واریز in the current row against
+      // برداشت in the next row. If equal, remove both rows.
+      const rowsWithoutFeeAndStampMatches = target.rows.filter((row, index) => {
+        if (index === 0) return true;
+        const referenceValue = amountKey(row[target.referenceIndex]) ?? normalizeText(row[target.referenceIndex]);
+        const feeValue = amountKey(row[target.feeIndex]) ?? normalizeText(row[target.feeIndex]);
+        const stampValue = amountKey(row[target.stampIndex]) ?? normalizeText(row[target.stampIndex]);
+        if (!referenceValue) return true;
+        return referenceValue !== feeValue && referenceValue !== stampValue;
+      });
+
+      const result = removeMatchedAmounts(
+        rowsWithoutFeeAndStampMatches,
+        target.depositIndex,
+        target.withdrawalIndex,
+      );
       outputRows = result.rows;
       removedRows = result.removedRows;
       removedPairs = result.removedPairs;
+      matchedRows = Math.max(0, target.rows.length - rowsWithoutFeeAndStampMatches.length);
     }
 
     workbook.Sheets[target.sheetName] = XLSX.utils.aoa_to_sheet(outputRows);
