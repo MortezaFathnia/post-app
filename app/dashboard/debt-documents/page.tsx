@@ -228,6 +228,7 @@ export default function DebtDocumentsArchivePage() {
               <option value="checkStatus">وضعیت سفته / چک</option>
               <option value="dueDate">تاریخ سررسید</option>
               <option value="bankAgent">بانک عامل</option>
+              <option value="amount">مبلغ</option>
             </select>
             {filterType === "dueDate" ? (
               <PersianDatePicker value={filterValue} onChange={(value) => { setFilterValue(value); setPage(1); }} placeholder="انتخاب تاریخ سررسید" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
