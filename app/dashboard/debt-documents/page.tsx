@@ -41,6 +41,7 @@ const columns: { key: keyof DebtRecord; label: string }[] = [
   { key: "serial", label: "سریال سفته / چک" },
   { key: "administrativeNumber", label: "شماره انتظامی" },
   { key: "dueDate", label: "تاریخ سررسید" },
+  { key: "rawData", label: "مبلغ" },
   { key: "checkStatus", label: "وضعیت چک" },
   { key: "description", label: "توضیحات" },
 ];
@@ -260,7 +261,9 @@ export default function DebtDocumentsArchivePage() {
               <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600">
                 <tr>
                   <th className="whitespace-nowrap px-4 py-3 font-semibold">ردیف</th>
-                  {columns.map((column) => sortableHeader(column.label, column.key))}
+                  {columns.map((column) => column.key === "rawData" ? (
+                    <th key={column.key} className="whitespace-nowrap px-4 py-3 font-semibold">{column.label}</th>
+                  ) : sortableHeader(column.label, column.key))}
                   <th className="whitespace-nowrap px-4 py-3 font-semibold">عملیات</th>
                 </tr>
               </thead>
@@ -270,7 +273,11 @@ export default function DebtDocumentsArchivePage() {
                     <td className="whitespace-nowrap px-4 py-3">{(firstRecord + index).toLocaleString("fa-IR")}</td>
                     {columns.map((column) => (
                       <td key={column.key} className="whitespace-nowrap px-4 py-3">
-{column.key === "checkStatus" && record.checkStatus === "نقدشده" ? "نقد شده" : String(record[column.key] ?? "—")}
+{column.key === "rawData"
+                          ? String(record.rawData?.["مبلغ چک"] ?? record.rawData?.["مبلغ"] ?? record.rawData?.["مبلغ سفته"] ?? "—")
+                          : column.key === "checkStatus" && record.checkStatus === "نقدشده"
+                            ? "نقد شده"
+                            : String(record[column.key] ?? "—")}
                       </td>
                     ))}
                     <td className="whitespace-nowrap px-4 py-3">
