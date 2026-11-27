@@ -231,7 +231,22 @@ export async function GET(request: NextRequest) {
       administrativeNumber: "administrativeNumber",
     };
     const filterField = filterFields[filterType];
-    if (filterValue && filterField) {
+    if (filterValue && filterType === "amount") {
+      const amountTerms = [...new Set([filterValue, normalizeDigits(filterValue)])]
+        .map((term) => term.replace(/,/g, "").trim())
+        .filter(Boolean);
+      const amountConditions = ["مبلغ چک", "مبلغ", "مبلغ سفته"].flatMap((key) =>
+        amountTerms.map((term) => ({
+          rawData: { path: [key], string_contains: term },
+        })),
+      );
+      if (where.OR) {
+        where.AND = [{ OR: where.OR }, { OR: amountConditions }];
+        delete where.OR;
+      } else {
+        where.OR = amountConditions;
+      }
+    } else if (filterValue && filterField) {
       const filterTerms = [...new Set([filterValue, normalizeDigits(filterValue)])];
       const filterConditions = filterTerms.map((term) => ({
         [filterField]: { contains: term, mode: "insensitive" as const },
