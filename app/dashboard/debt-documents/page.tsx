@@ -274,7 +274,20 @@ export default function DebtDocumentsArchivePage() {
                     {columns.map((column) => (
                       <td key={column.key} className="whitespace-nowrap px-4 py-3">
 {column.key === "rawData"
-                          ? String(record.rawData?.["مبلغ چک"] ?? record.rawData?.["مبلغ"] ?? record.rawData?.["مبلغ سفته"] ?? "—")
+                          ? (() => {
+                              const rawAmount = record.rawData?.["مبلغ چک"] ?? record.rawData?.["مبلغ"] ?? record.rawData?.["مبلغ سفته"];
+                              const amountText = String(rawAmount ?? "").trim();
+                              const normalizedAmount = amountText.replace(/[۰-۹٠-٩]/g, (digit) => {
+                                const persian = "۰۱۲۳۴۵۶۷۸۹";
+                                const arabic = "٠١٢٣٤٥٦٧٨٩";
+                                const index = persian.indexOf(digit);
+                                return String(index >= 0 ? index : arabic.indexOf(digit));
+                              }).replace(/,/g, "");
+                              const numericAmount = Number(normalizedAmount);
+                              return amountText && Number.isFinite(numericAmount)
+                                ? numericAmount.toLocaleString("en-US")
+                                : amountText || "—";
+                            })()
                           : column.key === "checkStatus" && record.checkStatus === "نقدشده"
                             ? "نقد شده"
                             : String(record[column.key] ?? "—")}
